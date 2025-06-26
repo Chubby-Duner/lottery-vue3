@@ -1,5 +1,7 @@
 # Lottery
 
+[参考链接](https://github.com/henry-fun/hanshan-lottery)
+
 ```bash
 src/
 ├── assets/
