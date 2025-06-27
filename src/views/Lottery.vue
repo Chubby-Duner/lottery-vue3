@@ -1,11 +1,13 @@
 <script setup>
 import { ref } from 'vue'
-import AwardList from '@/components/AwardList.vue'
-import PrizeList from '@/components/PrizeList.vue'
-import LotteryMain from '@/components/LotteryMain.vue'
-import SnowEffect from '@/components/SnowEffect.vue'
-import MusicControl from '@/components/MusicControl.vue'
-import ClearDataControl from '@/components/ClearDataControl.vue'
+import AwardList from '@/components/Lottery/AwardList.vue'
+import PrizeList from '@/components/Lottery/PrizeList.vue'
+import LotteryMain from '@/components/Lottery/LotteryMain.vue'
+import SnowEffect from '@/components/Lottery/SnowEffect.vue'
+import MusicControl from '@/components/Lottery/MusicControl.vue'
+import ClearDataControl from '@/components/Lottery/ClearDataControl.vue'
+
+import ExcelImport from '@/components/Upload/ExcelImport.vue'
 
 const showCountdown = ref(false)
 const countdownText = ref('')
@@ -29,6 +31,13 @@ const hideCountdown = () => {
 
 <template>
   <div class="app-container">
+    <!-- <a-button type="primary">Primary Button</a-button>
+
+    <ExcelImport /> -->
+
+    
+    <!-- ***************************** -->
+
     <header class="top-head"></header>
     
     <AwardList />
@@ -58,14 +67,14 @@ const hideCountdown = () => {
       :wind-power="2"
       :image="false"
     />
-    <!-- <SnowEffect 
-      speed="3"
-      interaction="true"
-      size="12"
-      count="80"
-      wind-power="-5"
+    <SnowEffect 
+      :speed="3"
+      :interaction="true"
+      :size="12"
+      :count="80"
+      :wind-power="-5"
       image="@/assets/images/snow.png"
-    /> -->
+    />
 
 
     <footer class="footer"></footer>

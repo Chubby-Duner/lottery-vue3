@@ -68,7 +68,7 @@ html {
 body {
     height: 100%;
     /*background: #FFF7E3;*/
-    background: url("../img/yunwen.jpg") repeat;
+    background: url("../images/yunwen.jpg") repeat;
     /*background: #fff;*/
     font-size: 1.5rem;
 }
@@ -80,7 +80,7 @@ body {
     width: 100%;
     height: 60px;
     z-index: 2;
-    background: url("../img/top_border.png") repeat-x;
+    background: url("../images/top_border.png") repeat-x;
 }
 
 .main {
@@ -273,7 +273,7 @@ aside .switch {
     /*left: 0;*/
     /*width: 100%;*/
     /*height: 100%;*/
-    /*background: url("../img/main-wrap-border.png") no-repeat 0 0;*/
+    /*background: url("../images/main-wrap-border.png") no-repeat 0 0;*/
     background-size: contain;
 }
 .wrap-border-top {
@@ -406,11 +406,11 @@ aside .switch {
     background: rgba(255,255,255,0.8);
     /*border: 2px solid #FD361F;*/
     /*border:15px solid transparent;*/
-    /*-moz-border-image:url(../img/china-border.png) 30 30 stretch;	!* Old Firefox *!*/
-    /*-webkit-border-image:url(../img/china-border.png) 30 30 stretch;	!* Safari and Chrome *!*/
-    /*-o-border-image:url(../img/china-border.png) 30 30 stretch;		!* Opera *!*/
-    /*border-image:url(../img/china-border.png) 30 30 stretch;*/
-    /*background: url("../img/border.png") no-repeat;*/
+    /*-moz-border-image:url(../images/china-border.png) 30 30 stretch;	!* Old Firefox *!*/
+    /*-webkit-border-image:url(../images/china-border.png) 30 30 stretch;	!* Safari and Chrome *!*/
+    /*-o-border-image:url(../images/china-border.png) 30 30 stretch;		!* Opera *!*/
+    /*border-image:url(../images/china-border.png) 30 30 stretch;*/
+    /*background: url("../images/border.png") no-repeat;*/
     /*background-size: cover;*/
 }
 .lottery-content .beauty {
@@ -423,25 +423,25 @@ aside .switch {
 .lottery-content .border-01 {
     top: 3px;
     left: 3px;
-    background: url("../img/border-01.png") no-repeat;
+    background: url("../images/border-01.png") no-repeat;
     background-size: contain;
 }
 .lottery-content .border-02 {
     top: 3px;
     right: 3px;
-    background: url("../img/border-02.png") no-repeat;
+    background: url("../images/border-02.png") no-repeat;
     background-size: contain;
 }
 .lottery-content .border-03 {
     bottom: 3px;
     left: 3px;
-    background: url("../img/border-03.png") no-repeat;
+    background: url("../images/border-03.png") no-repeat;
     background-size: contain;
 }
 .lottery-content .border-04 {
     bottom: 3px;
     right: 3px;
-    background: url("../img/border-04.png") no-repeat;
+    background: url("../images/border-04.png") no-repeat;
     background-size: contain;
 }
 .lottery-content:before {
@@ -810,7 +810,7 @@ footer {
     width: 100%;
     height: 2rem;
     z-index: 3;
-    background: url("../img/langhua.png") repeat-x;
+    background: url("../images/langhua.png") repeat-x;
     background-size: contain;
 }
 
@@ -821,7 +821,7 @@ footer {
     left: 0.5%;
     width: 3rem;
     height: 3rem;
-    background: url("../img/music.png") 0 0 no-repeat;
+    background: url("../images/music.png") 0 0 no-repeat;
     background-size: contain;
 }
 
@@ -832,7 +832,7 @@ footer {
     right: 0.5%;
     width: 3rem;
     height: 3rem;
-    background: url("../img/clear.png") 0 0 no-repeat;
+    background: url("../images/clear.png") 0 0 no-repeat;
     background-size: contain;
 }
 
