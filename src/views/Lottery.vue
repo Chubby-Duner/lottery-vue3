@@ -49,7 +49,7 @@ const hideCountdown = () => {
     <!-- 两种雪花效果 -->
     <SnowEffect 
       :speed="2"
-      interaction="true"
+      :interaction="true"
       :size="10"
       :count="30"
       start-color="rgba(253,252,251,1)"

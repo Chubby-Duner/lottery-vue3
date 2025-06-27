@@ -242,7 +242,7 @@ onUnmounted(() => {
               <div class="border bor-bottom"></div>
               <h3 class="content-title">
                 <span class="lottery-name">{{ item.namezh }}</span>
-                <span class="company">[ 寒山科技 ]</span>
+                <span class="company">[ XX科技 ]</span>
               </h3>
               <div class="content-detail">
                 <b>新年愿景及祝福：</b>

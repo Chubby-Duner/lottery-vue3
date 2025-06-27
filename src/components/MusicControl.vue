@@ -1,13 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import useLocalStorage from '@/composables/useLocalStorage'
+import shijiMp3 from '@/assets/audio/shiji.mp3'
 
 const { storedValue: musicState, setValue: setMusicState } = useLocalStorage('music', '1')
 const isMusicPlaying = ref(musicState.value === '1')
 const audioElement = ref(null)
 
 onMounted(() => {
-  audioElement.value = new Audio(require('@/assets/audio/shiji.mp3'))
+  audioElement.value = new Audio(shijiMp3)
   audioElement.value.loop = true
   
   if (isMusicPlaying.value) {
