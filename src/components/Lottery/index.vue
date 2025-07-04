@@ -49,6 +49,8 @@ const wrapMain = ref(null);
 const weightEditorVisible = ref(false);
 // 奖项设置相关
 const awardSettingVisible = ref(false);
+// 全屏loading
+const fullScreenLoading = ref(false);
 
 // ===================== 计算属性 =====================
 const buttonText = computed(() => {
@@ -357,33 +359,56 @@ const closeResult = () => {
   showResult.value = false;
 };
 
-// 重置所有数据
+// 重置数据
 const resetAllData = () => {
   Modal.confirm({
     title: "确定要重置所有数据吗？",
     content: "此操作会恢复到导入数据后的初始状态，所有抽奖结果和名单将被清空。",
     okText: "确定",
     cancelText: "取消",
-    onOk() {
-      awardStore.resetAllToImportBackup();
-      // 恢复 lotteryData，补全自定义字段
-      if (
-        awardStore.lotteryDataBackup &&
-        awardStore.lotteryDataBackup.length > 0
-      ) {
-        lotteryData.value = awardStore.lotteryDataBackup.map((item) => ({
-          ...item,
-          awardWeights: item.awardWeights || { 1: 1, 2: 1, 3: 1, 4: 1 },
-          locked: typeof item.locked === "boolean" ? item.locked : false,
-        }));
-        nextTick(() => {
+    async onOk() {
+      fullScreenLoading.value = true;
+      try {
+        awardStore.resetAllToImportBackup();
+        // 恢复 lotteryData，补全自定义字段
+        if (
+          awardStore.lotteryDataBackup &&
+          awardStore.lotteryDataBackup.length > 0
+        ) {
+          lotteryData.value = awardStore.lotteryDataBackup.map((item) => ({
+            ...item,
+            awardWeights: item.awardWeights || { 1: 1, 2: 1, 3: 1, 4: 1 },
+            locked: typeof item.locked === "boolean" ? item.locked : false,
+          }));
+          await nextTick();
           wrapPosition.value = 0;
           startAnimation();
-        });
-      } else {
-        lotteryData.value = [];
+        } else {
+          lotteryData.value = [];
+        }
+        message.success("已重置为导入初始状态");
+      } finally {
+        fullScreenLoading.value = false;
       }
-      message.success("已重置为导入初始状态");
+    },
+  });
+};
+
+// 清空所有数据
+const clearAllData = () => {
+  Modal.confirm({
+    title: "确定要清空所有数据吗？",
+    content: "此操作会清空上一次操作所产生的所有数据。",
+    okText: "确定",
+    cancelText: "取消",
+    async onOk() {
+      fullScreenLoading.value = true;
+      try {
+        awardStore.clearAll();
+        message.success("已清空所有数据");
+      } finally {
+        fullScreenLoading.value = false;
+      }
     },
   });
 };
@@ -494,7 +519,7 @@ const resetAllData = () => {
           </a-button>
         </div>
         <div class="btn weight-edit-section">
-          <a-button danger @click="resetAllData"> 重置所有数据 </a-button>
+          <a-button danger @click="resetAllData"> 重置数据 </a-button>
         </div>
       </div>
     </div>
@@ -515,6 +540,9 @@ const resetAllData = () => {
       </a-button>
       <a-button class="margin-left10" type="primary" @click="importModal = true"
         >导入抽奖名单数据</a-button
+      >
+      <a-button class="margin-left10" type="primary" @click="clearAllData"
+        >清空所有数据</a-button
       >
       <!-- <a-button type="primary">导入礼物名单数据</a-button> -->
     </a-empty>
@@ -556,6 +584,14 @@ const resetAllData = () => {
     v-model:visible="awardSettingVisible"
     :awards="awardStore.awards"
     @save="handleAwardSettingSave"
+  />
+
+  <!-- 全屏loading -->
+  <a-spin
+    v-if="fullScreenLoading"
+    :spinning="true"
+    size="large"
+    class="global-spin"
   />
 </template>
 
