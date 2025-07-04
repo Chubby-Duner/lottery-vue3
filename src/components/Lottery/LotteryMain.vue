@@ -5,6 +5,8 @@ import { useAwardStore } from '@/store/awardStore'
 import { getImageUrl } from "@/utils/index.js"
 import UploadExcel from '@/components/Upload/UploadExcel.vue'
 import LotteryResult from './LotteryResult.vue'
+import WeightEditor from './WeightEditor.vue'
+import { SettingOutlined } from '@ant-design/icons-vue'
 
 defineOptions({
   name: "LotteryMain"
@@ -47,7 +49,11 @@ const beforeUpload = file => {
 const handleSuccess = ({ header, results }) => {
   try {
     console.log(header, results)
-    lotteryData.value = results
+    // 设置默认权重
+    lotteryData.value = results.map(item => ({
+      ...item,
+      awardWeights: { 1: 1, 2: 1, 3: 1, 4: 1 } // 默认每个奖项权重为1
+    }))
 
     // 开始动画
     if (awardStore.selectAward) {
@@ -133,6 +139,40 @@ const selectAward = (award) => {
   awardStore.setSelectAward(award)
 }
 
+// 权重编辑相关
+const weightEditorVisible = ref(false)
+
+const openWeightEditor = () => {
+  if (lotteryData.value.length === 0) {
+    message.warning('请先导入抽奖数据')
+    return
+  }
+  weightEditorVisible.value = true
+}
+
+const handleWeightSave = (updatedData) => {
+  lotteryData.value = updatedData
+  message.success('权重设置已更新')
+}
+
+// 权重抽奖函数
+const weightedRandomIndex = (list, awardType) => {
+  const weights = list.map(item => (item.awardWeights?.[awardType] ?? 1))
+  const total = weights.reduce((a, b) => a + b, 0)
+  
+  if (total === 0) {
+    message.error('当前奖项所有权重都为0，无法抽奖')
+    return -1
+  }
+  
+  let r = Math.random() * total
+  for (let i = 0; i < weights.length; i++) {
+    if (r < weights[i]) return i
+    r -= weights[i]
+  }
+  return 0
+}
+
 const handleLottery = () => {
   const awardKey = `award0${selectedAward.value}`
   
@@ -185,9 +225,11 @@ const stopLottery = async() => {
   }
 
   try {
-    // 随机选择获奖者
-    const winnerCount = lotteryData.value.length
-    winnerIndex.value = Math.floor(Math.random() * (winnerCount - 4))
+    // 使用权重抽奖
+    const winnerIndexResult = weightedRandomIndex(lotteryData.value, selectedAward.value)
+    if (winnerIndexResult === -1) return
+    
+    winnerIndex.value = winnerIndexResult
     
     // 更新获奖者信息
     const winner = lotteryData.value[winnerIndex.value]
@@ -397,6 +439,16 @@ onUnmounted(() => {
     </a-empty>
   </div>
 
+  <!-- 权重编辑按钮 -->
+  <div v-if="lotteryData.length > 0" class="weight-edit-section" style="text-align: center; margin: 16px 0;">
+    <a-button type="dashed" @click="openWeightEditor">
+      <template #icon>
+        <SettingOutlined />
+      </template>
+      权重设置
+    </a-button>
+  </div>
+
   <!-- 倒计时 -->
   <transition name="fade">
     <div v-if="showCountdown" class="stop-main">
@@ -416,6 +468,13 @@ onUnmounted(() => {
 
   <!-- 导入数据 -->
   <UploadExcel v-model:visible="importModal" :on-success="handleSuccess" :before-upload="beforeUpload" />
+
+  <!-- 权重编辑 -->
+  <WeightEditor
+    v-model:visible="weightEditorVisible"
+    :lottery-data="lotteryData"
+    @save="handleWeightSave"
+  />
 </template>
 
 <style scoped>

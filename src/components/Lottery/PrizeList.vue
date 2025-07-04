@@ -1,17 +1,16 @@
 <script setup>
-import { ref } from 'vue'
+import { ref } from "vue";
 
 defineOptions({
-  name: "PrizeList"
+  name: "PrizeList",
 });
 
-const showList = ref(false)
+const showList = ref(false);
 
 const toggleList = () => {
-  showList.value = !showList.value
-}
+  showList.value = !showList.value;
+};
 </script>
-
 
 <template>
   <aside class="aside-right">
@@ -23,7 +22,7 @@ const toggleList = () => {
           <ul class="win">
             <li class="clearfix win-li">
               <div class="f-l avatar">
-                <img width="34" src="@/assets/images/gift/canon.jpg"/>
+                <img width="34" src="@/assets/images/gift/canon.jpg" />
               </div>
               <div class="f-l name">佳能微单</div>
             </li>
@@ -32,17 +31,17 @@ const toggleList = () => {
         <!-- 类似结构添加其他奖项 -->
       </div>
     </div>
-    <img 
-      src="@/assets/images/lantern.png" 
-      alt="" 
-      width="85" 
+    <img
+      src="@/assets/images/lantern.png"
+      alt=""
+      width="85"
       v-show="!showList"
       @click="showList = true"
       class="switch"
-    >
+    />
   </aside>
 </template>
 
 <style scoped>
-@import '@/assets/styles/style.css';
+@import "@/assets/styles/style.css";
 </style>

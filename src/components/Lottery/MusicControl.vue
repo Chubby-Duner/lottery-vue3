@@ -1,41 +1,46 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import useLocalStorage from '@/composables/useLocalStorage'
-import shijiMp3 from '@/assets/audio/shiji.mp3'
+import { ref, onMounted } from "vue";
+import useLocalStorage from "@/composables/useLocalStorage";
+import shijiMp3 from "@/assets/audio/shiji.mp3";
 
 defineOptions({
-  name: "MusicControl"
+  name: "MusicControl",
 });
 
-const { storedValue: musicState, setValue: setMusicState } = useLocalStorage('music', '1')
-const isMusicPlaying = ref(musicState.value === '1')
-const audioElement = ref(null)
+const { storedValue: musicState, setValue: setMusicState } = useLocalStorage(
+  "music",
+  "1"
+);
+const isMusicPlaying = ref(musicState.value === "1");
+const audioElement = ref(null);
 
 onMounted(() => {
-  audioElement.value = new Audio(shijiMp3)
-  audioElement.value.loop = true
-  
+  audioElement.value = new Audio(shijiMp3);
+  audioElement.value.loop = true;
+
   if (isMusicPlaying.value) {
-    audioElement.value.play().catch(e => console.log('Autoplay prevented:', e))
+    audioElement.value
+      .play()
+      .catch((e) => console.log("Autoplay prevented:", e));
   }
-})
+});
 
 const toggleMusic = () => {
-  isMusicPlaying.value = !isMusicPlaying.value
-  setMusicState(isMusicPlaying.value ? '1' : '0')
-  
+  isMusicPlaying.value = !isMusicPlaying.value;
+  setMusicState(isMusicPlaying.value ? "1" : "0");
+
   if (isMusicPlaying.value) {
-    audioElement.value.play()
+    audioElement.value.play();
   } else {
-    audioElement.value.pause()
+    audioElement.value.pause();
   }
-}
+};
 </script>
 
 <template>
-  <a 
-    id="music-control" 
-    href="javascript:;" 
+  <a
+    id="music-control"
+    href="javascript:;"
     @click="toggleMusic"
     :class="{ 'animated infinite bounce': isMusicPlaying }"
   ></a>
@@ -48,7 +53,7 @@ const toggleMusic = () => {
   right: 20px;
   width: 40px;
   height: 40px;
-  background: url('@/assets/images/music-icon.png') no-repeat center;
+  background: url("@/assets/images/music-icon.png") no-repeat center;
   background-size: contain;
   z-index: 1000;
   cursor: pointer;
