@@ -5,10 +5,10 @@ export const useAwardStore = defineStore("awardStore", {
   state: () => ({
     // 动态奖项列表
     awards: storage.get("awards", [
-      { key: "award1", label: "一", count: 1 },
-      { key: "award2", label: "二", count: 3 },
-      { key: "award3", label: "三", count: 3 },
-      { key: "award4", label: "纪", count: 4 }
+      { key: "award1", label: "一等奖", count: 1 },
+      { key: "award2", label: "二等奖", count: 3 },
+      { key: "award3", label: "三等奖", count: 3 },
+      { key: "award4", label: "纪念奖", count: 4 }
     ]),
     // 奖项剩余数量
     awardLog: storage.get("award_log", {
@@ -92,10 +92,10 @@ export const useAwardStore = defineStore("awardStore", {
     },
     clearAll() {
       this.awards = [
-        { key: "award1", label: "一", count: 1 },
-        { key: "award2", label: "二", count: 3 },
-        { key: "award3", label: "三", count: 3 },
-        { key: "award4", label: "纪", count: 4 }
+        { key: "award1", label: "一等奖", count: 1 },
+        { key: "award2", label: "二等奖", count: 3 },
+        { key: "award3", label: "三等奖", count: 3 },
+        { key: "award4", label: "纪念奖", count: 4 }
       ];
       storage.set("awards", this.awards);
       this.awardLog = {
@@ -123,10 +123,10 @@ export const useAwardStore = defineStore("awardStore", {
       // 你可以根据实际需求恢复awards、awardLog、winnerMap等
       // 这里只恢复名单，奖项和数量可根据实际需求扩展
       this.awards = [
-        { key: "award1", label: "一", count: 1 },
-        { key: "award2", label: "二", count: 3 },
-        { key: "award3", label: "三", count: 3 },
-        { key: "award4", label: "纪", count: 4 }
+        { key: "award1", label: "一等奖", count: 1 },
+        { key: "award2", label: "二等奖", count: 3 },
+        { key: "award3", label: "三等奖", count: 3 },
+        { key: "award4", label: "纪念奖", count: 4 }
       ];
       storage.set("awards", this.awards);
       this.awardLog = {

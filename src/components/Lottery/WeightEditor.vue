@@ -137,7 +137,7 @@ const handleCancel = () => {
     <div class="weight-editor">
       <a-alert
         message="权重说明"
-        description="有锁定人时只从锁定人中抽取。没有锁定人时按权重抽奖。权重越大，中奖概率越高。权重为0表示不参与该奖项抽奖。"
+        description="有锁定人时只从锁定人中抽取。没有锁定人时按权重抽奖。权重越大：中奖概率越高。权重为0：不参与该奖项抽奖。所有权重为0：提示无法抽奖"
         type="info"
         show-icon
         style="margin-bottom: 16px"

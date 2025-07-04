@@ -1,39 +1,41 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import useLocalStorage from "@/composables/useLocalStorage";
+import { ref, onMounted, watch } from "vue";
+import { useMusicStore } from "@/store/musicStore";
 import shijiMp3 from "@/assets/audio/shiji.mp3";
 
-defineOptions({
-  name: "MusicControl",
-});
-
-const { storedValue: musicState, setValue: setMusicState } = useLocalStorage(
-  "music",
-  "1"
-);
-const isMusicPlaying = ref(musicState.value === "1");
+const musicStore = useMusicStore();
 const audioElement = ref(null);
 
 onMounted(() => {
-  audioElement.value = new Audio(shijiMp3);
-  audioElement.value.loop = true;
-
-  if (isMusicPlaying.value) {
-    audioElement.value
-      .play()
-      .catch((e) => console.log("Autoplay prevented:", e));
+  if (audioElement.value) {
+    audioElement.value.loop = true;
+    if (musicStore.isMusicPlaying) {
+      audioElement.value.play().catch((e) => {
+        // 自动播放被拦截，等待用户交互
+        const tryPlay = () => {
+          audioElement.value.play();
+          window.removeEventListener('click', tryPlay);
+        };
+        window.addEventListener('click', tryPlay);
+      });
+    }
   }
 });
 
-const toggleMusic = () => {
-  isMusicPlaying.value = !isMusicPlaying.value;
-  setMusicState(isMusicPlaying.value ? "1" : "0");
-
-  if (isMusicPlaying.value) {
-    audioElement.value.play();
-  } else {
-    audioElement.value.pause();
+watch(
+  () => musicStore.isMusicPlaying,
+  (newVal) => {
+    if (!audioElement.value) return;
+    if (newVal) {
+      audioElement.value.play();
+    } else {
+      audioElement.value.pause();
+    }
   }
+);
+
+const toggleMusic = () => {
+  musicStore.toggleMusic();
 };
 </script>
 
@@ -42,8 +44,9 @@ const toggleMusic = () => {
     id="music-control"
     href="javascript:;"
     @click="toggleMusic"
-    :class="{ 'animated infinite bounce': isMusicPlaying }"
+    :class="{ 'animated infinite bounce': musicStore.isMusicPlaying }"
   ></a>
+  <audio ref="audioElement" :src="shijiMp3" style="display:none" />
 </template>
 
 <style scoped>
@@ -53,7 +56,7 @@ const toggleMusic = () => {
   right: 20px;
   width: 40px;
   height: 40px;
-  background: url("@/assets/images/music-icon.png") no-repeat center;
+  background: url("@/assets/images/music.png") no-repeat center;
   background-size: contain;
   z-index: 1000;
   cursor: pointer;

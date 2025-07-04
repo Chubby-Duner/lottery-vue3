@@ -29,8 +29,8 @@ defineOptions({
     <LotteryMain />
 
     <!-- 添加音乐和清除控制 -->
-    <!-- <MusicControl />
-    <ClearDataControl /> -->
+    <MusicControl />
+    <!-- <ClearDataControl /> -->
     
     
     <!-- 两种雪花效果 -->
