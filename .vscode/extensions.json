@@ -1,3 +1,9 @@
 {
-  "recommendations": ["Vue.volar"]
+  "recommendations": [
+    "christian-kohler.path-intellisense",
+    "warmthsea.vscode-custom-code-color",
+    "vscode-icons-team.vscode-icons",
+    "stylelint.vscode-stylelint",
+    "Vue.volar"
+  ]
 }
