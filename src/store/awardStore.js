@@ -140,7 +140,6 @@ export const useAwardStore = defineStore("awardStore", {
       storage.remove("winner_map");
       this.selectAward = "award4";
       storage.set("select_award", this.selectAward);
-      // 恢复 lotteryDataBackup 由前端页面自行处理
     }
   }
 }) 

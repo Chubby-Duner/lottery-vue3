@@ -8,7 +8,7 @@ src/
 │   ├── images/
 │   └── styles/
 ├── components/
-│   ├── LotteryMain.vue       # 主抽奖区域
+│   ├── index.vue       # 主抽奖区域
 │   ├── AwardList.vue         # 中奖名单展示
 │   ├── PrizeList.vue         # 奖品展示
 │   ├── LotteryResult.vue     # 抽奖结果弹窗

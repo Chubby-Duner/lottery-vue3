@@ -5,7 +5,7 @@ import { translateKeys } from '@/composables/utils'
 
 import AwardList from '@/components/Lottery/AwardList.vue'
 import PrizeList from '@/components/Lottery/PrizeList.vue'
-import LotteryMain from '@/components/Lottery/LotteryMain.vue'
+import LotteryMain from '@/components/Lottery/index.vue'
 import SnowEffect from '@/components/Lottery/SnowEffect.vue'
 import MusicControl from '@/components/Lottery/MusicControl.vue'
 import ClearDataControl from '@/components/Lottery/ClearDataControl.vue'

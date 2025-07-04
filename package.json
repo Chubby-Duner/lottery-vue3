@@ -12,7 +12,6 @@
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
     "ant-design-vue": "^4.2.6",
-    "element-plus": "^2.10.2",
     "exceljs": "^4.4.0",
     "pinia": "^3.0.3",
     "vue": "^3.5.17",

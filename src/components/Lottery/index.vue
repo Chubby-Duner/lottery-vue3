@@ -16,69 +16,21 @@ defineOptions({
 // 获取奖项剩余数量，中奖名单等数据
 const awardStore = useAwardStore();
 
+// ===================== 状态变量 =====================
 //#region 倒计时相关
 const showCountdown = ref(false);
 const countdownText = ref("叁");
-
-async function showCountdownSequence() {
-  showCountdown.value = true;
-  countdownText.value = "叁";
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  countdownText.value = "贰";
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  countdownText.value = "壹";
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  showCountdown.value = false;
-}
 //#endregion
 
-//#region 导入数据
+//#region 导入数据相关
 const importModal = ref(false);
 const lotteryData = ref([]);
-
-const beforeUpload = (file) => {
-  const isLt1M = file.size / 1024 / 1024 < 1;
-
-  if (isLt1M) {
-    return true;
-  }
-
-  message.error("Please do not upload files larger than 1m in size.");
-  return false;
-};
-
-const handleSuccess = ({ header, results }) => {
-  try {
-    // 设置默认权重
-    lotteryData.value = results.map((item) => ({
-      ...item,
-      awardWeights: { 1: 1, 2: 1, 3: 1, 4: 1 }, // 默认每个奖项权重为1
-      locked: false,
-    }));
-
-    // 备份导入数据
-    awardStore.setLotteryDataBackup(lotteryData.value);
-
-    // 开始动画
-    if (awardStore.selectAward) {
-      selectedAward.value = awardStore.selectAward;
-    }
-    nextTick(() => {
-      wrapPosition.value = 0; // 重置
-      startAnimation();
-    });
-  } catch (error) {
-    console.error("handleSuccess ~ error:", error);
-  }
-};
-
-const getTemplateUrl = () => {
-  return new URL("/template/importTemplate.xlsx", import.meta.url).href;
-};
 //#endregion
 
 // 状态管理
-const selectedAward = ref(awardStore.selectAward || (awardStore.awards[0]?.key || ""));
+const selectedAward = ref(
+  awardStore.selectAward || awardStore.awards[0]?.key || ""
+);
 const isMoving = ref(true);
 const isStarted = ref(false);
 const isLocked = ref(true);
@@ -93,7 +45,12 @@ const speed = ref(6);
 const lotteryWrap = ref(null);
 const wrapMain = ref(null);
 
-// 计算属性
+// 权重编辑相关
+const weightEditorVisible = ref(false);
+// 奖项设置相关
+const awardSettingVisible = ref(false);
+
+// ===================== 计算属性 =====================
 const buttonText = computed(() => {
   if (!isStarted.value && !isMoving.value) return "重新开始";
   if (!isStarted.value && isMoving.value) return "开始抽奖";
@@ -101,223 +58,7 @@ const buttonText = computed(() => {
   return "正在抽奖...";
 });
 
-// 开始动画
-const startAnimation = () => {
-  let lastTime = 0;
-  const animate = (timestamp) => {
-    if (!isMoving.value) return;
-    if (!lotteryWrap.value) return; // 防止空指针
-
-    const deltaTime = timestamp - lastTime;
-    lastTime = timestamp;
-
-    wrapPosition.value -= speed.value;
-    if (-wrapPosition.value >= lotteryWrap.value.scrollHeight / 2) {
-      wrapPosition.value = 0;
-    }
-
-    animationFrame.value = window.requestAnimationFrame(animate);
-  };
-  animationFrame.value = window.requestAnimationFrame(animate);
-};
-
-// 取消动画
-const cancelAnimation = () => {
-  if (animationFrame.value) {
-    cancelAnimationFrame(animationFrame.value);
-  }
-};
-
-const selectAward = (awardKey) => {
-  if (isStarted.value) {
-    message.error("正在抽奖中，不允许更改奖项设置");
-    return;
-  }
-  selectedAward.value = awardKey;
-  awardStore.setSelectAward(awardKey);
-};
-
-// 权重编辑相关
-const weightEditorVisible = ref(false);
-
-const openWeightEditor = () => {
-  if (lotteryData.value.length === 0) {
-    message.warning("请先导入抽奖数据");
-    return;
-  }
-  weightEditorVisible.value = true;
-};
-
-const handleWeightSave = (updatedData) => {
-  lotteryData.value = updatedData;
-  message.success("权重设置已更新");
-};
-
-// 奖项设置相关
-const awardSettingVisible = ref(false);
-
-const openAwardSetting = () => {
-  awardSettingVisible.value = true;
-};
-
-const handleAwardSettingSave = (newAwards) => {
-  awardStore.setAwards(newAwards);
-};
-
-const handleLottery = () => {
-  const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
-  const awardKey = `award0${idx + 1}`;
-
-  if (awardStore.awardLog[awardKey] <= 0) {
-    message.error("该奖项已经抽完啦，请选择其它奖项哦！");
-    return;
-  }
-
-  const lockedList = lotteryData.value.filter((item) => item.locked);
-  if (lockedList.length > 0) {
-    // 有锁定，判断锁定且权重>0的人
-    const lockedWithWeight = lockedList.filter(
-      (item) => (item.awardWeights?.[selectedAward.value] ?? 1) > 0
-    );
-    if (lockedWithWeight.length === 0) {
-      message.error("锁定的人员当前奖项权重都为0，无法抽奖");
-      return;
-    }
-  } else {
-    // 没有锁定，判断所有权重
-    const weights = lotteryData.value.map(
-      (item) => item.awardWeights?.[selectedAward.value] ?? 1
-    );
-    const total = weights.reduce((a, b) => a + b, 0);
-    if (total === 0) {
-      message.error("当前奖项所有权重都为0，无法抽奖");
-      return;
-    }
-  }
-
-  if (!isStarted.value && !isMoving.value) {
-    // 重新开始：重置状态并重新滚动，不刷新页面
-    wrapPosition.value = 0;
-    isMoving.value = true;
-    isStarted.value = false;
-    isLocked.value = true;
-    speed.value = 6;
-    winnerIndex.value = -1;
-    showResult.value = false;
-    canStop.value = false;
-    startAnimation();
-    return;
-  }
-
-  if (!isStarted.value && isMoving.value) {
-    startLottery();
-  } else if (isStarted.value && !isLocked.value) {
-    stopLottery();
-  }
-};
-
-const startLottery = () => {
-  isStarted.value = true;
-  isMoving.value = true;
-  isLocked.value = true;
-
-  // 加速动画
-  setTimeout(() => (speed.value = 15), 1000);
-  setTimeout(() => (speed.value = 20), 3000);
-  setTimeout(() => (speed.value = 30), 5000);
-  setTimeout(() => (speed.value = 50), 7000);
-  setTimeout(() => {
-    speed.value = 90;
-    isLocked.value = false;
-  }, 9000);
-};
-
-const stopLottery = async () => {
-  if (isLocked.value) {
-    message.error("还没结束，请稍等...");
-    return;
-  }
-
-  try {
-    // 先查找是否有锁定 锁定且权重>0才可抽中
-    const lockedList = lotteryData.value.filter(
-      (item) =>
-        item.locked && (item.awardWeights?.[selectedAward.value] ?? 1) > 0
-    );
-    let winnerIndexResult;
-    if (lockedList.length > 0) {
-      // 只从锁定的人中随机抽取
-      const idx = Math.floor(Math.random() * lockedList.length);
-      const winner = lockedList[idx];
-      winnerIndexResult = lotteryData.value.findIndex(
-        (item) => item.nameen === winner.nameen
-      );
-    } else {
-      // 正常权重抽奖
-      winnerIndexResult = weightedRandomIndex(
-        lotteryData.value,
-        selectedAward.value
-      );
-      if (winnerIndexResult === -1) {
-        message.error("当前奖项所有权重都为0，无法抽奖");
-        return;
-      }
-    }
-    winnerIndex.value = winnerIndexResult;
-
-    // 更新获奖者信息
-    const winner = lotteryData.value[winnerIndex.value];
-    winnerNameZh.value = winner.namezh;
-    winnerNameEn.value = winner.nameen;
-
-    // 显示倒计时
-    await showCountdownSequence();
-
-    // 显示结果
-    showResult.value = true;
-    canStop.value = true;
-
-    // 停止主动画
-    isMoving.value = false;
-    cancelAnimation();
-
-    isStarted.value = false;
-    speed.value = 8;
-
-    // 更新奖项数据
-    // 中奖人对象
-    const winnerData = {
-      nameen: winnerNameEn.value,
-      namezh: winnerNameZh.value,
-    };
-    // 写入中奖名单
-    awardStore.addWinner(selectedAward.value, winnerData);
-
-    // 更新奖项剩余数量
-    const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
-    const awardKey = `award0${idx + 1}`;
-    const newAwardLog = { ...awardStore.awardLog };
-    newAwardLog[awardKey] -= 1;
-    awardStore.setAwardLog(newAwardLog);
-
-    // 从抽奖池中移除获奖者
-    lotteryData.value = lotteryData.value.filter(
-      (item) => item.nameen !== winner.nameen
-    );
-    winnerIndex.value = -1;
-  } catch (error) {
-    console.error("Function stopLottery ~ error:", error);
-  }
-};
-
-const closeResult = () => {
-  if (!canStop.value) {
-    message.error("还没结束，无法关闭！");
-    return;
-  }
-  showResult.value = false;
-};
-
+// ===================== 生命周期与事件监听 =====================
 // 键盘事件
 const handleKeyPress = (e) => {
   switch (e.key) {
@@ -359,21 +100,281 @@ onUnmounted(() => {
   window.removeEventListener("keypress", handleKeyPress);
 });
 
+// ===================== 业务逻辑区 =====================
+
+//#region 倒计时相关
+async function showCountdownSequence() {
+  showCountdown.value = true;
+  countdownText.value = "叁";
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  countdownText.value = "贰";
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  countdownText.value = "壹";
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  showCountdown.value = false;
+}
+//#endregion
+
+//#region 导入数据相关
+const beforeUpload = (file) => {
+  const isLt1M = file.size / 1024 / 1024 < 1;
+  if (isLt1M) {
+    return true;
+  }
+  message.error("Please do not upload files larger than 1m in size.");
+  return false;
+};
+
+const handleSuccess = ({ header, results }) => {
+  try {
+    // 设置默认权重
+    lotteryData.value = results.map((item) => ({
+      ...item,
+      awardWeights: { 1: 1, 2: 1, 3: 1, 4: 1 }, // 默认每个奖项权重为1
+      locked: false,
+    }));
+    // 备份导入数据
+    awardStore.setLotteryDataBackup(lotteryData.value);
+    // 开始动画
+    if (awardStore.selectAward) {
+      selectedAward.value = awardStore.selectAward;
+    }
+    nextTick(() => {
+      wrapPosition.value = 0; // 重置
+      startAnimation();
+    });
+  } catch (error) {
+    console.error("handleSuccess ~ error:", error);
+  }
+};
+
+const getTemplateUrl = () => {
+  return new URL("/template/importTemplate.xlsx", import.meta.url).href;
+};
+//#endregion
+
+//#region 奖项设置相关
+const openAwardSetting = () => {
+  awardSettingVisible.value = true;
+};
+const handleAwardSettingSave = (newAwards) => {
+  awardStore.setAwards(newAwards);
+};
+//#endregion
+
+//#region 权重编辑相关
+const openWeightEditor = () => {
+  if (lotteryData.value.length === 0) {
+    message.warning("请先导入抽奖数据");
+    return;
+  }
+  weightEditorVisible.value = true;
+};
+const handleWeightSave = (updatedData) => {
+  lotteryData.value = updatedData;
+  message.success("权重设置已更新");
+};
+//#endregion
+
+//#region 抽奖相关
+const selectAward = (awardKey) => {
+  if (isStarted.value) {
+    message.error("正在抽奖中，不允许更改奖项设置");
+    return;
+  }
+  selectedAward.value = awardKey;
+  awardStore.setSelectAward(awardKey);
+};
+
+const handleLottery = () => {
+  const idx = awardStore.awards.findIndex((a) => a.key === selectedAward.value);
+  const awardKey = `award0${idx + 1}`;
+  if (awardStore.awardLog[awardKey] <= 0) {
+    message.error("该奖项已经抽完啦，请选择其它奖项哦！");
+    return;
+  }
+  const lockedList = lotteryData.value.filter((item) => item.locked);
+  if (lockedList.length > 0) {
+    // 有锁定，判断锁定且权重>0的人
+    const lockedWithWeight = lockedList.filter(
+      (item) => (item.awardWeights?.[selectedAward.value] ?? 1) > 0
+    );
+    if (lockedWithWeight.length === 0) {
+      message.error("锁定的人员当前奖项权重都为0，无法抽奖");
+      return;
+    }
+  } else {
+    // 没有锁定，判断所有权重
+    const weights = lotteryData.value.map(
+      (item) => item.awardWeights?.[selectedAward.value] ?? 1
+    );
+    const total = weights.reduce((a, b) => a + b, 0);
+    if (total === 0) {
+      message.error("当前奖项所有权重都为0，无法抽奖");
+      return;
+    }
+  }
+  if (!isStarted.value && !isMoving.value) {
+    // 重新开始：重置状态并重新滚动，不刷新页面
+    wrapPosition.value = 0;
+    isMoving.value = true;
+    isStarted.value = false;
+    isLocked.value = true;
+    speed.value = 6;
+    winnerIndex.value = -1;
+    showResult.value = false;
+    canStop.value = false;
+    startAnimation();
+    return;
+  }
+  if (!isStarted.value && isMoving.value) {
+    startLottery();
+  } else if (isStarted.value && !isLocked.value) {
+    stopLottery();
+  }
+};
+
+const startLottery = () => {
+  isStarted.value = true;
+  isMoving.value = true;
+  isLocked.value = true;
+  // 加速动画
+  setTimeout(() => (speed.value = 15), 1000);
+  setTimeout(() => (speed.value = 20), 3000);
+  setTimeout(() => (speed.value = 30), 5000);
+  setTimeout(() => (speed.value = 50), 7000);
+  setTimeout(() => {
+    speed.value = 90;
+    isLocked.value = false;
+  }, 9000);
+};
+
+const stopLottery = async () => {
+  if (isLocked.value) {
+    message.error("还没结束，请稍等...");
+    return;
+  }
+  try {
+    // 先查找是否有锁定 锁定且权重>0才可抽中
+    const lockedList = lotteryData.value.filter(
+      (item) =>
+        item.locked && (item.awardWeights?.[selectedAward.value] ?? 1) > 0
+    );
+    let winnerIndexResult;
+    if (lockedList.length > 0) {
+      // 只从锁定的人中随机抽取
+      const idx = Math.floor(Math.random() * lockedList.length);
+      const winner = lockedList[idx];
+      winnerIndexResult = lotteryData.value.findIndex(
+        (item) => item.nameen === winner.nameen
+      );
+    } else {
+      // 正常权重抽奖
+      winnerIndexResult = weightedRandomIndex(
+        lotteryData.value,
+        selectedAward.value
+      );
+      if (winnerIndexResult === -1) {
+        message.error("当前奖项所有权重都为0，无法抽奖");
+        return;
+      }
+    }
+    winnerIndex.value = winnerIndexResult;
+
+    // 更新获奖者信息
+    const winner = lotteryData.value[winnerIndex.value];
+    winnerNameZh.value = winner.namezh;
+    winnerNameEn.value = winner.nameen;
+
+    // 显示倒计时
+    await showCountdownSequence();
+    // 显示结果
+    showResult.value = true;
+    canStop.value = true;
+    // 停止主动画
+    isMoving.value = false;
+    cancelAnimation();
+    isStarted.value = false;
+    speed.value = 8;
+
+    // 更新奖项数据
+    // 中奖人对象
+    const winnerData = {
+      nameen: winnerNameEn.value,
+      namezh: winnerNameZh.value,
+    };
+    // 写入中奖名单
+    awardStore.addWinner(selectedAward.value, winnerData);
+    // 更新奖项剩余数量
+    const idx = awardStore.awards.findIndex(
+      (a) => a.key === selectedAward.value
+    );
+    const awardKey = `award0${idx + 1}`;
+    const newAwardLog = { ...awardStore.awardLog };
+    newAwardLog[awardKey] -= 1;
+    awardStore.setAwardLog(newAwardLog);
+    // 从抽奖池中移除获奖者
+    lotteryData.value = lotteryData.value.filter(
+      (item) => item.nameen !== winner.nameen
+    );
+    winnerIndex.value = -1;
+  } catch (error) {
+    console.error("Function stopLottery ~ error:", error);
+  }
+};
+//#endregion
+
+//#region 动画相关
+const startAnimation = () => {
+  let lastTime = 0;
+  const animate = (timestamp) => {
+    if (!isMoving.value) return;
+    if (!lotteryWrap.value) return; // 防止空指针
+    const deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
+    wrapPosition.value -= speed.value;
+    if (-wrapPosition.value >= lotteryWrap.value.scrollHeight / 2) {
+      wrapPosition.value = 0;
+    }
+    animationFrame.value = window.requestAnimationFrame(animate);
+  };
+  animationFrame.value = window.requestAnimationFrame(animate);
+};
+
+const cancelAnimation = () => {
+  if (animationFrame.value) {
+    cancelAnimationFrame(animationFrame.value);
+  }
+};
+//#endregion
+
+//#region 其它功能
+const closeResult = () => {
+  if (!canStop.value) {
+    message.error("还没结束，无法关闭！");
+    return;
+  }
+  showResult.value = false;
+};
+
 // 重置所有数据
 const resetAllData = () => {
   Modal.confirm({
-    title: '确定要重置所有数据吗？',
-    content: '此操作会恢复到导入数据后的初始状态，所有抽奖结果和名单将被清空。',
-    okText: '确定',
-    cancelText: '取消',
+    title: "确定要重置所有数据吗？",
+    content: "此操作会恢复到导入数据后的初始状态，所有抽奖结果和名单将被清空。",
+    okText: "确定",
+    cancelText: "取消",
     onOk() {
       awardStore.resetAllToImportBackup();
       // 恢复 lotteryData，补全自定义字段
-      if (awardStore.lotteryDataBackup && awardStore.lotteryDataBackup.length > 0) {
-        lotteryData.value = awardStore.lotteryDataBackup.map(item => ({
+      if (
+        awardStore.lotteryDataBackup &&
+        awardStore.lotteryDataBackup.length > 0
+      ) {
+        lotteryData.value = awardStore.lotteryDataBackup.map((item) => ({
           ...item,
           awardWeights: item.awardWeights || { 1: 1, 2: 1, 3: 1, 4: 1 },
-          locked: typeof item.locked === 'boolean' ? item.locked : false
+          locked: typeof item.locked === "boolean" ? item.locked : false,
         }));
         nextTick(() => {
           wrapPosition.value = 0;
@@ -382,10 +383,11 @@ const resetAllData = () => {
       } else {
         lotteryData.value = [];
       }
-      message.success('已重置为导入初始状态');
-    }
+      message.success("已重置为导入初始状态");
+    },
   });
 };
+//#endregion
 </script>
 
 <template>
@@ -492,9 +494,7 @@ const resetAllData = () => {
           </a-button>
         </div>
         <div class="btn weight-edit-section">
-          <a-button danger @click="resetAllData">
-            重置所有数据
-          </a-button>
+          <a-button danger @click="resetAllData"> 重置所有数据 </a-button>
         </div>
       </div>
     </div>
@@ -511,7 +511,7 @@ const resetAllData = () => {
         <span> 请先导入数据 </span>
       </template>
       <a-button type="primary">
-        <a :href="getTemplateUrl()" target="_blank">点击下载</a>
+        <a :href="getTemplateUrl()" target="_blank">下载模板</a>
       </a-button>
       <a-button class="margin-left10" type="primary" @click="importModal = true"
         >导入抽奖名单数据</a-button
