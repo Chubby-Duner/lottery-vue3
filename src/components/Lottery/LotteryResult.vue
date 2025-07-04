@@ -1,5 +1,7 @@
 <script setup>
 import { computed } from "vue";
+import { useAwardStore } from "@/store/awardStore";
+import { storeToRefs } from "pinia";
 
 defineOptions({
   name: "LotteryResult",
@@ -15,19 +17,16 @@ const props = defineProps({
 
 const emit = defineEmits(["close"]);
 
+const awardStore = useAwardStore();
+const { awards } = storeToRefs(awardStore);
+
 const awardText = computed(() => {
-  switch (props.award) {
-    case 1:
-      return "一等奖";
-    case 2:
-      return "二等奖";
-    case 3:
-      return "三等奖";
-    case 4:
-      return "纪念奖";
-    default:
-      return props.award;
+  const found = awards.value.find(item => item.key === props.award);
+  if (found) {
+    if (found.label === "纪") return "纪念奖";
+    return `${found.label}等奖`;
   }
+  return props.award;
 });
 
 const avatarUrl = computed(() => {
