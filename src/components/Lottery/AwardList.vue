@@ -2,7 +2,7 @@
 import { ref, computed } from "vue";
 import { Empty } from "ant-design-vue";
 import { useAwardStore } from "@/store/awardStore";
-import { getImageUrl } from "@/utils/index.js";
+import { getImageUrl } from "@/composables/utils";
 
 defineOptions({
   name: "AwardList",

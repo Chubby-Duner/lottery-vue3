@@ -9,6 +9,7 @@ const props = defineProps({
 
 const emit = defineEmits(["update:visible", "save"]);
 
+const weightVisible = ref(false);
 // 权重数据副本
 const weightData = ref([]);
 
@@ -24,6 +25,20 @@ watch(
     }
   },
   { immediate: true }
+);
+
+watch(
+  () => props.visible,
+  (newValue) => {
+    weightVisible.value = newValue;
+  }
+);
+
+watch(
+  () => weightVisible.value,
+  (val) => {
+    emit("update:visible", val);
+  }
 );
 
 // 表格列定义
@@ -58,6 +73,12 @@ const columns = [
     width: 120,
     align: "center",
   },
+  {
+    title: "锁定",
+    key: "locked",
+    width: 80,
+    align: "center",
+  },
 ];
 
 // 权重变更处理
@@ -90,21 +111,21 @@ const handleOk = () => {
   }));
 
   emit("save", updatedData);
-  emit("update:visible", false);
+  weightVisible.value = false;
   message.success("权重设置已保存");
 };
 
 // 取消编辑
 const handleCancel = () => {
-  emit("update:visible", false);
+  weightVisible.value = false;
 };
 </script>
 
 <template>
   <a-modal
-    v-model:open="visible"
+    v-model:open="weightVisible"
     title="权重设置"
-    width="800px"
+    width="600"
     :footer="null"
     @ok="handleOk"
     @cancel="handleCancel"
@@ -112,7 +133,7 @@ const handleCancel = () => {
     <div class="weight-editor">
       <a-alert
         message="权重说明"
-        description="权重越大，中奖概率越高。权重为0表示不参与该奖项抽奖。"
+        description="有锁定人时只从锁定人中抽取。没有锁定人时按权重抽奖。权重越大，中奖概率越高。权重为0表示不参与该奖项抽奖。"
         type="info"
         show-icon
         style="margin-bottom: 16px"
@@ -144,6 +165,9 @@ const handleCancel = () => {
               style="width: 80px"
               @change="handleWeightChange"
             />
+          </template>
+          <template v-else-if="column.key === 'locked'">
+            <a-switch v-model:checked="record.locked" />
           </template>
         </template>
       </a-table>

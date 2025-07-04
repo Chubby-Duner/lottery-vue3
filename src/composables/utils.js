@@ -30,6 +30,12 @@ const translateKeys = (data, keyMap) => {
   });
 }
 
+
+/**
+ * 获取图片路径
+ * @param {string} name 图片名称
+ * @param {string} type 图片所在文件夹
+ */
 const getImageUrl = (name, type) => {
   if (!name || !type) {
     console.warn('getImageUrl 参数缺失:', { name, type })
@@ -39,4 +45,25 @@ const getImageUrl = (name, type) => {
   return new URL(`../assets/images/${type}/${name}.jpg`, import.meta.url).href
 }
 
-export { formatExcelDate, translateKeys, getImageUrl }
+/**
+ * 权重抽奖函数
+ * @param {array} list 名单
+ * @param {number} awardType 奖项
+ */
+const weightedRandomIndex = () => {
+  const weights = list.map((item) => item.awardWeights?.[awardType] ?? 1);
+  const total = weights.reduce((a, b) => a + b, 0);
+
+  if (total === 0) {
+    return -1;
+  }
+
+  let r = Math.random() * total;
+  for (let i = 0; i < weights.length; i++) {
+    if (r < weights[i]) return i;
+    r -= weights[i];
+  }
+  return 0;
+};
+
+export { formatExcelDate, translateKeys, getImageUrl, weightedRandomIndex }

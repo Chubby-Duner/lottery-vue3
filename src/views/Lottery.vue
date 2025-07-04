@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { message } from 'ant-design-vue'
-import { translateKeys } from '@/utils/index.js'
+import { translateKeys } from '@/composables/utils'
 
 import AwardList from '@/components/Lottery/AwardList.vue'
 import PrizeList from '@/components/Lottery/PrizeList.vue'

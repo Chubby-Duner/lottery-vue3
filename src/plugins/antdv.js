@@ -9,7 +9,10 @@ import {
   Modal,
   Spin,
   message,
-  Empty
+  Empty,
+  InputNumber,
+  Space,
+  Switch
 } from 'ant-design-vue'
 
 const components = [
@@ -22,7 +25,10 @@ const components = [
   Modal,
   Spin,
   message,
-  Empty
+  Empty,
+  InputNumber,
+  Space,
+  Switch
 ]
 
 const plugins = []
