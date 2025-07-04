@@ -7,7 +7,9 @@ import {
   Tag,
   Table,
   Modal,
+  Spin,
   message,
+  Empty
 } from 'ant-design-vue'
 
 const components = [
@@ -17,7 +19,10 @@ const components = [
   Alert,
   Tag,
   Table,
-  Modal
+  Modal,
+  Spin,
+  message,
+  Empty
 ]
 
 const plugins = []

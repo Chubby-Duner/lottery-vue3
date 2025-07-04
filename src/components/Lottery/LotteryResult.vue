@@ -1,98 +1,95 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { computed } from 'vue'
+
+defineOptions({
+  name: "LotteryResult"
+});
 
 const props = defineProps({
-  award: Number,
+  visible: Boolean,
+  award: [String, Number],
   nameZh: String,
   nameEn: String,
-  show: Boolean
+  avatar: String // 可选，若未传则自动拼接
 })
 
 const emit = defineEmits(['close'])
-const canvas = ref(null)
 
-const drawResult = () => {
-  const ctx = canvas.value.getContext('2d')
-  const backImg = new Image()
-  const avatar = new Image()
-  
-  backImg.src = `@/assets/images/award_${props.award}.png`
-  avatar.src = `@/assets/images/avatar/${props.nameEn}.jpg`
-  
-  backImg.onload = () => {
-    ctx.drawImage(backImg, 0, 0)
-    drawCircleAvatar(ctx, avatar, 158, 178, 200)
-    
-    ctx.fillStyle = '#D9AD61'
-    ctx.font = "bold 6rem STKaiti"
-    
-    const x = props.nameZh.length <= 2 ? 300 : 280
-    const y = props.nameZh.length <= 2 ? 1010 : 1000
-    ctx.fillText(props.nameZh, x, y)
-  }
-}
-
-const drawCircleAvatar = (ctx, img, x, y, r) => {
-  ctx.save()
-  const d = 2 * r
-  const cx = x + r
-  const cy = y + r
-  ctx.arc(cx, cy, r, 0, 2 * Math.PI)
-  ctx.clip()
-  ctx.drawImage(img, x, y, d, d)
-  ctx.restore()
-}
-
-onMounted(() => {
-  if (props.show) {
-    drawResult()
+const awardText = computed(() => {
+  switch (props.award) {
+    case 1: return '一等奖'
+    case 2: return '二等奖'
+    case 3: return '三等奖'
+    case 4: return '纪念奖'
+    default: return props.award
   }
 })
 
-watch(() => props.show, (newVal) => {
-  if (newVal) {
-    drawResult()
-  }
+const avatarUrl = computed(() => {
+  return props.avatar || `/src/assets/images/avatar/${props.nameEn}.jpg`
 })
 </script>
 
 <template>
-  <div class="modal" v-if="show">
-    <div class="modal-content">
-      <canvas ref="canvas" width="700" height="1300"></canvas>
+  <div v-if="visible" class="result-dialog-mask">
+    <div class="result-dialog">
+      <div class="result-header">
+        <span class="award">{{ awardText }}</span>
+        <button class="close-btn" @click="emit('close')">&times;</button>
+      </div>
+      <div class="result-body">
+        <img :src="avatarUrl" class="avatar" :alt="nameZh" />
+        <div class="winner-name">{{ nameZh }}</div>
+      </div>
+      <div class="result-footer">
+        恭喜获得 <b>{{ awardText }}</b>！
+      </div>
     </div>
-    <button class="close" @click="$emit('close')">
-      <span aria-hidden="true">&times;</span>
-    </button>
   </div>
 </template>
 
 <style scoped>
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+.result-dialog-mask {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
 }
-
-.modal-content {
+.result-dialog {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 40px 24px 40px;
+  min-width: 320px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  text-align: center;
   position: relative;
+  animation: pop-in 0.4s;
 }
-
-.close {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 2rem;
-  cursor: pointer;
+@keyframes pop-in {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.result-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px;
+}
+.award {
+  font-size: 1.3rem; color: #d9ad61; font-weight: bold;
+}
+.close-btn {
+  background: none; border: none; font-size: 2rem; color: #888; cursor: pointer;
+}
+.result-body {
+  display: flex; flex-direction: column; align-items: center;
+}
+.avatar {
+  width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+  border: 4px solid #d9ad61; margin-bottom: 16px;
+}
+.winner-name {
+  font-size: 2rem; color: #333; font-weight: bold;
+}
+.result-footer {
+  margin-top: 18px; font-size: 1.1rem; color: #d9ad61;
 }
 </style>

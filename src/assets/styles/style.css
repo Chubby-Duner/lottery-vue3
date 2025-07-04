@@ -47,12 +47,22 @@ table {
 /* 清除浮动 */
 .clearfix:after{content:".";display:block;height:0;clear:both;visibility:hidden}
 .clearfix{*+height:1%;}
+
+.clearFloat {
+    overflow: hidden;
+}
+
 .f-l {
    float: left;
 }
 .f-r {
     float: right;
 }
+
+.margin-left10 {
+    margin-left: 10px;
+}
+
 * {
     font-family: '微软雅黑', sans-serif, arial;
 }
@@ -99,7 +109,6 @@ aside {
     /*border: 1px solid red;*/
 }
 .aside-main {
-    display: none;
     width: 100%;
     height: 100%;
     background: #fff;
@@ -343,24 +352,37 @@ aside .switch {
     top: 2%;
     /*height: 640px*/
     height: 71%;
+    /* height: 71vh; */
     overflow: hidden;
     /*border: 3px solid #CB141D;*/
 }
 #lottery-wrap {
     position: absolute;
-    top: 20px;
+    top: 0;
     width: 100%;
+    height: 100%;
+    will-change: transform;
 }
 
 #lottery-wrap .sure-active {
-    border-top: 5px solid #CB141D;
+    /* border-top: 5px solid #CB141D;
     border-bottom: 5px solid #CB141D;
     -webkit-transition: all 1s;
     -moz-transition: all 1s;
     -ms-transition: all 1s;
     -o-transition: all 1s;
-    transition: all 1s;
+    transition: all 1s; */
     /*padding: 2rem;*/
+
+    background: linear-gradient(90deg, #fffbe6 0%, #ffe58f 100%);
+    border: 3px solid #d9ad61;
+    box-shadow: 0 0 16px 4px #ffe58f, 0 2px 8px #d9ad61;
+    font-weight: bold;
+    font-size: 1.25em;
+    color: #b48800 !important;
+    z-index: 2;
+    position: relative;
+    transition: all 0.3s cubic-bezier(.4,2.3,.3,1);
 }
 
 .lottery-list {
@@ -495,12 +517,15 @@ aside .switch {
 }
 
 .dashboard {
-    position: relative;
+    /* position: relative; */
     margin: 4rem auto 0 auto;
     text-align: center;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    gap: 24px; /* 按钮之间的间距，可根据需要调整 */
 }
 .btn {
-    padding: 1rem 1.5rem;
     text-align: center;
     border-radius: 0.5rem;
 }
@@ -529,7 +554,6 @@ aside .switch {
     display: inline-block;
     width: 15%;
     margin: 0 auto;
-    padding: 1rem 1.6rem;
     cursor: pointer;
     font-size: 2rem;
     font-family: 'STKaiti', 'KaiTi ';
@@ -551,7 +575,7 @@ aside .switch {
 }
 
 .dashboard .cirle-btn {
-    position: absolute;
+    /* position: absolute; */
     display: inline-block;
     width: 2rem;
     height: 2rem;
@@ -567,7 +591,7 @@ aside .switch {
     -moz-box-shadow: 0 5px rgba(253, 54, 31, 0.5);
     box-shadow: 0 5px rgba(253, 54, 31, 0.5);
 }
-.dashboard .cirle-btn:nth-child(1) {
+/* .dashboard .cirle-btn:nth-child(1) {
     left: 15%;
 }
 .dashboard .cirle-btn:nth-child(2) {
@@ -578,7 +602,16 @@ aside .switch {
 }
 .dashboard .cirle-btn:nth-child(5) {
     right: 15%;
+} */
+
+.cirle-btn.award {
+    margin: 0 4px;
 }
+
+.lottery-btn {
+    margin: 0 12px;
+}
+
 .award-active {
     background: #ffbfb7;
 }
@@ -626,9 +659,7 @@ button.close {
     bottom: 0;
     left: 0;
     z-index: 1040;
-    display: none;
     overflow: hidden;
-    -webkit-overflow-scrolling: touch;
     outline: 0
 }
 .modal.fade .modal-dialog {
@@ -771,7 +802,7 @@ button.close {
     z-index: 1045;
 }
 
-.stop-main {
+/* .stop-main {
     display: none;
     position: fixed;
     top: 0;
@@ -802,6 +833,28 @@ button.close {
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.1);
+} */
+
+.fade-enter-active, .fade-leave-active {
+    transition: opacity 0.5s;
+}
+.fade-enter-from, .fade-leave-to {
+    opacity: 0;
+}
+.stop-main {
+    position: fixed;
+    left: 0; right: 0; top: 0; bottom: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.7);
+}
+#stop-time {
+    font-size: 6rem;
+    color: #d9ad61;
+    font-family: 'STKaiti', KaiTi, '楷体', serif;
+    text-shadow: 2px 2px 8px #fff;
 }
 
 footer {

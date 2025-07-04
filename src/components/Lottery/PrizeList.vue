@@ -1,6 +1,10 @@
 <script setup>
 import { ref } from 'vue'
 
+defineOptions({
+  name: "PrizeList"
+});
+
 const showList = ref(false)
 
 const toggleList = () => {
@@ -40,5 +44,5 @@ const toggleList = () => {
 </template>
 
 <style scoped>
-/* 保留原有样式 */
+@import '@/assets/styles/style.css';
 </style>

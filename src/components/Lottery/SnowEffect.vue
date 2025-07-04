@@ -1,6 +1,10 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
+defineOptions({
+  name: "SnowEffect"
+});
+
 const props = defineProps({
   speed: {
     type: Number,

@@ -18,3 +18,8 @@ src/
 ├── App.vue
 └── main.js
 ```
+
+## Todo
+
+1、AwardList.vue 抽奖名单展示 每次打开获取的不是最新的
+2、获奖名单，选择奖项，奖项剩余名额，改成使用pinia管理，需要同步至loacalStorage

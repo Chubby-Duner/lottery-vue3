@@ -3,7 +3,10 @@
 import { ref, computed } from 'vue'
 import * as ExcelJS from 'exceljs'
 import { UploadOutlined } from '@ant-design/icons-vue'
-import { ElMessage } from 'element-plus'
+
+defineOptions({
+  name: "ExcelImport"
+});
 
 // 状态管理
 const status = ref('idle') // idle | parsing | success | error

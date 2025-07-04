@@ -1,11 +1,74 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import useLocalStorage from '@/composables/useLocalStorage'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { message } from 'ant-design-vue'
+import { useAwardStore } from '@/store/awardStore'
+import { getImageUrl } from "@/utils/index.js"
+import UploadExcel from '@/components/Upload/UploadExcel.vue'
 import LotteryResult from './LotteryResult.vue'
-import lotteryData from '@/assets/data/lotteryData.json'
+
+defineOptions({
+  name: "LotteryMain"
+});
+
+// 获取奖项剩余数量，中奖名单等数据
+const awardStore = useAwardStore()
+
+//#region 倒计时相关
+const showCountdown = ref(false)
+const countdownText = ref('叁')
+
+async function showCountdownSequence() {
+  showCountdown.value = true
+  countdownText.value = '叁'
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  countdownText.value = '贰'
+  await new Promise(resolve => setTimeout(resolve, 1000))
+  countdownText.value = '壹'
+  await new Promise(resolve => setTimeout(resolve, 500))
+  showCountdown.value = false
+}
+//#endregion
+
+//#region 导入数据
+const importModal = ref(false)
+const lotteryData = ref([]);
+
+const beforeUpload = file => {
+  const isLt1M = file.size / 1024 / 1024 < 1
+
+  if (isLt1M) {
+    return true
+  }
+
+  message.error('Please do not upload files larger than 1m in size.')
+  return false
+};
+
+const handleSuccess = ({ header, results }) => {
+  try {
+    console.log(header, results)
+    lotteryData.value = results
+
+    // 开始动画
+    if (awardStore.selectAward) {
+      selectedAward.value = awardStore.selectAward
+    }
+    nextTick(() => {
+      wrapPosition.value = 0 // 重置
+      startAnimation()
+    })
+  } catch (error) {
+    console.log("🚀 ~ handleSuccess ~ error:", error);
+  }
+}
+
+const getTemplateUrl = () => {
+  return new URL("/template/importTemplate.xlsx", import.meta.url).href;
+};
+//#endregion
 
 // 状态管理
-const selectedAward = ref(4)
+const selectedAward = ref(awardStore.selectAward)
 const isMoving = ref(true)
 const isStarted = ref(false)
 const isLocked = ref(true)
@@ -18,16 +81,13 @@ const wrapPosition = ref(0)
 const animationFrame = ref(null)
 const speed = ref(6)
 const lotteryWrap = ref(null)
-
-// localStorage 管理
-const { storedValue: awardLog, setValue: setAwardLog } = useLocalStorage('award_log', {
-  award01: 1,
-  award02: 3,
-  award03: 3,
-  award04: 4
-})
-
-const { storedValue: selectAwardStorage, setValue: setSelectAward } = useLocalStorage('select_award', 4)
+const wrapMain = ref(null)
+const awards = [
+  { n: 1, label: '一' },
+  { n: 2, label: '二' },
+  { n: 3, label: '三' },
+  { n: 4, label: '纪' }
+]
 
 // 计算属性
 const buttonText = computed(() => {
@@ -37,23 +97,12 @@ const buttonText = computed(() => {
   return '正在抽奖...'
 })
 
-// 初始化
-onMounted(() => {
-  if (selectAwardStorage.value) {
-    selectedAward.value = selectAwardStorage.value
-  }
-  startAnimation()
-})
-
-onUnmounted(() => {
-  cancelAnimation()
-})
-
-// 方法
+// 开始动画
 const startAnimation = () => {
   let lastTime = 0
   const animate = (timestamp) => {
     if (!isMoving.value) return
+    if (!lotteryWrap.value) return // 防止空指针
     
     const deltaTime = timestamp - lastTime
     lastTime = timestamp
@@ -63,11 +112,12 @@ const startAnimation = () => {
       wrapPosition.value = 0
     }
     
-    animationFrame.value = requestAnimationFrame(animate)
+    animationFrame.value = window.requestAnimationFrame(animate)
   }
-  animationFrame.value = requestAnimationFrame(animate)
+  animationFrame.value = window.requestAnimationFrame(animate)
 }
 
+// 取消动画
 const cancelAnimation = () => {
   if (animationFrame.value) {
     cancelAnimationFrame(animationFrame.value)
@@ -76,24 +126,32 @@ const cancelAnimation = () => {
 
 const selectAward = (award) => {
   if (isStarted.value) {
-    console.error('正在抽奖中，不允许更改奖项设置')
+    message.error('正在抽奖中，不允许更改奖项设置')
     return
   }
   selectedAward.value = award
-  setSelectAward(award)
+  awardStore.setSelectAward(award)
 }
 
 const handleLottery = () => {
   const awardKey = `award0${selectedAward.value}`
   
-  if (awardLog.value[awardKey] <= 0) {
-    alert('该奖项已经抽完啦，请选择其它奖项哦！')
+  if (awardStore.awardLog[awardKey] <= 0) {
+    message.error('该奖项已经抽完啦，请选择其它奖项哦！')
     return
   }
 
   if (!isStarted.value && !isMoving.value) {
-    // 重新开始
-    location.reload()
+    // 重新开始：重置状态并重新滚动，不刷新页面
+    wrapPosition.value = 0
+    isMoving.value = true
+    isStarted.value = false
+    isLocked.value = true
+    speed.value = 6
+    winnerIndex.value = -1
+    showResult.value = false
+    canStop.value = false
+    startAnimation()
     return
   }
 
@@ -120,44 +178,89 @@ const startLottery = () => {
   }, 9000)
 }
 
-const stopLottery = () => {
+const stopLottery = async() => {
   if (isLocked.value) {
-    console.error('还没结束，请稍等...')
+    message.error('还没结束，请稍等...')
     return
   }
-  
-  isStarted.value = false
-  isMoving.value = false
-  speed.value = 8
-  
-  // 随机选择获奖者
-  const winnerCount = lotteryData.value.length
-  winnerIndex.value = Math.floor(Math.random() * (winnerCount - 4))
-  
-  // 更新获奖者信息
-  const winner = lotteryData.value[winnerIndex.value]
-  winnerNameZh.value = winner.namezh
-  winnerNameEn.value = winner.nameen
-  
-  // 更新奖项数据
-  const awardKey = `award0${selectedAward.value}`
-  const newAwardLog = { ...awardLog.value }
-  newAwardLog[awardKey] -= 1
-  setAwardLog(newAwardLog)
-  
-  // 从抽奖池中移除获奖者
-  lotteryData.value = lotteryData.value.filter(item => item.nameen !== winner.nameen)
-  
-  // 显示结果
-  setTimeout(() => {
+
+  try {
+    // 随机选择获奖者
+    const winnerCount = lotteryData.value.length
+    winnerIndex.value = Math.floor(Math.random() * (winnerCount - 4))
+    
+    // 更新获奖者信息
+    const winner = lotteryData.value[winnerIndex.value]
+    winnerNameZh.value = winner.namezh
+    winnerNameEn.value = winner.nameen
+    console.log("🚀 ~ stopLottery ~ winner:", winner);
+
+    // 显示倒计时
+    await showCountdownSequence()
+
+    // 显示结果
     showResult.value = true
     canStop.value = true
-  }, 4200)
+
+    // 停止主动画
+    isMoving.value = false
+    cancelAnimation()
+
+    isStarted.value = false
+    speed.value = 8
+
+    // 更新奖项数据
+    // 中奖人对象
+    const winnerData = {
+      nameen: winnerNameEn.value,
+      namezh: winnerNameZh.value
+    }
+    if (selectedAward.value === 1) {
+      awardStore.addWinner('award1', winnerData)
+    } else if (selectedAward.value === 2) {
+      awardStore.addWinner('award2', winnerData)
+    } else if (selectedAward.value === 3) {
+      awardStore.addWinner('award3', winnerData)
+    } else if (selectedAward.value === 4) {
+      awardStore.addWinner('award4', winnerData)
+    }
+
+    // 更新奖项剩余数量
+    const awardKey = `award0${selectedAward.value}`
+    const newAwardLog = { ...awardStore.awardLog }
+    newAwardLog[awardKey] -= 1
+    awardStore.setAwardLog(newAwardLog)
+    
+    // 从抽奖池中移除获奖者
+    lotteryData.value = lotteryData.value.filter(item => item.nameen !== winner.nameen)
+    winnerIndex.value = -1
+    console.log("🚀 ~ stopLottery ~ lotteryData.value:", lotteryData.value);
+    
+  } catch (error) {
+    console.log("🚀 ~ stopLottery ~ error:", error);
+  }
+}
+
+const smoothScrollTo = (targetTop) => {
+  return new Promise(resolve => {
+    function step() {
+      const diff = targetTop - wrapPosition.value
+      if (Math.abs(diff) < 2) {
+        wrapPosition.value = targetTop
+        resolve()
+        return
+      }
+      // 逐步靠近目标，速度可调
+      wrapPosition.value += diff * 0.2
+      requestAnimationFrame(step)
+    }
+    step()
+  })
 }
 
 const closeResult = () => {
   if (!canStop.value) {
-    console.error('还没结束，无法关闭！')
+    message.error('还没结束，无法关闭！')
     return
   }
   showResult.value = false
@@ -200,16 +303,17 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  cancelAnimation()
   window.removeEventListener('keypress', handleKeyPress)
 })
 </script>
 
 <template>
   <div class="main">
-    <div class="lotterty-infogo">
+    <!-- <div class="lotterty-infogo">
       <img src="@/assets/images/logo.png">
-    </div>
-    <div class="lottery-main">
+    </div> -->
+    <div v-if="lotteryData.length > 0" class="lottery-main">
       <div class="wrap-border-main">
         <img src="@/assets/images/wrap-border-1.png" class="wrap-border wrap-border-1">
         <img src="@/assets/images/wrap-border-2.png" class="wrap-border wrap-border-2">
@@ -218,20 +322,20 @@ onUnmounted(() => {
         <div class="wrap-border wrap-border-left"></div>
         <div class="wrap-border wrap-border-right"></div>
       </div>
-      <div class="wrap-main">
+      <div ref="wrapMain" class="wrap-main">
         <div 
-          class="lottery-wrap" 
-          :style="{ top: `${wrapPosition}px` }"
+          id="lottery-wrap" 
+          :style="{ transform: `translateY(${wrapPosition}px)` }"
           ref="lotteryWrap"
         >
           <div 
             v-for="(item, index) in lotteryData" 
             :key="index" 
-            class="lottery-list"
+            class="clearFloat lottery-list"
             :class="{ 'sure-active': index === winnerIndex }"
           >
             <div class="f-l turqoise lottery-avatar">
-              <img :src="`@/assets/images/avatar/${item.nameen}.jpg`" :alt="item.namezh">
+              <img :src="getImageUrl(item.nameen, 'avatar')" :alt="item.namezh">
             </div>
             <div class="f-l lottery-content">
               <em class="beauty border-01"></em>
@@ -242,7 +346,7 @@ onUnmounted(() => {
               <div class="border bor-bottom"></div>
               <h3 class="content-title">
                 <span class="lottery-name">{{ item.namezh }}</span>
-                <span class="company">[ XX科技 ]</span>
+                <span class="company">[ 牛马科技 ]</span>
               </h3>
               <div class="content-detail">
                 <b>新年愿景及祝福：</b>
@@ -254,34 +358,66 @@ onUnmounted(() => {
       </div>
 
       <div class="dashboard">
-        <div 
-          v-for="n in 4" 
-          :key="n"
-          class="cirle-btn award"
-          :class="{ 'award-active': selectedAward === n }"
-          @click="selectAward(n)"
-        >
-          {{ n === 4 ? '纪' : ['一', '二', '三'][n-1] }}
-        </div>
-        <button 
-          class="btn btn-red-outline lottery-btn"
-          @click="handleLottery"
-        >
-          {{ buttonText }}
-        </button>
+        <template v-for="(item, idx) in awards" :key="item.n">
+          <a-button
+            v-if="idx === 2"
+            class="btn btn-red-outline lottery-btn"
+            @click="handleLottery"
+          >
+            {{ buttonText }}
+          </a-button>
+          <div
+            class="cirle-btn award"
+            :id="'award-' + item.n"
+            :class="{ 'award-active': selectedAward === item.n }"
+            @click="selectAward(item.n)"
+          >
+            {{ item.label }}
+          </div>
+        </template>
       </div>
     </div>
+    <a-empty
+      v-else
+      image="https://gw.alipayobjects.com/mdn/miniapp_social/afts/img/A*pevERLJC9v0AAAAAAAAAAABjAQAAAQ/original"
+      :image-style="{
+        height: '60px',
+      }"
+    >
+      <template #description>
+        <span>
+          请先导入数据
+        </span>
+      </template>
+      <a-button type="primary">
+        <a :href="getTemplateUrl()" target="_blank">点击下载</a>
+      </a-button>
+      <a-button class="margin-left10" type="primary" @click="importModal = true">导入抽奖名单数据</a-button>
+      <!-- <a-button type="primary">导入礼物名单数据</a-button> -->
+    </a-empty>
   </div>
 
-  <LotteryResult 
-    v-if="showResult"
+  <!-- 倒计时 -->
+  <transition name="fade">
+    <div v-if="showCountdown" class="stop-main">
+      <div id="stop-time">{{ countdownText }}</div>
+      <div class="back"></div>
+    </div>
+  </transition>
+
+  <!-- 中奖结果 -->
+  <LotteryResult
+    :visible="showResult"
     :award="selectedAward"
     :name-zh="winnerNameZh"
     :name-en="winnerNameEn"
-    @close="closeResult"
+    @close="showResult = false"
   />
+
+  <!-- 导入数据 -->
+  <UploadExcel v-model:visible="importModal" :on-success="handleSuccess" :before-upload="beforeUpload" />
 </template>
 
 <style scoped>
-/* 保留原有的CSS样式 */
+@import '@/assets/styles/style.css';
 </style>

@@ -2,6 +2,10 @@
 import { useRouter } from 'vue-router'
 import useLocalStorage from '@/composables/useLocalStorage'
 
+defineOptions({
+  name: "ClearDataControl"
+});
+
 const router = useRouter()
 const { clear: clearLocalStorage } = useLocalStorage()
 
