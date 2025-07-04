@@ -8,27 +8,35 @@ defineOptions({
   name: "AwardList",
 });
 
+const awardStore = useAwardStore();
 const showList = ref(false);
-const visibleCounts = ref({
-  award1: 5,
-  award2: 5,
-  award3: 5,
-  award4: 5,
-});
+const visibleCounts = ref({});
 const simpleImage = Empty.PRESENTED_IMAGE_SIMPLE;
 
-// 只显示有数据的奖项
+// 动态奖项分组
 const awardGroups = computed(() =>
-  [
-    { key: "award1", title: "一等奖", data: useAwardStore().award1 },
-    { key: "award2", title: "二等奖", data: useAwardStore().award2 },
-    { key: "award3", title: "三等奖", data: useAwardStore().award3 },
-    { key: "award4", title: "纪念奖", data: useAwardStore().award4 },
-  ].filter((group) => group.data.length > 0)
+  awardStore.awards
+    .map((award) => ({
+      key: award.key,
+      title: award.label + "奖",
+      data: awardStore.winnerMap[award.key] || [],
+    }))
+    .filter((group) => group.data.length > 0)
 );
+
+// 初始化每个奖项的显示数量
+const initVisibleCounts = () => {
+  awardStore.awards.forEach((award) => {
+    if (!(award.key in visibleCounts.value)) {
+      visibleCounts.value[award.key] = 5;
+    }
+  });
+};
+initVisibleCounts();
 
 const toggleList = () => {
   showList.value = !showList.value;
+  if (showList.value) initVisibleCounts();
 };
 
 const showMore = (awardKey) => {
@@ -52,10 +60,7 @@ const showLess = (awardKey) => {
             <h3 class="award-title">{{ group.title }}</h3>
             <ul class="win">
               <li
-                v-for="(winner, index) in group.data.slice(
-                  0,
-                  visibleCounts[group.key]
-                )"
+                v-for="(winner, index) in group.data.slice(0, visibleCounts[group.key])"
                 :key="index"
                 class="clearfix win-li"
               >

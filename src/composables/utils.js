@@ -50,7 +50,7 @@ const getImageUrl = (name, type) => {
  * @param {array} list 名单
  * @param {number} awardType 奖项
  */
-const weightedRandomIndex = () => {
+const weightedRandomIndex = (list, awardType) => {
   const weights = list.map((item) => item.awardWeights?.[awardType] ?? 1);
   const total = weights.reduce((a, b) => a + b, 0);
 

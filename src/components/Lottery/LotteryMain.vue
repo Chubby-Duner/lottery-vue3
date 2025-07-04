@@ -1,12 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
-import { message } from "ant-design-vue";
+import { message, Modal } from "ant-design-vue";
 import { SettingOutlined } from "@ant-design/icons-vue";
 import { useAwardStore } from "@/store/awardStore";
-import { getImageUrl, weightedRandomIndex } from "@/composables/utils"
+import { getImageUrl, weightedRandomIndex } from "@/composables/utils";
 import UploadExcel from "@/components/Upload/UploadExcel.vue";
 import LotteryResult from "./LotteryResult.vue";
 import WeightEditor from "./WeightEditor.vue";
+import AwardSetting from "./AwardSetting.vue";
 
 defineOptions({
   name: "LotteryMain",
@@ -55,6 +56,9 @@ const handleSuccess = ({ header, results }) => {
       locked: false,
     }));
 
+    // 备份导入数据
+    awardStore.setLotteryDataBackup(lotteryData.value);
+
     // 开始动画
     if (awardStore.selectAward) {
       selectedAward.value = awardStore.selectAward;
@@ -74,7 +78,7 @@ const getTemplateUrl = () => {
 //#endregion
 
 // 状态管理
-const selectedAward = ref(awardStore.selectAward);
+const selectedAward = ref(awardStore.selectAward || (awardStore.awards[0]?.key || ""));
 const isMoving = ref(true);
 const isStarted = ref(false);
 const isLocked = ref(true);
@@ -88,12 +92,6 @@ const animationFrame = ref(null);
 const speed = ref(6);
 const lotteryWrap = ref(null);
 const wrapMain = ref(null);
-const awards = [
-  { n: 1, label: "一" },
-  { n: 2, label: "二" },
-  { n: 3, label: "三" },
-  { n: 4, label: "纪" },
-];
 
 // 计算属性
 const buttonText = computed(() => {
@@ -130,13 +128,13 @@ const cancelAnimation = () => {
   }
 };
 
-const selectAward = (award) => {
+const selectAward = (awardKey) => {
   if (isStarted.value) {
     message.error("正在抽奖中，不允许更改奖项设置");
     return;
   }
-  selectedAward.value = award;
-  awardStore.setSelectAward(award);
+  selectedAward.value = awardKey;
+  awardStore.setSelectAward(awardKey);
 };
 
 // 权重编辑相关
@@ -155,8 +153,20 @@ const handleWeightSave = (updatedData) => {
   message.success("权重设置已更新");
 };
 
+// 奖项设置相关
+const awardSettingVisible = ref(false);
+
+const openAwardSetting = () => {
+  awardSettingVisible.value = true;
+};
+
+const handleAwardSettingSave = (newAwards) => {
+  awardStore.setAwards(newAwards);
+};
+
 const handleLottery = () => {
-  const awardKey = `award0${selectedAward.value}`;
+  const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
+  const awardKey = `award0${idx + 1}`;
 
   if (awardStore.awardLog[awardKey] <= 0) {
     message.error("该奖项已经抽完啦，请选择其它奖项哦！");
@@ -280,18 +290,12 @@ const stopLottery = async () => {
       nameen: winnerNameEn.value,
       namezh: winnerNameZh.value,
     };
-    if (selectedAward.value === 1) {
-      awardStore.addWinner("award1", winnerData);
-    } else if (selectedAward.value === 2) {
-      awardStore.addWinner("award2", winnerData);
-    } else if (selectedAward.value === 3) {
-      awardStore.addWinner("award3", winnerData);
-    } else if (selectedAward.value === 4) {
-      awardStore.addWinner("award4", winnerData);
-    }
+    // 写入中奖名单
+    awardStore.addWinner(selectedAward.value, winnerData);
 
     // 更新奖项剩余数量
-    const awardKey = `award0${selectedAward.value}`;
+    const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
+    const awardKey = `award0${idx + 1}`;
     const newAwardLog = { ...awardStore.awardLog };
     newAwardLog[awardKey] -= 1;
     awardStore.setAwardLog(newAwardLog);
@@ -321,16 +325,16 @@ const handleKeyPress = (e) => {
       handleLottery();
       break;
     case "1":
-      selectAward(1);
+      selectAward("award1");
       break;
     case "2":
-      selectAward(2);
+      selectAward("award2");
       break;
     case "3":
-      selectAward(3);
+      selectAward("award3");
       break;
     case "4":
-      selectAward(4);
+      selectAward("award4");
       break;
     case "Enter":
       closeResult();
@@ -354,6 +358,34 @@ onUnmounted(() => {
   cancelAnimation();
   window.removeEventListener("keypress", handleKeyPress);
 });
+
+// 重置所有数据
+const resetAllData = () => {
+  Modal.confirm({
+    title: '确定要重置所有数据吗？',
+    content: '此操作会恢复到导入数据后的初始状态，所有抽奖结果和名单将被清空。',
+    okText: '确定',
+    cancelText: '取消',
+    onOk() {
+      awardStore.resetAllToImportBackup();
+      // 恢复 lotteryData，补全自定义字段
+      if (awardStore.lotteryDataBackup && awardStore.lotteryDataBackup.length > 0) {
+        lotteryData.value = awardStore.lotteryDataBackup.map(item => ({
+          ...item,
+          awardWeights: item.awardWeights || { 1: 1, 2: 1, 3: 1, 4: 1 },
+          locked: typeof item.locked === 'boolean' ? item.locked : false
+        }));
+        nextTick(() => {
+          wrapPosition.value = 0;
+          startAnimation();
+        });
+      } else {
+        lotteryData.value = [];
+      }
+      message.success('已重置为导入初始状态');
+    }
+  });
+};
 </script>
 
 <template>
@@ -421,7 +453,7 @@ onUnmounted(() => {
       </div>
 
       <div class="dashboard">
-        <template v-for="(item, idx) in awards" :key="item.n">
+        <template v-for="(item, idx) in awardStore.awards" :key="item.key">
           <a-button
             v-if="idx === 2"
             class="btn btn-red-outline lottery-btn"
@@ -431,11 +463,12 @@ onUnmounted(() => {
           </a-button>
           <div
             class="cirle-btn award"
-            :id="'award-' + item.n"
-            :class="{ 'award-active': selectedAward === item.n }"
-            @click="selectAward(item.n)"
+            :id="'award-' + item.key"
+            :class="{ 'award-active': selectedAward === item.key }"
+            @click="selectAward(item.key)"
           >
-            {{ item.label }}
+            {{ item.label }}<br />
+            <small>剩余: {{ awardStore.awardLog[`award0${idx + 1}`] }}</small>
           </div>
         </template>
       </div>
@@ -443,11 +476,24 @@ onUnmounted(() => {
       <!-- 权重编辑按钮 v-if="lotteryData.length > 0" -->
       <div class="dashboard">
         <div class="btn weight-edit-section">
+          <a-button @click="openAwardSetting">
+            <template #icon>
+              <SettingOutlined />
+            </template>
+            奖项设置
+          </a-button>
+        </div>
+        <div class="btn weight-edit-section">
           <a-button @click="openWeightEditor">
             <template #icon>
               <SettingOutlined />
             </template>
             权重设置
+          </a-button>
+        </div>
+        <div class="btn weight-edit-section">
+          <a-button danger @click="resetAllData">
+            重置所有数据
           </a-button>
         </div>
       </div>
@@ -503,6 +549,13 @@ onUnmounted(() => {
     v-model:visible="weightEditorVisible"
     :lottery-data="lotteryData"
     @save="handleWeightSave"
+  />
+
+  <!-- 奖项设置 -->
+  <AwardSetting
+    v-model:visible="awardSettingVisible"
+    :awards="awardStore.awards"
+    @save="handleAwardSettingSave"
   />
 </template>
 

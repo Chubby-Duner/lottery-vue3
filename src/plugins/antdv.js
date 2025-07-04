@@ -12,7 +12,9 @@ import {
   Empty,
   InputNumber,
   Space,
-  Switch
+  Switch,
+  Input,
+  Popconfirm
 } from 'ant-design-vue'
 
 const components = [
@@ -28,7 +30,9 @@ const components = [
   Empty,
   InputNumber,
   Space,
-  Switch
+  Switch,
+  Input,
+  Popconfirm
 ]
 
 const plugins = []
