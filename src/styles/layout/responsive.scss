@@ -82,6 +82,9 @@
   .btn-red-outline {
     width: 40%;
     font-size: var(--font-size-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -144,6 +147,9 @@
   .btn-red-outline {
     width: 45%;
     font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .top-head {
@@ -214,6 +220,9 @@
   .btn-red-outline {
     width: 50%;
     font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .top-head {

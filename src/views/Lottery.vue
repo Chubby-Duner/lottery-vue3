@@ -48,12 +48,4 @@ defineOptions({
 </template>
 
 <style lang="scss">
-/* 全局样式 */
-@use "@/styles/index.scss";
-@import "@/styles/animate.css";
-
-.lottery-container {
-  width: 100%;
-  height: 100%;
-}
 </style>

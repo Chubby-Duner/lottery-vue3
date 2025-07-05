@@ -50,42 +50,58 @@ const showLess = awardKey => {
 
 <template>
   <aside class="aside-left">
-    <div class="aside-main" v-show="showList">
-      <div class="btn btn-red-outline award-list-btn" @click="toggleList">
-        {{ showList ? "收起名单" : "中奖名单" }}
-      </div>
-      <div class="award-main" v-if="awardGroups.length > 0">
-        <template v-for="group in awardGroups" :key="group.key">
-          <div class="award-con" v-if="group.data.length > 0">
-            <h3 class="award-title">{{ group.title }}</h3>
-            <ul class="win">
-              <li v-for="(winner, index) in group.data.slice(0, visibleCounts[group.key])" :key="index" class="clearfix win-li">
-                <div class="f-l avatar">
-                  <img width="34" :src="getImageUrl(winner.nameen, 'avatar')" />
-                </div>
-                <div class="f-l name">{{ winner.namezh }}</div>
-              </li>
-            </ul>
-            <div class="action-btns" v-if="group.data.length > 5">
-              <a-button type="link" @click="showMore(group.key)" v-if="visibleCounts[group.key] < group.data.length"> 查看更多 </a-button>
-              <a-button type="link" @click="showLess(group.key)" v-if="visibleCounts[group.key] > 5"> 收起 </a-button>
+    <!-- 侧边栏内容区域 -->
+    <transition name="drawer">
+      <div class="aside-main" v-show="showList">
+        <div class="btn btn-red-outline award-list-btn" @click="toggleList">
+          收起名单
+        </div>
+        <div class="award-main" v-if="awardGroups.length > 0">
+          <template v-for="group in awardGroups" :key="group.key">
+            <div class="award-con" v-if="group.data.length > 0">
+              <h3 class="award-title">{{ group.title }}</h3>
+              <ul class="win">
+                <li v-for="(winner, index) in group.data.slice(0, visibleCounts[group.key])" :key="index" class="clearfix win-li">
+                  <div class="f-l avatar">
+                    <img width="34" :src="getImageUrl(winner.nameen, 'avatar')" />
+                  </div>
+                  <div class="f-l name">{{ winner.namezh }}</div>
+                </li>
+              </ul>
+              <div class="action-btns" v-if="group.data.length > 5">
+                <a-button type="link" @click="showMore(group.key)" v-if="visibleCounts[group.key] < group.data.length"> 查看更多 </a-button>
+                <a-button type="link" @click="showLess(group.key)" v-if="visibleCounts[group.key] > 5"> 收起 </a-button>
+              </div>
             </div>
-          </div>
-        </template>
+          </template>
+        </div>
+        <div v-else class="empty-tip">
+          <a-empty :image="simpleImage" description="暂无中奖名单" />
+        </div>
       </div>
-      <div v-else class="empty-tip">
-        <a-empty :image="simpleImage" description="暂无中奖名单" />
-      </div>
-    </div>
-
-    <img src="@/assets/images/lantern.png" alt="" width="85" v-show="!showList" @click="toggleList" class="switch" />
+    </transition>
+    
+    <!-- 灯笼 - 同一个灯笼，跟随区域移动 -->
+    <img src="@/assets/images/lantern.png" alt="" width="85" @click="toggleList" class="switch" :class="{ 'switch-expanded': showList }" />
   </aside>
 </template>
 
-<style lang="scss">
-@use "@/styles/index.scss";
-
+<style lang="scss" scoped>
 .empty-tip {
   margin-top: 50px;
+}
+
+.switch {
+  position: absolute;
+  left: 52%;
+  transform: translateX(-50%);
+  z-index: 10;
+  cursor: pointer;
+  top: 2rem;
+  transition: top 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.switch-expanded {
+  top: calc(100% - 2rem);
 }
 </style>

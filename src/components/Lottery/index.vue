@@ -105,12 +105,19 @@ onUnmounted(() => {
 //#region 倒计时相关
 async function showCountdownSequence() {
   showCountdown.value = true;
+  
+  // 叁
   countdownText.value = "叁";
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // 贰
   countdownText.value = "贰";
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // 壹
   countdownText.value = "壹";
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, 600));
+  
   showCountdown.value = false;
 }
 //#endregion
@@ -293,11 +300,14 @@ const stopLottery = async () => {
       }
     }
     winnerIndex.value = winnerIndexResult;
+    console.log(winnerIndexResult, 'winnerIndexResult')
 
     // 更新获奖者信息
     const winner = lotteryData.value[winnerIndex.value];
     winnerNameZh.value = winner.namezh;
     winnerNameEn.value = winner.nameen;
+    console.log(winner, 'winner')
+
 
     // 显示倒计时
     await showCountdownSequence();
@@ -477,7 +487,7 @@ const clearAllData = () => {
       </div>
 
       <!-- 权重编辑按钮 -->
-      <div v-if="lotteryData.length > 0" class="dashboard">
+      <div v-if="lotteryData.length > 0" class="dashboard dashboard-setting">
         <div class="btn weight-edit-section">
           <a-button @click="openAwardSetting">
             <template #icon>
@@ -528,7 +538,11 @@ const clearAllData = () => {
   <!-- 倒计时 -->
   <transition name="fade">
     <div v-if="showCountdown" class="stop-main">
-      <div id="stop-time">{{ countdownText }}</div>
+      <div class="countdown-container">
+        <div id="stop-time" class="countdown-text" :data-number="countdownText">{{ countdownText }}</div>
+        <div class="countdown-circle"></div>
+        <div class="countdown-particles"></div>
+      </div>
       <div class="back"></div>
     </div>
   </transition>
@@ -550,6 +564,4 @@ const clearAllData = () => {
 </template>
 
 <style lang="scss" scoped>
-// @use "@/styles/index.scss";
-@import url("@/styles/index.scss");
 </style>
