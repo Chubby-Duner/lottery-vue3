@@ -4,7 +4,7 @@ import { useAwardStore } from "@/store/awardStore";
 import { storeToRefs } from "pinia";
 
 defineOptions({
-  name: "LotteryResult",
+  name: "LotteryResult"
 });
 
 const props = defineProps({
@@ -12,7 +12,7 @@ const props = defineProps({
   award: [String, Number],
   nameZh: String,
   nameEn: String,
-  avatar: String, // 可选，若未传则自动拼接
+  avatar: String // 可选，若未传则自动拼接
 });
 
 const emit = defineEmits(["close"]);
@@ -23,7 +23,7 @@ const { awards } = storeToRefs(awardStore);
 const awardText = computed(() => {
   const found = awards.value.find(item => item.key === props.award);
   if (found) {
-    return found.label
+    return found.label;
   }
   return props.award;
 });
@@ -95,7 +95,7 @@ const avatarUrl = computed(() => {
   font-size: 2.8rem;
   color: #d9ad61;
   font-weight: bold;
-  font-family: 'STKaiti', 'KaiTi ', serif;
+  font-family: "STKaiti", "KaiTi ", serif;
 }
 .close-btn {
   background: none;
@@ -121,13 +121,13 @@ const avatarUrl = computed(() => {
   font-size: 2.4rem;
   color: #333;
   font-weight: bold;
-  font-family: 'STKaiti', 'KaiTi ', serif;
+  font-family: "STKaiti", "KaiTi ", serif;
   margin-top: 8px;
 }
 .result-footer {
   margin-top: 18px;
   font-size: 1.4rem;
   color: #d9ad61;
-  font-family: 'STKaiti', 'KaiTi ', serif;
+  font-family: "STKaiti", "KaiTi ", serif;
 }
 </style>

@@ -5,7 +5,7 @@ import { useAwardStore } from "@/store/awardStore";
 import { getImageUrl } from "@/composables/utils";
 
 defineOptions({
-  name: "AwardList",
+  name: "AwardList"
 });
 
 const awardStore = useAwardStore();
@@ -16,17 +16,17 @@ const simpleImage = Empty.PRESENTED_IMAGE_SIMPLE;
 // 动态奖项分组
 const awardGroups = computed(() =>
   awardStore.awards
-    .map((award) => ({
+    .map(award => ({
       key: award.key,
       title: award.label,
-      data: awardStore.winnerMap[award.key] || [],
+      data: awardStore.winnerMap[award.key] || []
     }))
-    .filter((group) => group.data.length > 0)
+    .filter(group => group.data.length > 0)
 );
 
 // 初始化每个奖项的显示数量
 const initVisibleCounts = () => {
-  awardStore.awards.forEach((award) => {
+  awardStore.awards.forEach(award => {
     if (!(award.key in visibleCounts.value)) {
       visibleCounts.value[award.key] = 5;
     }
@@ -39,11 +39,11 @@ const toggleList = () => {
   if (showList.value) initVisibleCounts();
 };
 
-const showMore = (awardKey) => {
+const showMore = awardKey => {
   visibleCounts.value[awardKey] += 5;
 };
 
-const showLess = (awardKey) => {
+const showLess = awardKey => {
   visibleCounts.value[awardKey] = 5;
 };
 </script>
@@ -59,11 +59,7 @@ const showLess = (awardKey) => {
           <div class="award-con" v-if="group.data.length > 0">
             <h3 class="award-title">{{ group.title }}</h3>
             <ul class="win">
-              <li
-                v-for="(winner, index) in group.data.slice(0, visibleCounts[group.key])"
-                :key="index"
-                class="clearfix win-li"
-              >
+              <li v-for="(winner, index) in group.data.slice(0, visibleCounts[group.key])" :key="index" class="clearfix win-li">
                 <div class="f-l avatar">
                   <img width="34" :src="getImageUrl(winner.nameen, 'avatar')" />
                 </div>
@@ -71,20 +67,8 @@ const showLess = (awardKey) => {
               </li>
             </ul>
             <div class="action-btns" v-if="group.data.length > 5">
-              <a-button
-                type="link"
-                @click="showMore(group.key)"
-                v-if="visibleCounts[group.key] < group.data.length"
-              >
-                查看更多
-              </a-button>
-              <a-button
-                type="link"
-                @click="showLess(group.key)"
-                v-if="visibleCounts[group.key] > 5"
-              >
-                收起
-              </a-button>
+              <a-button type="link" @click="showMore(group.key)" v-if="visibleCounts[group.key] < group.data.length"> 查看更多 </a-button>
+              <a-button type="link" @click="showLess(group.key)" v-if="visibleCounts[group.key] > 5"> 收起 </a-button>
             </div>
           </div>
         </template>
@@ -94,19 +78,12 @@ const showLess = (awardKey) => {
       </div>
     </div>
 
-    <img
-      src="@/assets/images/lantern.png"
-      alt=""
-      width="85"
-      v-show="!showList"
-      @click="toggleList"
-      class="switch"
-    />
+    <img src="@/assets/images/lantern.png" alt="" width="85" v-show="!showList" @click="toggleList" class="switch" />
   </aside>
 </template>
 
 <style lang="scss">
-@use "@/assets/styles/index.scss";
+@use "@/styles/index.scss";
 
 .empty-tip {
   margin-top: 50px;

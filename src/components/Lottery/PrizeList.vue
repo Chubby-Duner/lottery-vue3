@@ -2,7 +2,7 @@
 import { ref } from "vue";
 
 defineOptions({
-  name: "PrizeList",
+  name: "PrizeList"
 });
 
 const showList = ref(false);
@@ -31,17 +31,10 @@ const toggleList = () => {
         <!-- 类似结构添加其他奖项 -->
       </div>
     </div>
-    <img
-      src="@/assets/images/lantern.png"
-      alt=""
-      width="85"
-      v-show="!showList"
-      @click="showList = true"
-      class="switch"
-    />
+    <img src="@/assets/images/lantern.png" alt="" width="85" v-show="!showList" @click="showList = true" class="switch" />
   </aside>
 </template>
 
 <style lang="scss">
-@use "@/assets/styles/index.scss";
+@use "@/styles/index.scss";
 </style>

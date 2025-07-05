@@ -1,13 +1,14 @@
 {
   "name": "lottery-vue",
   "private": true,
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
   "author": "chubbyduner",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "build": "rimraf dist && vite build",
+    "preview": "vite preview",
+    "preview:build": "pnpm build && vite preview"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
@@ -20,7 +21,38 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.0",
+    "postcss": "^8.5.4",
+    "postcss-html": "^1.8.0",
+    "postcss-load-config": "^6.0.1",
+    "postcss-scss": "^4.0.9",
     "sass": "^1.89.1",
+    "stylelint": "^16.20.0",
+    "stylelint-config-recess-order": "^6.0.0",
+    "stylelint-config-recommended-vue": "^1.6.0",
+    "stylelint-config-standard-scss": "^14.0.0",
+    "stylelint-prettier": "^5.0.3",
     "vite": "^7.0.0"
+  },
+  "engines": {
+    "node": "^18.18.0 || ^20.9.0 || >=22.0.0",
+    "pnpm": ">=9"
+  },
+  "pnpm": {
+    "allowedDeprecatedVersions": {
+      "sourcemap-codec": "*",
+      "lodash.isequal": "*",
+      "domexception": "*",
+      "w3c-hr-time": "*",
+      "stable": "*",
+      "abab": "*"
+    },
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "core-js",
+      "es5-ext",
+      "esbuild",
+      "typeit",
+      "vue-demi"
+    ]
   }
 }

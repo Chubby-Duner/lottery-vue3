@@ -57,7 +57,7 @@ src/assets/styles/
 
 ```vue
 <style lang="scss" scoped>
-@use "@/assets/styles/index.scss";
+@use "@/styles/index.scss";
 </style>
 ```
 
@@ -65,8 +65,8 @@ src/assets/styles/
 
 ```vue
 <style lang="scss" scoped>
-@use "@/assets/styles/base/variables.scss";
-@use "@/assets/styles/components/lottery/lottery-main.scss";
+@use "@/styles/base/variables.scss";
+@use "@/styles/components/lottery/lottery-main.scss";
 </style>
 ```
 

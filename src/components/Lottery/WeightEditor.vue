@@ -4,12 +4,12 @@ import { message } from "ant-design-vue";
 import { useAwardStore } from "@/store/awardStore";
 
 defineOptions({
-  name: "WeightEditor",
+  name: "WeightEditor"
 });
 
 const props = defineProps({
   visible: Boolean,
-  lotteryData: Array,
+  lotteryData: Array
 });
 
 const emit = defineEmits(["update:visible", "save"]);
@@ -25,8 +25,8 @@ const paginationConfig = ref({
   showSizeChanger: true,
   showQuickJumper: true,
   showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-  pageSizeOptions: ['5', '10', '20', '50'],
-  size: 'small'
+  pageSizeOptions: ["5", "10", "20", "50"],
+  size: "small"
 });
 
 // 动态生成表格列
@@ -36,37 +36,37 @@ const columns = computed(() => {
       title: "姓名",
       key: "name",
       width: 160,
-      fixed: "left",
+      fixed: "left"
     }
   ];
-  
+
   // 动态添加奖项列
   awardStore.awards.forEach((award, index) => {
     baseColumns.push({
       title: `${award.label}权重`,
       key: `award${index + 1}`,
       width: 120,
-      align: "center",
+      align: "center"
     });
   });
-  
+
   // 添加锁定列
   baseColumns.push({
     title: "锁定",
     key: "locked",
     width: 80,
-    align: "center",
+    align: "center"
   });
-  
+
   return baseColumns;
 });
 
 // 监听数据变化，创建副本
 watch(
   () => props.lotteryData,
-  (newData) => {
+  newData => {
     if (newData && newData.length > 0) {
-      weightData.value = newData.map((item) => {
+      weightData.value = newData.map(item => {
         // 确保权重数据结构包含所有奖项
         const awardWeights = { ...item.awardWeights };
         awardStore.awards.forEach((award, index) => {
@@ -75,10 +75,10 @@ watch(
             awardWeights[key] = 1; // 默认权重为1
           }
         });
-        
+
         return {
           ...item,
-          awardWeights,
+          awardWeights
         };
       });
     }
@@ -91,7 +91,7 @@ watch(
   () => awardStore.awards,
   () => {
     if (weightData.value.length > 0) {
-      weightData.value = weightData.value.map((item) => {
+      weightData.value = weightData.value.map(item => {
         const awardWeights = { ...item.awardWeights };
         // 确保包含所有奖项的权重
         awardStore.awards.forEach((award, index) => {
@@ -100,10 +100,10 @@ watch(
             awardWeights[key] = 1; // 默认权重为1
           }
         });
-        
+
         return {
           ...item,
-          awardWeights,
+          awardWeights
         };
       });
     }
@@ -113,7 +113,7 @@ watch(
 
 watch(
   () => props.visible,
-  (newValue) => {
+  newValue => {
     weightVisible.value = newValue;
     if (newValue) {
       // 重置分页状态
@@ -124,7 +124,7 @@ watch(
 
 watch(
   () => weightVisible.value,
-  (val) => {
+  val => {
     emit("update:visible", val);
   }
 );
@@ -136,7 +136,7 @@ const handleWeightChange = () => {
 
 // 重置所有权重为0
 const resetAllWeights = () => {
-  weightData.value.forEach((item) => {
+  weightData.value.forEach(item => {
     const awardWeights = {};
     awardStore.awards.forEach((award, index) => {
       awardWeights[index + 1] = 0;
@@ -148,7 +148,7 @@ const resetAllWeights = () => {
 
 // 设置默认权重为1
 const setDefaultWeights = () => {
-  weightData.value.forEach((item) => {
+  weightData.value.forEach(item => {
     const awardWeights = {};
     awardStore.awards.forEach((award, index) => {
       awardWeights[index + 1] = 1;
@@ -161,9 +161,9 @@ const setDefaultWeights = () => {
 // 保存设置
 const handleOk = () => {
   // 将修改后的数据传回父组件
-  const updatedData = weightData.value.map((item) => ({
+  const updatedData = weightData.value.map(item => ({
     ...item,
-    awardWeights: { ...item.awardWeights },
+    awardWeights: { ...item.awardWeights }
   }));
 
   emit("save", updatedData);
@@ -177,7 +177,7 @@ const handleCancel = () => {
 };
 
 // 分页事件处理
-const handleTableChange = (pagination) => {
+const handleTableChange = pagination => {
   paginationConfig.value.pageSize = pagination.pageSize;
   paginationConfig.value.current = pagination.current;
 };
@@ -190,42 +190,25 @@ const resetPagination = () => {
 </script>
 
 <template>
-  <a-modal
-    v-model:open="weightVisible"
-    title="权重设置"
-    width="80%"
-    :footer="null"
-    @ok="handleOk"
-    @cancel="handleCancel"
-    style="top: 60px;"
-  >
+  <a-modal v-model:open="weightVisible" title="权重设置" width="80%" :footer="null" @ok="handleOk" @cancel="handleCancel" style="top: 60px">
     <div class="weight-editor">
       <!-- 固定的说明区域 -->
-      <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-        <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center;">
-          <span style="margin-right: 8px;">⚖️</span>
+      <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1)">
+        <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center">
+          <span style="margin-right: 8px">⚖️</span>
           权重说明
         </div>
-        <div style="font-size: 12px; line-height: 1.6; opacity: 0.95;">
-          <div style="margin-bottom: 4px;">• <strong>有锁定人时</strong>：只从锁定人中抽取</div>
-          <div style="margin-bottom: 4px;">• <strong>没有锁定人时</strong>：按权重抽奖</div>
-          <div style="margin-bottom: 4px;">• <strong>权重越大</strong>：中奖概率越高</div>
-          <div style="margin-bottom: 4px;">• <strong>权重为0</strong>：不参与该奖项抽奖</div>
+        <div style="font-size: 12px; line-height: 1.6; opacity: 0.95">
+          <div style="margin-bottom: 4px">• <strong>有锁定人时</strong>：只从锁定人中抽取</div>
+          <div style="margin-bottom: 4px">• <strong>没有锁定人时</strong>：按权重抽奖</div>
+          <div style="margin-bottom: 4px">• <strong>权重越大</strong>：中奖概率越高</div>
+          <div style="margin-bottom: 4px">• <strong>权重为0</strong>：不参与该奖项抽奖</div>
           <div>• <strong>所有权重为0</strong>：提示无法抽奖</div>
         </div>
       </div>
 
       <!-- 表格区域 -->
-      <a-table
-        :dataSource="weightData"
-        :columns="columns"
-        :pagination="paginationConfig"
-        size="small"
-        bordered
-        :scroll="{ y: 300 }"
-        style="border-radius: 8px; overflow: hidden; margin-bottom: 16px;"
-        @change="handleTableChange"
-      >
+      <a-table :dataSource="weightData" :columns="columns" :pagination="paginationConfig" size="small" bordered :scroll="{ y: 300 }" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px" @change="handleTableChange">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">
             <div class="person-info">
@@ -235,42 +218,30 @@ const resetPagination = () => {
           </template>
 
           <template v-else-if="column.key.startsWith('award')">
-            <a-input-number
-              v-model:value="
-                record.awardWeights[column.key.replace('award', '')]
-              "
-              :min="0"
-              :max="100"
-              style="width: 80px; border-radius: 4px;"
-              @change="handleWeightChange"
-            />
+            <a-input-number v-model:value="record.awardWeights[column.key.replace('award', '')]" :min="0" :max="100" style="width: 80px; border-radius: 4px" @change="handleWeightChange" />
           </template>
           <template v-else-if="column.key === 'locked'">
-            <a-switch 
-              v-model:checked="record.locked" 
-              size="small"
-              style="border-radius: 12px;"
-            />
+            <a-switch v-model:checked="record.locked" size="small" style="border-radius: 12px" />
           </template>
         </template>
       </a-table>
 
       <!-- 固定的按钮区域 -->
-      <div style="text-align: center; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+      <div style="text-align: center; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef">
         <a-space size="middle">
-          <a-button @click="resetAllWeights" style="border-radius: 6px;">
+          <a-button @click="resetAllWeights" style="border-radius: 6px">
             <template #icon>🔄</template>
             重置所有权重
           </a-button>
-          <a-button @click="setDefaultWeights" style="border-radius: 6px;">
+          <a-button @click="setDefaultWeights" style="border-radius: 6px">
             <template #icon>⚙️</template>
             设置默认权重
           </a-button>
-          <a-button type="primary" @click="handleOk" style="border-radius: 6px;">
+          <a-button type="primary" @click="handleOk" style="border-radius: 6px">
             <template #icon>💾</template>
             保存设置
           </a-button>
-          <a-button @click="handleCancel" style="border-radius: 6px;">
+          <a-button @click="handleCancel" style="border-radius: 6px">
             <template #icon>❌</template>
             取消
           </a-button>

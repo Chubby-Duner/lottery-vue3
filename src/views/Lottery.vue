@@ -1,30 +1,27 @@
 <script setup>
-import AwardList from '@/components/Lottery/AwardList.vue'
-import PrizeList from '@/components/Lottery/PrizeList.vue'
-import LotteryMain from '@/components/Lottery/index.vue'
+import AwardList from "@/components/Lottery/AwardList.vue";
+import PrizeList from "@/components/Lottery/PrizeList.vue";
+import LotteryMain from "@/components/Lottery/index.vue";
 // import SnowEffect from '@/components/Lottery/SnowEffect.vue'
-import MusicControl from '@/components/Lottery/MusicControl.vue'
+import MusicControl from "@/components/Lottery/MusicControl.vue";
 
 defineOptions({
   name: "Lottery"
 });
-
 </script>
 
 <template>
   <div class="lottery-container">
-  
     <header class="top-head"></header>
-    
+
     <AwardList />
     <PrizeList />
-    
+
     <LotteryMain />
 
     <!-- 添加音乐和清除控制 -->
     <MusicControl />
-    
-    
+
     <!-- 两种雪花效果 -->
     <!-- <SnowEffect 
       :speed="2"
@@ -46,15 +43,14 @@ defineOptions({
       image="@/assets/images/snow.png"
     /> -->
 
-
     <footer class="footer"></footer>
   </div>
 </template>
 
 <style lang="scss">
 /* 全局样式 */
-@use '@/assets/styles/index.scss';
-@import '@/assets/styles/animate.css';
+@use "@/styles/index.scss";
+@import "@/styles/animate.css";
 
 .lottery-container {
   width: 100%;

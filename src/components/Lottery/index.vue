@@ -10,7 +10,7 @@ import WeightEditor from "./WeightEditor.vue";
 import AwardSetting from "./AwardSetting.vue";
 
 defineOptions({
-  name: "LotteryMain",
+  name: "LotteryMain"
 });
 
 // 获取奖项剩余数量，中奖名单等数据
@@ -28,9 +28,7 @@ const lotteryData = ref([]);
 //#endregion
 
 // 状态管理
-const selectedAward = ref(
-  awardStore.selectAward || awardStore.awards[0]?.key || ""
-);
+const selectedAward = ref(awardStore.selectAward || awardStore.awards[0]?.key || "");
 const isMoving = ref(true);
 const isStarted = ref(false);
 const isLocked = ref(true);
@@ -62,7 +60,7 @@ const buttonText = computed(() => {
 
 // ===================== 生命周期与事件监听 =====================
 // 键盘事件
-const handleKeyPress = (e) => {
+const handleKeyPress = e => {
   switch (e.key) {
     case " ":
       handleLottery();
@@ -108,17 +106,17 @@ onUnmounted(() => {
 async function showCountdownSequence() {
   showCountdown.value = true;
   countdownText.value = "叁";
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1000));
   countdownText.value = "贰";
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise(resolve => setTimeout(resolve, 1000));
   countdownText.value = "壹";
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, 500));
   showCountdown.value = false;
 }
 //#endregion
 
 //#region 导入数据相关
-const beforeUpload = (file) => {
+const beforeUpload = file => {
   const isLt1M = file.size / 1024 / 1024 < 1;
   if (isLt1M) {
     return true;
@@ -130,10 +128,10 @@ const beforeUpload = (file) => {
 const handleSuccess = ({ header, results }) => {
   try {
     // 设置默认权重
-    lotteryData.value = results.map((item) => ({
+    lotteryData.value = results.map(item => ({
       ...item,
       awardWeights: { 1: 1, 2: 1, 3: 1, 4: 1 }, // 默认每个奖项权重为1
-      locked: false,
+      locked: false
     }));
     // 备份导入数据
     awardStore.setLotteryDataBackup(lotteryData.value);
@@ -159,7 +157,7 @@ const getTemplateUrl = () => {
 const openAwardSetting = () => {
   awardSettingVisible.value = true;
 };
-const handleAwardSettingSave = (newAwards) => {
+const handleAwardSettingSave = newAwards => {
   awardStore.setAwards(newAwards);
   // 更新权重数据结构
   updateWeightData();
@@ -169,7 +167,7 @@ const handleAwardSettingSave = (newAwards) => {
 //#region 权重数据更新
 const updateWeightData = () => {
   if (lotteryData.value.length > 0) {
-    lotteryData.value = lotteryData.value.map((item) => {
+    lotteryData.value = lotteryData.value.map(item => {
       const awardWeights = { ...item.awardWeights };
       // 确保包含所有奖项的权重
       awardStore.awards.forEach((award, index) => {
@@ -178,10 +176,10 @@ const updateWeightData = () => {
           awardWeights[key] = 1; // 默认权重为1
         }
       });
-      
+
       return {
         ...item,
-        awardWeights,
+        awardWeights
       };
     });
   }
@@ -196,14 +194,14 @@ const openWeightEditor = () => {
   }
   weightEditorVisible.value = true;
 };
-const handleWeightSave = (updatedData) => {
+const handleWeightSave = updatedData => {
   lotteryData.value = updatedData;
   message.success("权重设置已更新");
 };
 //#endregion
 
 //#region 抽奖相关
-const selectAward = (awardKey) => {
+const selectAward = awardKey => {
   if (isStarted.value) {
     message.error("正在抽奖中，不允许更改奖项设置");
     return;
@@ -213,27 +211,23 @@ const selectAward = (awardKey) => {
 };
 
 const handleLottery = () => {
-  const idx = awardStore.awards.findIndex((a) => a.key === selectedAward.value);
+  const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
   const awardKey = `award0${idx + 1}`;
   if (awardStore.awardLog[awardKey] <= 0) {
     message.error("该奖项已经抽完啦，请选择其它奖项哦！");
     return;
   }
-  const lockedList = lotteryData.value.filter((item) => item.locked);
+  const lockedList = lotteryData.value.filter(item => item.locked);
   if (lockedList.length > 0) {
     // 有锁定，判断锁定且权重>0的人
-    const lockedWithWeight = lockedList.filter(
-      (item) => (item.awardWeights?.[idx + 1] ?? 1) > 0
-    );
+    const lockedWithWeight = lockedList.filter(item => (item.awardWeights?.[idx + 1] ?? 1) > 0);
     if (lockedWithWeight.length === 0) {
       message.error("锁定的人员当前奖项权重都为0，无法抽奖");
       return;
     }
   } else {
     // 没有锁定，判断所有权重
-    const weights = lotteryData.value.map(
-      (item) => item.awardWeights?.[idx + 1] ?? 1
-    );
+    const weights = lotteryData.value.map(item => item.awardWeights?.[idx + 1] ?? 1);
     const total = weights.reduce((a, b) => a + b, 0);
     if (total === 0) {
       message.error("当前奖项所有权重都为0，无法抽奖");
@@ -281,26 +275,18 @@ const stopLottery = async () => {
     return;
   }
   try {
-    const idx = awardStore.awards.findIndex((a) => a.key === selectedAward.value);
+    const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
     // 先查找是否有锁定 锁定且权重>0才可抽中
-    const lockedList = lotteryData.value.filter(
-      (item) =>
-        item.locked && (item.awardWeights?.[idx + 1] ?? 1) > 0
-    );
+    const lockedList = lotteryData.value.filter(item => item.locked && (item.awardWeights?.[idx + 1] ?? 1) > 0);
     let winnerIndexResult;
     if (lockedList.length > 0) {
       // 只从锁定的人中随机抽取
       const idx = Math.floor(Math.random() * lockedList.length);
       const winner = lockedList[idx];
-      winnerIndexResult = lotteryData.value.findIndex(
-        (item) => item.nameen === winner.nameen
-      );
+      winnerIndexResult = lotteryData.value.findIndex(item => item.nameen === winner.nameen);
     } else {
       // 正常权重抽奖
-      winnerIndexResult = weightedRandomIndex(
-        lotteryData.value,
-        selectedAward.value
-      );
+      winnerIndexResult = weightedRandomIndex(lotteryData.value, selectedAward.value);
       if (winnerIndexResult === -1) {
         message.error("当前奖项所有权重都为0，无法抽奖");
         return;
@@ -328,22 +314,18 @@ const stopLottery = async () => {
     // 中奖人对象
     const winnerData = {
       nameen: winnerNameEn.value,
-      namezh: winnerNameZh.value,
+      namezh: winnerNameZh.value
     };
     // 写入中奖名单
     awardStore.addWinner(selectedAward.value, winnerData);
     // 更新奖项剩余数量
-    const remainingIdx = awardStore.awards.findIndex(
-      (a) => a.key === selectedAward.value
-    );
+    const remainingIdx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
     const awardKey = `award0${remainingIdx + 1}`;
     const newAwardLog = { ...awardStore.awardLog };
     newAwardLog[awardKey] -= 1;
     awardStore.setAwardLog(newAwardLog);
     // 从抽奖池中移除获奖者
-    lotteryData.value = lotteryData.value.filter(
-      (item) => item.nameen !== winner.nameen
-    );
+    lotteryData.value = lotteryData.value.filter(item => item.nameen !== winner.nameen);
     winnerIndex.value = -1;
   } catch (error) {
     console.error("Function stopLottery ~ error:", error);
@@ -354,7 +336,7 @@ const stopLottery = async () => {
 //#region 动画相关
 const startAnimation = () => {
   let lastTime = 0;
-  const animate = (timestamp) => {
+  const animate = timestamp => {
     if (!isMoving.value) return;
     if (!lotteryWrap.value) return; // 防止空指针
     const deltaTime = timestamp - lastTime;
@@ -396,14 +378,11 @@ const resetAllData = () => {
       try {
         awardStore.resetAllToImportBackup();
         // 恢复 lotteryData，补全自定义字段
-        if (
-          awardStore.lotteryDataBackup &&
-          awardStore.lotteryDataBackup.length > 0
-        ) {
-          lotteryData.value = awardStore.lotteryDataBackup.map((item) => ({
+        if (awardStore.lotteryDataBackup && awardStore.lotteryDataBackup.length > 0) {
+          lotteryData.value = awardStore.lotteryDataBackup.map(item => ({
             ...item,
             awardWeights: item.awardWeights || { 1: 1, 2: 1, 3: 1, 4: 1 },
-            locked: typeof item.locked === "boolean" ? item.locked : false,
+            locked: typeof item.locked === "boolean" ? item.locked : false
           }));
           await nextTick();
           wrapPosition.value = 0;
@@ -415,7 +394,7 @@ const resetAllData = () => {
       } finally {
         fullScreenLoading.value = false;
       }
-    },
+    }
   });
 };
 
@@ -434,7 +413,7 @@ const clearAllData = () => {
       } finally {
         fullScreenLoading.value = false;
       }
-    },
+    }
   });
 };
 //#endregion
@@ -447,42 +426,18 @@ const clearAllData = () => {
     </div> -->
     <div v-if="lotteryData.length > 0" class="lottery-main">
       <div class="wrap-border-main">
-        <img
-          src="@/assets/images/wrap-border-1.png"
-          class="wrap-border wrap-border-1"
-        />
-        <img
-          src="@/assets/images/wrap-border-2.png"
-          class="wrap-border wrap-border-2"
-        />
-        <img
-          src="@/assets/images/wrap-border-3.png"
-          class="wrap-border wrap-border-3"
-        />
-        <img
-          src="@/assets/images/wrap-border-4.png"
-          class="wrap-border wrap-border-4"
-        />
+        <img src="@/assets/images/wrap-border-1.png" class="wrap-border wrap-border-1" />
+        <img src="@/assets/images/wrap-border-2.png" class="wrap-border wrap-border-2" />
+        <img src="@/assets/images/wrap-border-3.png" class="wrap-border wrap-border-3" />
+        <img src="@/assets/images/wrap-border-4.png" class="wrap-border wrap-border-4" />
         <div class="wrap-border wrap-border-left"></div>
         <div class="wrap-border wrap-border-right"></div>
       </div>
       <div ref="wrapMain" class="wrap-main">
-        <div
-          id="lottery-wrap"
-          :style="{ transform: `translateY(${wrapPosition}px)` }"
-          ref="lotteryWrap"
-        >
-          <div
-            v-for="(item, index) in lotteryData"
-            :key="index"
-            class="clearFloat lottery-list"
-            :class="{ 'sure-active': index === winnerIndex }"
-          >
+        <div id="lottery-wrap" :style="{ transform: `translateY(${wrapPosition}px)` }" ref="lotteryWrap">
+          <div v-for="(item, index) in lotteryData" :key="index" class="clearFloat lottery-list" :class="{ 'sure-active': index === winnerIndex }">
             <div class="f-l turqoise lottery-avatar">
-              <img
-                :src="getImageUrl(item.nameen, 'avatar')"
-                :alt="item.namezh"
-              />
+              <img :src="getImageUrl(item.nameen, 'avatar')" :alt="item.namezh" />
             </div>
             <div class="f-l lottery-content">
               <em class="beauty border-01"></em>
@@ -508,23 +463,15 @@ const clearAllData = () => {
         <!-- 奖项按钮区域 -->
         <div class="award-buttons-container">
           <template v-for="(item, idx) in awardStore.awards" :key="item.key">
-            <div
-              class="cirle-btn award"
-              :id="'award-' + item.key"
-              :class="{ 'award-active': selectedAward === item.key }"
-              @click="selectAward(item.key)"
-            >
+            <div class="cirle-btn award" :id="'award-' + item.key" :class="{ 'award-active': selectedAward === item.key }" @click="selectAward(item.key)">
               {{ item.label }}<br />
               <small>剩余: {{ awardStore.awardLog[`award0${idx + 1}`] }}</small>
             </div>
           </template>
         </div>
-        
+
         <!-- 抽奖按钮 -->
-        <a-button
-          class="btn btn-red-outline lottery-btn"
-          @click="handleLottery"
-        >
+        <a-button class="btn btn-red-outline lottery-btn" @click="handleLottery">
           {{ buttonText }}
         </a-button>
       </div>
@@ -563,7 +510,7 @@ const clearAllData = () => {
       v-else
       image="https://gw.alipayobjects.com/mdn/miniapp_social/afts/img/A*pevERLJC9v0AAAAAAAAAAABjAQAAAQ/original"
       :image-style="{
-        height: '60px',
+        height: '60px'
       }"
     >
       <template #description>
@@ -572,12 +519,8 @@ const clearAllData = () => {
       <a-button type="primary">
         <a :href="getTemplateUrl()" target="_blank">下载模板</a>
       </a-button>
-      <a-button class="margin-left10" type="primary" @click="importModal = true"
-        >导入抽奖名单数据</a-button
-      >
-      <a-button class="margin-left10" type="primary" @click="clearAllData"
-        >清空所有数据</a-button
-      >
+      <a-button class="margin-left10" type="primary" @click="importModal = true">导入抽奖名单数据</a-button>
+      <a-button class="margin-left10" type="primary" @click="clearAllData">清空所有数据</a-button>
       <!-- <a-button type="primary">导入礼物名单数据</a-button> -->
     </a-empty>
   </div>
@@ -591,45 +534,22 @@ const clearAllData = () => {
   </transition>
 
   <!-- 中奖结果 -->
-  <LotteryResult
-    :visible="showResult"
-    :award="selectedAward"
-    :name-zh="winnerNameZh"
-    :name-en="winnerNameEn"
-    @close="showResult = false"
-  />
+  <LotteryResult :visible="showResult" :award="selectedAward" :name-zh="winnerNameZh" :name-en="winnerNameEn" @close="showResult = false" />
 
   <!-- 导入数据 -->
-  <UploadExcel
-    v-model:visible="importModal"
-    :on-success="handleSuccess"
-    :before-upload="beforeUpload"
-  />
+  <UploadExcel v-model:visible="importModal" :on-success="handleSuccess" :before-upload="beforeUpload" />
 
   <!-- 权重编辑 -->
-  <WeightEditor
-    v-model:visible="weightEditorVisible"
-    :lottery-data="lotteryData"
-    @save="handleWeightSave"
-  />
+  <WeightEditor v-model:visible="weightEditorVisible" :lottery-data="lotteryData" @save="handleWeightSave" />
 
   <!-- 奖项设置 -->
-  <AwardSetting
-    v-model:visible="awardSettingVisible"
-    :awards="awardStore.awards"
-    @save="handleAwardSettingSave"
-  />
+  <AwardSetting v-model:visible="awardSettingVisible" :awards="awardStore.awards" @save="handleAwardSettingSave" />
 
   <!-- 全屏loading -->
-  <a-spin
-    v-if="fullScreenLoading"
-    :spinning="true"
-    size="large"
-    class="global-spin"
-  />
+  <a-spin v-if="fullScreenLoading" :spinning="true" size="large" class="global-spin" />
 </template>
 
 <style lang="scss" scoped>
-// @use "@/assets/styles/index.scss";
-@import url("@/assets/styles/index.scss");
+// @use "@/styles/index.scss";
+@import url("@/styles/index.scss");
 </style>

@@ -4,7 +4,7 @@ import * as ExcelJS from "exceljs";
 import { UploadOutlined } from "@ant-design/icons-vue";
 
 defineOptions({
-  name: "ExcelImport",
+  name: "ExcelImport"
 });
 
 // 状态管理
@@ -21,16 +21,16 @@ const headers = ref([]);
 
 // 计算预览表格列
 const previewColumns = computed(() => {
-  return headers.value.map((header) => ({
+  return headers.value.map(header => ({
     title: header,
     dataIndex: header,
     key: header,
-    ellipsis: true,
+    ellipsis: true
   }));
 });
 
 // 文件上传前处理
-const beforeUpload = async (file) => {
+const beforeUpload = async file => {
   if (!file) return false;
 
   resetState();
@@ -62,7 +62,7 @@ const beforeUpload = async (file) => {
 };
 
 // Excel解析核心方法
-const parseExcel = async (file) => {
+const parseExcel = async file => {
   // const arrayBuffer = await file.arrayBuffer()
   // const workbook = new ExcelJS.Workbook()
 
@@ -149,7 +149,7 @@ const parseExcel = async (file) => {
           name: row.values[2].trim(),
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-expect-error
-          works: row.values[3].trim(),
+          works: row.values[3].trim()
         });
       }
     });
@@ -162,19 +162,13 @@ const parseExcel = async (file) => {
 };
 
 // 文件类型校验
-const isExcel = (file) => {
-  const types = [
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/vnd.ms-excel",
-  ];
-  return (
-    types.includes(file.type) ||
-    [".xlsx", ".xls"].some((ext) => file.name.endsWith(ext))
-  );
+const isExcel = file => {
+  const types = ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-excel"];
+  return types.includes(file.type) || [".xlsx", ".xls"].some(ext => file.name.endsWith(ext));
 };
 
 // 错误处理
-const handleError = (error) => {
+const handleError = error => {
   console.error("Excel导入错误:", error);
   status.value = "error";
   progressStatus.value = "exception";
@@ -200,7 +194,7 @@ const confirmImport = () => {
 
 // 暴露方法
 defineExpose({
-  getCurrentData: () => tableData.value,
+  getCurrentData: () => tableData.value
 });
 
 // 定义事件
@@ -210,11 +204,7 @@ const emit = defineEmits(["import"]);
 <template>
   <div class="exca-import">
     <!-- 上传按钮 -->
-    <a-upload
-      :before-upload="beforeUpload"
-      accept=".xlsx,.xls"
-      :showUploadList="false"
-    >
+    <a-upload :before-upload="beforeUpload" accept=".xlsx,.xls" :showUploadList="false">
       <a-button type="primary">
         <template #icon><UploadOutlined /></template>
         选择Excel文件
@@ -223,43 +213,22 @@ const emit = defineEmits(["import"]);
 
     <!-- 状态显示 -->
     <div v-if="status !== 'idle'" class="status-area">
-      <a-progress
-        v-if="status === 'parsing'"
-        :percent="progress"
-        :status="progressStatus"
-      />
+      <a-progress v-if="status === 'parsing'" :percent="progress" :status="progressStatus" />
 
-      <a-alert
-        v-if="errorMessage"
-        :message="errorMessage"
-        type="error"
-        show-icon
-        class="mt-10"
-      />
+      <a-alert v-if="errorMessage" :message="errorMessage" type="error" show-icon class="mt-10" />
 
       <div v-if="status === 'success'" class="result-summary mt-10">
         <a-tag color="green">成功解析 {{ tableData.length }} 条数据</a-tag>
-        <a-button size="small" class="ml-10" @click="previewData = true">
-          预览数据
-        </a-button>
+        <a-button size="small" class="ml-10" @click="previewData = true"> 预览数据 </a-button>
       </div>
     </div>
 
     <!-- 数据预览模态框 -->
     <a-modal v-model:open="previewData" title="导入数据预览" width="80%">
-      <a-table
-        :dataSource="tableData"
-        :columns="previewColumns"
-        bordered
-        size="small"
-        :scroll="{ y: 400 }"
-        :loading="loading"
-      />
+      <a-table :dataSource="tableData" :columns="previewColumns" bordered size="small" :scroll="{ y: 400 }" :loading="loading" />
       <template #footer>
         <a-button key="back" @click="previewData = false">取消</a-button>,
-        <a-button key="submit" type="primary" @click="confirmImport">
-          确认导入
-        </a-button>
+        <a-button key="submit" type="primary" @click="confirmImport"> 确认导入 </a-button>
       </template>
     </a-modal>
   </div>

@@ -2,46 +2,46 @@
 import { ref, onMounted, onUnmounted } from "vue";
 
 defineOptions({
-  name: "SnowEffect",
+  name: "SnowEffect"
 });
 
 const props = defineProps({
   speed: {
     type: Number,
-    default: 2,
+    default: 2
   },
   interaction: {
     type: Boolean,
-    default: true,
+    default: true
   },
   size: {
     type: Number,
-    default: 10,
+    default: 10
   },
   count: {
     type: Number,
-    default: 30,
+    default: 30
   },
   startColor: {
     type: String,
-    default: "rgba(253,252,251,1)",
+    default: "rgba(253,252,251,1)"
   },
   endColor: {
     type: String,
-    default: "rgba(251,252,253,0.3)",
+    default: "rgba(251,252,253,0.3)"
   },
   opacity: {
     type: Number,
-    default: 0.8,
+    default: 0.8
   },
   windPower: {
     type: Number,
-    default: 2,
+    default: 2
   },
   image: {
     type: [Boolean, String],
-    default: false,
-  },
+    default: false
+  }
 });
 
 const snowCanvas = ref(null);
@@ -58,15 +58,12 @@ class Snowflake {
     this.ctx = canvas.getContext("2d");
     this.x = Math.random() * canvas.width;
     this.y = Math.random() * -canvas.height;
-    this.size =
-      Math.random() * (options.sizeMax - options.sizeMin) + options.sizeMin;
+    this.size = Math.random() * (options.sizeMax - options.sizeMin) + options.sizeMin;
     this.speed = Math.random() * options.speed;
     this.velocityY = this.speed;
     this.velocityX = (Math.random() - 0.5) * options.windPower;
     this.opacity = Math.random() * options.opacity;
-    this.color = options.useImage
-      ? null
-      : this.lerpColor(options.startColor, options.endColor, Math.random());
+    this.color = options.useImage ? null : this.lerpColor(options.startColor, options.endColor, Math.random());
     this.image = options.image;
     this.angle = Math.random() * Math.PI * 2;
     this.rotationSpeed = (Math.random() - 0.5) * 0.1;
@@ -74,13 +71,13 @@ class Snowflake {
 
   lerpColor(color1, color2, ratio) {
     // 简单的颜色插值实现
-    const hex = (color) => {
+    const hex = color => {
       const rgb = color.match(/\d+/g);
       return {
         r: parseInt(rgb[0]),
         g: parseInt(rgb[1]),
         b: parseInt(rgb[2]),
-        a: parseFloat(rgb[3] || 1),
+        a: parseFloat(rgb[3] || 1)
       };
     };
 
@@ -132,13 +129,7 @@ class Snowflake {
     this.ctx.rotate(this.angle);
 
     if (this.image) {
-      this.ctx.drawImage(
-        this.image,
-        -this.size / 2,
-        -this.size / 2,
-        this.size,
-        this.size
-      );
+      this.ctx.drawImage(this.image, -this.size / 2, -this.size / 2, this.size, this.size);
     } else {
       this.ctx.fillStyle = this.color;
       this.ctx.globalAlpha = this.opacity;
@@ -162,7 +153,7 @@ const initSnowflakes = () => {
     startColor: props.startColor,
     endColor: props.endColor,
     useImage: !!props.image,
-    image: null,
+    image: null
   };
 
   if (props.image && typeof props.image === "string") {
@@ -171,10 +162,7 @@ const initSnowflakes = () => {
     options.image = img;
   }
 
-  snowflakes.value = Array.from(
-    { length: props.count },
-    () => new Snowflake(canvas, options)
-  );
+  snowflakes.value = Array.from({ length: props.count }, () => new Snowflake(canvas, options));
 };
 
 const animate = () => {
@@ -183,7 +171,7 @@ const animate = () => {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  snowflakes.value.forEach((flake) => {
+  snowflakes.value.forEach(flake => {
     flake.update(mouseX.value, mouseY.value, props.interaction);
     flake.draw();
   });
@@ -196,7 +184,7 @@ const handleResize = () => {
   canvasHeight.value = window.innerHeight;
 };
 
-const handleMouseMove = (e) => {
+const handleMouseMove = e => {
   if (!props.interaction) return;
   const rect = snowCanvas.value.getBoundingClientRect();
   mouseX.value = e.clientX - rect.left;
@@ -235,12 +223,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <canvas
-    class="snow-canvas"
-    ref="snowCanvas"
-    :width="canvasWidth"
-    :height="canvasHeight"
-  ></canvas>
+  <canvas class="snow-canvas" ref="snowCanvas" :width="canvasWidth" :height="canvasHeight"></canvas>
 </template>
 
 <style scoped>
