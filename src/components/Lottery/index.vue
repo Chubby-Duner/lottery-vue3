@@ -242,13 +242,13 @@ const startLottery = () => {
   isLocked.value = true;
   // 加速动画
   setTimeout(() => (speed.value = 15), 1000);
-  setTimeout(() => (speed.value = 20), 3000);
-  setTimeout(() => (speed.value = 30), 5000);
-  setTimeout(() => (speed.value = 50), 7000);
+  setTimeout(() => (speed.value = 20), 1500);
+  setTimeout(() => (speed.value = 30), 3000);
+  setTimeout(() => (speed.value = 50), 3500);
   setTimeout(() => {
     speed.value = 90;
     isLocked.value = false;
-  }, 9000);
+  }, 4000);
 };
 
 const stopLottery = async () => {
@@ -480,28 +480,32 @@ const clearAllData = () => {
       </div>
 
       <div class="dashboard">
-        <template v-for="(item, idx) in awardStore.awards" :key="item.key">
-          <a-button
-            v-if="idx === 2"
-            class="btn btn-red-outline lottery-btn"
-            @click="handleLottery"
-          >
-            {{ buttonText }}
-          </a-button>
-          <div
-            class="cirle-btn award"
-            :id="'award-' + item.key"
-            :class="{ 'award-active': selectedAward === item.key }"
-            @click="selectAward(item.key)"
-          >
-            {{ item.label }}<br />
-            <small>剩余: {{ awardStore.awardLog[`award0${idx + 1}`] }}</small>
-          </div>
-        </template>
+        <!-- 奖项按钮区域 -->
+        <div class="award-buttons-container">
+          <template v-for="(item, idx) in awardStore.awards" :key="item.key">
+            <div
+              class="cirle-btn award"
+              :id="'award-' + item.key"
+              :class="{ 'award-active': selectedAward === item.key }"
+              @click="selectAward(item.key)"
+            >
+              {{ item.label }}<br />
+              <small>剩余: {{ awardStore.awardLog[`award0${idx + 1}`] }}</small>
+            </div>
+          </template>
+        </div>
+        
+        <!-- 抽奖按钮 -->
+        <a-button
+          class="btn btn-red-outline lottery-btn"
+          @click="handleLottery"
+        >
+          {{ buttonText }}
+        </a-button>
       </div>
 
-      <!-- 权重编辑按钮 v-if="lotteryData.length > 0" -->
-      <div class="dashboard">
+      <!-- 权重编辑按钮 -->
+      <div v-if="lotteryData.length > 0" class="dashboard">
         <div class="btn weight-edit-section">
           <a-button @click="openAwardSetting">
             <template #icon>

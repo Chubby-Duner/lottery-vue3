@@ -23,8 +23,7 @@ const { awards } = storeToRefs(awardStore);
 const awardText = computed(() => {
   const found = awards.value.find(item => item.key === props.award);
   if (found) {
-    if (found.label === "纪") return "纪念奖";
-    return `${found.label}等奖`;
+    return found.label
   }
   return props.award;
 });
@@ -69,8 +68,8 @@ const avatarUrl = computed(() => {
 .result-dialog {
   background: #fff;
   border-radius: 16px;
-  padding: 32px 40px 24px 40px;
-  min-width: 320px;
+  padding: 40px 48px 32px 48px;
+  min-width: 380px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   text-align: center;
   position: relative;
@@ -93,9 +92,10 @@ const avatarUrl = computed(() => {
   margin-bottom: 16px;
 }
 .award {
-  font-size: 1.3rem;
+  font-size: 2.8rem;
   color: #d9ad61;
   font-weight: bold;
+  font-family: 'STKaiti', 'KaiTi ', serif;
 }
 .close-btn {
   background: none;
@@ -110,21 +110,24 @@ const avatarUrl = computed(() => {
   align-items: center;
 }
 .avatar {
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid #d9ad61;
-  margin-bottom: 16px;
+  border: 5px solid #d9ad61;
+  margin-bottom: 20px;
 }
 .winner-name {
-  font-size: 2rem;
+  font-size: 2.4rem;
   color: #333;
   font-weight: bold;
+  font-family: 'STKaiti', 'KaiTi ', serif;
+  margin-top: 8px;
 }
 .result-footer {
   margin-top: 18px;
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   color: #d9ad61;
+  font-family: 'STKaiti', 'KaiTi ', serif;
 }
 </style>

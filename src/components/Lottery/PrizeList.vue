@@ -15,7 +15,7 @@ const toggleList = () => {
 <template>
   <aside class="aside-right">
     <div class="aside-main" v-show="showList">
-      <div class="btn btn-red-outline" @click="toggleList">新年礼物</div>
+      <div class="btn btn-red-outline award-list-btn" @click="toggleList">新年礼物</div>
       <div class="award-main">
         <div class="award-con">
           <h3 class="award-title">一等奖</h3>

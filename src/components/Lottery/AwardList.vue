@@ -51,7 +51,7 @@ const showLess = (awardKey) => {
 <template>
   <aside class="aside-left">
     <div class="aside-main" v-show="showList">
-      <div class="btn btn-red-outline" @click="toggleList">
+      <div class="btn btn-red-outline award-list-btn" @click="toggleList">
         {{ showList ? "收起名单" : "中奖名单" }}
       </div>
       <div class="award-main" v-if="awardGroups.length > 0">

@@ -272,8 +272,9 @@ aside .switch {
 .wrap-border-main {
     position: absolute;
     width: 100%;
-    height: 75%;
+    height: 65%; /* 调整为与wrap-main相同的高度 */
     z-index: -5;
+    top: 2%; /* 添加top定位，与wrap-main对齐 */
 }
 .wrap-border {
     position: absolute;
@@ -352,7 +353,7 @@ aside .switch {
     position: relative;
     top: 2%;
     /*height: 640px*/
-    height: 71%;
+    height: 65%; /* 减小高度，为按钮区域留出更多空间 */
     /* height: 71vh; */
     overflow: hidden;
     /*border: 3px solid #CB141D;*/
@@ -379,17 +380,17 @@ aside .switch {
 
 .lottery-list {
     position: relative;
-    margin: 0 auto 2rem auto;
+    margin: 0 auto 1.5rem auto; /* 减小底部间距 */
     width: 100%;
 }
 .lottery-avatar {
-    height: 90px;
-    width: 90px;
+    height: 80px; /* 减小高度 */
+    width: 80px; /* 减小宽度 */
     margin-left: 8rem;
-    margin-top: 1.5rem;
-    -webkit-border-radius: 90px;
-    -moz-border-radius: 90px;
-    border-radius: 90px;
+    margin-top: 1.2rem; /* 减小上边距 */
+    -webkit-border-radius: 80px;
+    -moz-border-radius: 80px;
+    border-radius: 80px;
     overflow: hidden;
 }
 .lottery-avatar.turqoise {
@@ -398,15 +399,15 @@ aside .switch {
     box-shadow: 0 0 0 4px white, inset 0 0 0 1px rgba(254,54,31,0.2), 0 0 0 8px rgba(254,54,31,0.9);
 }
 .lottery-avatar img {
-    width: 90px;
-    height: 90px;
+    width: 80px; /* 减小宽度 */
+    height: 80px; /* 减小高度 */
 }
 .lottery-content {
     position: relative;
     margin-left: 3rem;
-    padding: 2rem;
+    padding: 1.5rem; /* 减小内边距 */
     width: 80.5%;
-    height: 7rem;
+    height: 6rem; /* 减小高度 */
     -webkit-transition: all .4s;
     -moz-transition: all .4s;
     transition: all .4s;
@@ -501,17 +502,65 @@ aside .switch {
 
 .dashboard {
     /* position: relative; */
-    margin: 4rem auto 0 auto;
+    margin: 6rem auto 0 auto; /* 进一步增加上边距，确保在边框区域下方 */
     text-align: center;
     display: flex; 
     align-items: center; 
     justify-content: center;
-    gap: 24px; /* 按钮之间的间距，可根据需要调整 */
+    gap: 12px; /* 进一步减小按钮之间的间距 */
+    flex-wrap: wrap; /* 在小屏幕上自动换行 */
+    padding: 0 1rem; /* 添加左右内边距 */
 }
+
+/* 第一个dashboard（奖项按钮）的特殊样式 - 不换行，横向滚动 */
+.dashboard:first-of-type {
+    flex-wrap: nowrap; /* 不换行 */
+    overflow-x: auto; /* 横向滚动 */
+    overflow-y: hidden;
+    justify-content: flex-start; /* 左对齐 */
+    padding: 0 2rem; /* 增加左右内边距 */
+    gap: 8px; /* 更小的间距 */
+    scrollbar-width: none; /* Firefox隐藏滚动条 */
+    -ms-overflow-style: none; /* IE隐藏滚动条 */
+    min-height: 80px; /* 确保有足够的高度 */
+}
+
+.dashboard:first-of-type::-webkit-scrollbar {
+    display: none; /* Chrome隐藏滚动条 */
+}
+
+/* 奖项按钮容器样式 */
+.award-buttons-container {
+    display: flex;
+    flex-wrap: nowrap; /* 不换行 */
+    gap: 8px; /* 奖项按钮之间的间距 */
+    align-items: center;
+    flex-shrink: 0; /* 防止被压缩 */
+    min-width: max-content; /* 确保容器不会被压缩 */
+}
+
+/* 抽奖按钮在第一个dashboard中的样式 */
+.dashboard:first-of-type .lottery-btn {
+    flex-shrink: 0; /* 防止被压缩 */
+    margin-left: 1rem; /* 与奖项按钮的间距 */
+    width: auto; /* 自适应宽度 */
+    min-width: 120px; /* 最小宽度 */
+}
+
+/* 第二个dashboard（奖项设置按钮）的特殊样式 */
+.dashboard:nth-of-type(2) {
+    margin-top: 1.5rem; /* 减小与第一个dashboard的间距 */
+    gap: 8px; /* 更小的间距 */
+    flex-wrap: wrap; /* 设置按钮可以换行 */
+}
+
+/* 确保按钮容器有足够的空间 */
 .btn {
     text-align: center;
     border-radius: 0.5rem;
+    min-width: 120px; /* 确保按钮有最小宽度 */
 }
+
 .btn-red {
     color: #ffffff;
     background: #FD361F;
@@ -521,70 +570,283 @@ aside .switch {
     box-shadow: 0 6px #B92C1C;
 }
 .btn-red-outline {
-    width: 40%;
-    margin: 1.5rem auto 0 auto;
+    width: 35%; /* 减小宽度 */
+    margin: 1rem auto 0 auto; /* 减小上边距 */
     cursor: pointer;
     color: #FD361F;
     border: 3px solid #FD361F;
     -webkit-box-shadow: 0 6px rgba(253, 54, 31, 0.5);
     -moz-box-shadow: 0 6px rgba(253, 54, 31, 0.5);
     box-shadow: 0 6px rgba(253, 54, 31, 0.5);
-    font-size: 2rem;
+    font-size: 1.8rem; /* 减小字体 */
     font-weight: 600;
     font-family: 'STKaiti', 'KaiTi ';
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 50px;
+    background: linear-gradient(145deg, #ffffff, #f8f8f8);
+    position: relative;
+    overflow: hidden;
 }
+
+.btn-red-outline:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(253, 54, 31, 0.6);
+    border-color: #e62e1a;
+}
+
+.btn-red-outline:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(253, 54, 31, 0.4);
+}
+
 .dashboard .lottery-btn {
     display: inline-block;
-    width: 15%;
+    width: 12%; /* 减小宽度 */
     margin: 0 auto;
     cursor: pointer;
-    font-size: 2rem;
+    font-size: 1.8rem; /* 减小字体 */
     font-family: 'STKaiti', 'KaiTi ';
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 50px;
+    background: linear-gradient(145deg, #FD361F, #e62e1a);
+    color: white;
+    border: none;
+    box-shadow: 0 6px 16px rgba(253, 54, 31, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard .lottery-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(253, 54, 31, 0.6);
+    background: linear-gradient(145deg, #e62e1a, #d41c07);
 }
 
 .dashboard .lottery-btn:active {
-    margin-top: 5px;
-    -webkit-box-shadow: 0 1px rgba(253, 54, 31, 0.3);
-    -moz-box-shadow: 0 1px rgba(253, 54, 31, 0.3);
-    box-shadow: 0 1px rgba(253, 54, 31, 0.3);
-}
-.dashboard .lottery-btn.start {
-    background: #d41c07;
-    cursor: pointer;
-}
-.dashboard .lottery-btn.end {
-    background: #d41c07;
-    cursor: not-allowed;
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(253, 54, 31, 0.4);
 }
 
-.dashboard .cirle-btn {
-    /* position: absolute; */
-    display: inline-block;
-    width: 2rem;
-    height: 2rem;
-    color: #FD361F;
-    padding: 0.5rem;
+.dashboard .lottery-btn.start {
+    background: linear-gradient(145deg, #FD361F, #e62e1a);
     cursor: pointer;
-    font-size: 2rem;
-    font-weight: 800;
+}
+
+.dashboard .lottery-btn.end {
+    background: linear-gradient(145deg, #d41c07, #b92c1c);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* 优化奖项按钮样式 */
+.dashboard .cirle-btn {
+    display: inline-block;
+    width: 65px; /* 稍微增加宽度 */
+    height: 65px; /* 稍微增加高度 */
+    color: #FD361F;
+    padding: 0.5rem; /* 增加内边距 */
+    cursor: pointer;
+    font-size: 2rem; /* 增加主字体 */
+    font-weight: 700;
     font-family: 'STKaiti', 'KaiTi ';
-    border: 3px solid #FD361F;
-    border-radius: 100%;
-    -webkit-box-shadow: 0 5px rgba(253, 54, 31, 0.5);
-    -moz-box-shadow: 0 5px rgba(253, 54, 31, 0.5);
-    box-shadow: 0 5px rgba(253, 54, 31, 0.5);
+    border: 2px solid #FD361F; /* 减小边框 */
+    border-radius: 50%;
+    background: linear-gradient(145deg, #ffffff, #f8f8f8);
+    box-shadow: 
+        0 4px 8px rgba(253, 54, 31, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    line-height: 1.1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0; /* 防止按钮被压缩 */
+    min-width: 65px; /* 确保最小宽度 */
+}
+
+.dashboard .cirle-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 
+        0 6px 12px rgba(253, 54, 31, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-color: #e62e1a;
+}
+
+.dashboard .cirle-btn:active {
+    transform: translateY(0) scale(1.01);
+    box-shadow: 
+        0 3px 6px rgba(253, 54, 31, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .cirle-btn.award {
-    margin: 0 4px;
+    margin: 0 2px; /* 进一步减小间距 */
+}
+
+/* 选中状态样式 */
+.award-active {
+    background: linear-gradient(145deg, #ffbfb7, #ffa8a0) !important;
+    color: #d41c07 !important;
+    border-color: #d41c07 !important;
+    box-shadow: 
+        0 4px 8px rgba(212, 28, 7, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+    transform: translateY(-1px) scale(1.02);
+}
+
+.award-active:hover {
+    background: linear-gradient(145deg, #ffa8a0, #ffbfb7) !important;
+    box-shadow: 
+        0 6px 12px rgba(212, 28, 7, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+/* 奖项按钮内部文字样式 */
+.cirle-btn small {
+    font-size: 1.5rem; /* 增加字体大小 */
+    font-weight: 600; /* 增加字重 */
+    margin-top: 0.3rem; /* 增加间距 */
+    opacity: 0.9; /* 增加透明度 */
+    display: block;
+    line-height: 1.0; /* 调整行高 */
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .dashboard:first-of-type {
+        gap: 6px;
+        padding: 0 1.5rem;
+    }
+    
+    .dashboard {
+        gap: 10px;
+        margin-top: 5.5rem; /* 调整大屏幕的间距 */
+    }
+    
+    .dashboard:nth-of-type(2) {
+        margin-top: 1.5rem;
+        gap: 6px;
+    }
+    
+    .dashboard .cirle-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+    }
+    
+    .cirle-btn small {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard:first-of-type {
+        gap: 4px;
+        padding: 0 1rem;
+    }
+    
+    .dashboard {
+        gap: 8px; /* 减小间距 */
+        padding: 0 1rem;
+        margin-top: 5rem; /* 调整中等屏幕的间距 */
+    }
+    
+    .dashboard:nth-of-type(2) {
+        margin-top: 1.2rem;
+        gap: 6px;
+    }
+    
+    .dashboard .cirle-btn {
+        width: 55px;
+        height: 55px;
+        font-size: 0.9rem;
+        padding: 0.4rem;
+    }
+    
+    .cirle-btn small {
+        font-size: 0.7rem;
+    }
+    
+    .btn-red-outline {
+        width: 40%;
+        font-size: 1.6rem;
+    }
+    
+    .dashboard .lottery-btn {
+        width: 15%;
+        font-size: 1.6rem;
+    }
+    
+    .weight-edit-section {
+        font-size: 1.4rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .weight-edit-section .ant-btn {
+        font-size: 1.2rem;
+        padding: 0.3rem 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard:first-of-type {
+        gap: 3px;
+        padding: 0 0.8rem;
+    }
+    
+    .dashboard {
+        gap: 6px; /* 进一步减小间距 */
+        margin-top: 4.5rem; /* 调整小屏幕的间距 */
+    }
+    
+    .dashboard:nth-of-type(2) {
+        margin-top: 1rem;
+        gap: 4px;
+    }
+    
+    .dashboard .cirle-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 2rem;
+        padding: 0.3rem;
+    }
+    
+    .cirle-btn small {
+        font-size: 1rem;
+        margin-top: 0.2rem;
+    }
+    
+    .btn-red-outline {
+        width: 45%;
+        font-size: 1.4rem;
+    }
+    
+    .dashboard .lottery-btn {
+        width: 18%;
+        font-size: 1.4rem;
+    }
+    
+    .weight-edit-section {
+        font-size: 1.2rem;
+        padding: 0.3rem 0.6rem;
+    }
+    
+    .weight-edit-section .ant-btn {
+        font-size: 1rem;
+        padding: 0.2rem 0.6rem;
+    }
 }
 
 .lottery-btn {
     margin: 0 12px;
 }
 
-.award-active {
-    background: #ffbfb7;
+.award-list-btn {
+    margin: 4rem;
 }
 
 .close {
@@ -828,16 +1090,76 @@ footer {
 }
 
 .weight-edit-section {
-    margin: 1.5rem auto 0 auto;
+    margin: 0.5rem auto 0 auto; /* 减小边距 */
     cursor: pointer;
     color: #FD361F;
-    border: 3px solid #FD361F;
-    -webkit-box-shadow: 0 6px rgba(253, 54, 31, 0.5);
-    -moz-box-shadow: 0 6px rgba(253, 54, 31, 0.5);
-    box-shadow: 0 6px rgba(253, 54, 31, 0.5);
-    font-size: 2rem;
+    border: 2px solid #FD361F; /* 减小边框 */
+    -webkit-box-shadow: 0 4px rgba(253, 54, 31, 0.4);
+    -moz-box-shadow: 0 4px rgba(253, 54, 31, 0.4);
+    box-shadow: 0 4px rgba(253, 54, 31, 0.4);
+    font-size: 1.6rem; /* 减小字体 */
     font-weight: 600;
     font-family: 'STKaiti', 'KaiTi ';
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 40px; /* 减小圆角 */
+    background: linear-gradient(145deg, #ffffff, #f8f8f8);
+    position: relative;
+    overflow: hidden;
+    padding: 0.5rem 1rem; /* 添加内边距 */
+}
+
+.weight-edit-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(253, 54, 31, 0.5);
+    border-color: #e62e1a;
+}
+
+.weight-edit-section:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 8px rgba(253, 54, 31, 0.3);
+}
+
+/* 权重编辑按钮内的 Ant Design 按钮样式优化 */
+.weight-edit-section .ant-btn {
+    border-radius: 40px; /* 减小圆角 */
+    font-family: 'STKaiti', 'KaiTi ';
+    font-weight: 600;
+    font-size: 1.4rem; /* 减小字体 */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid #FD361F;
+    background: linear-gradient(145deg, #ffffff, #f8f8f8);
+    color: #FD361F;
+    box-shadow: 0 3px 8px rgba(253, 54, 31, 0.3);
+    padding: 0.4rem 1rem; /* 调整内边距 */
+    height: auto; /* 自适应高度 */
+    line-height: 1.4;
+}
+
+.weight-edit-section .ant-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(253, 54, 31, 0.4);
+    border-color: #e62e1a;
+    color: #e62e1a;
+}
+
+.weight-edit-section .ant-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(253, 54, 31, 0.3);
+}
+
+/* 危险按钮样式 */
+.weight-edit-section .ant-btn-dangerous {
+    background: linear-gradient(145deg, #ff4d4f, #ff7875);
+    color: white;
+    border-color: #ff4d4f;
+    box-shadow: 0 3px 8px rgba(255, 77, 79, 0.3);
+}
+
+.weight-edit-section .ant-btn-dangerous:hover {
+    background: linear-gradient(145deg, #ff7875, #ff4d4f);
+    border-color: #ff7875;
+    color: white;
+    box-shadow: 0 5px 12px rgba(255, 77, 79, 0.4);
 }
 
 .global-spin {
