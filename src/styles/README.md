@@ -12,7 +12,6 @@ src/assets/styles/
 ├── global.scss                  # 全局CSS变量定义
 ├── base/                        # 基础样式
 │   ├── reset.scss              # CSS重置
-│   ├── variables.scss          # CSS变量
 │   └── common.scss             # 公共样式
 ├── components/                  # 组件样式
 │   └── lottery/                # 抽奖组件
@@ -34,7 +33,6 @@ src/assets/styles/
 ### 基础样式 (base/)
 
 - **reset.scss**: CSS重置，确保跨浏览器一致性
-- **variables.scss**: CSS变量定义，统一管理颜色、字体、间距等
 - **common.scss**: 公共样式，包括布局、按钮、模态框等基础组件
 
 ### 组件样式 (components/)
@@ -65,7 +63,6 @@ src/assets/styles/
 
 ```vue
 <style lang="scss" scoped>
-@use "@/styles/base/variables.scss";
 @use "@/styles/components/lottery/lottery-main.scss";
 </style>
 ```

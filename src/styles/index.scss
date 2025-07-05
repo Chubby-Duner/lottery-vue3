@@ -4,7 +4,6 @@
 @use './global.scss';
 
 /* 基础样式 */
-@forward './base/variables';
 @forward './base/reset';
 @forward './base/common';
 
