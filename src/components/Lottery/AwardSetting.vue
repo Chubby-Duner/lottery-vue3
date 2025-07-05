@@ -1,50 +1,5 @@
-<template>
-  <a-modal
-    v-model:open="settingVisible"
-    title="奖项设置"
-    width="500px"
-    @ok="handleOk"
-    @cancel="handleCancel"
-    okText="保存"
-    cancelText="取消"
-  >
-    <a-table
-      :dataSource="localAwards"
-      :pagination="false"
-      :columns="columns"
-      rowKey="key"
-      size="small"
-      bordered
-    >
-      <template #bodyCell="{ column, record, index }">
-        <template v-if="column.key === 'label'">
-          <a-input v-model:value="record.label" />
-        </template>
-        <template v-else-if="column.key === 'count'">
-          <a-input-number v-model:value="record.count" :min="1" :max="99" />
-        </template>
-        <template v-else-if="column.key === 'action'">
-          <a-popconfirm
-            title="确定删除该奖项？"
-            okText="删除"
-            okType="danger"
-            cancelText="取消"
-            @confirm="removeAward(index)"
-          >
-            <a-button type="link" danger>删除</a-button>
-          </a-popconfirm>
-        </template>
-      </template>
-    </a-table>
-    <div style="margin-top: 16px; text-align: center">
-      <a-button type="dashed" @click="addAward">添加奖项</a-button>
-      <a-button type="dashed" class="margin-left10" @click="resetAwardCounts">重置奖项个数</a-button>
-    </div>
-  </a-modal>
-</template>
-
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { message } from "ant-design-vue";
 import { useAwardStore } from "@/store/awardStore";
 
@@ -61,47 +16,125 @@ const emit = defineEmits(["update:visible", "save"]);
 const awardStore = useAwardStore();
 const settingVisible = ref(false);
 const localAwards = ref([]);
+
+// 计算实际的剩余数量
+const getRemainingCount = (awardKey) => {
+  const idx = awardStore.awards.findIndex(a => a.key === awardKey);
+  if (idx === -1) return 0;
+  const awardLogKey = `award0${idx + 1}`;
+  return awardStore.awardLog[awardLogKey] || 0;
+};
+
+// 创建包含剩余数量的奖项数据
+const createAwardsWithRemaining = () => {
+  return props.awards.map((item) => ({
+    ...item,
+    remainingCount: getRemainingCount(item.key),
+    originalCount: item.count // 保留原始数量用于重置
+  }));
+};
+
 watch(
   () => props.awards,
   (val) => {
-    localAwards.value = val.map((item) => ({ ...item }));
+    localAwards.value = createAwardsWithRemaining();
   },
   { immediate: true }
 );
 
 const columns = [
   { title: "奖项名称", key: "label", dataIndex: "label", width: 120 },
-  { title: "数量", key: "count", dataIndex: "count", width: 80 },
+  { title: "原始数量", key: "originalCount", dataIndex: "originalCount", width: 80 },
+  { title: "剩余数量", key: "remainingCount", dataIndex: "remainingCount", width: 100 },
   { title: "操作", key: "action", width: 80 },
 ];
 
 // 新增
 const addAward = () => {
   const idx = localAwards.value.length + 1;
-  localAwards.value.push({
+  const newAward = {
     key: `award${idx}`,
     label: `新奖项${idx}`,
     count: 1,
-  });
+    originalCount: 1,
+    remainingCount: 1,
+  };
+  localAwards.value.push(newAward);
+  
+  // 同时更新奖项存储
+  const newAwards = localAwards.value.map((item) => ({
+    key: item.key,
+    label: item.label,
+    count: item.originalCount,
+  }));
+  awardStore.setAwards(newAwards);
 };
 
 // 删除
 const removeAward = (index) => {
   localAwards.value.splice(index, 1);
+  
+  // 同时更新奖项存储
+  const newAwards = localAwards.value.map((item) => ({
+    key: item.key,
+    label: item.label,
+    count: item.originalCount,
+  }));
+  awardStore.setAwards(newAwards);
 };
 
 // 重置
 const resetAwardCounts = () => {
   awardStore.resetAwardCounts();
-  message.success("奖项个数已重置");
+  // 更新本地数据
+  localAwards.value = createAwardsWithRemaining();
+  message.success("奖项剩余数量已重置为原始设置，中奖名单已保留");
+};
+
+// 手动设置剩余数量
+const setRemainingCounts = () => {
+  // 验证剩余数量不超过原始数量
+  const invalidItems = localAwards.value.filter(item => item.remainingCount > item.originalCount);
+  if (invalidItems.length > 0) {
+    message.error(`剩余数量不能超过原始数量：${invalidItems.map(item => item.label).join(', ')}`);
+    return;
+  }
+  
+  const newLog = { ...awardStore.awardLog };
+  localAwards.value.forEach((item, idx) => {
+    const key = `award0${idx + 1}`;
+    newLog[key] = item.remainingCount;
+  });
+  awardStore.setAwardLog(newLog);
+  message.success("剩余数量已手动更新");
 };
 
 const handleOk = () => {
-  emit(
-    "save",
-    localAwards.value.map((item) => ({ ...item }))
-  );
+  // 验证剩余数量不超过原始数量
+  const invalidItems = localAwards.value.filter(item => item.remainingCount > item.originalCount);
+  if (invalidItems.length > 0) {
+    message.error(`剩余数量不能超过原始数量：${invalidItems.map(item => item.label).join(', ')}`);
+    return;
+  }
+  
+  // 更新奖项数据，使用原始数量作为count
+  const newAwards = localAwards.value.map((item) => ({
+    key: item.key,
+    label: item.label,
+    count: item.originalCount, // 使用原始数量
+  }));
+  emit("save", newAwards);
+  
+  // 同时更新剩余数量
+  const newLog = { ...awardStore.awardLog };
+  localAwards.value.forEach((item, idx) => {
+    const key = `award0${idx + 1}`;
+    newLog[key] = item.remainingCount;
+  });
+  awardStore.setAwardLog(newLog);
+  
   settingVisible.value = false;
+  message.success("奖项设置已保存");
 };
 
 const handleCancel = () => {
@@ -112,6 +145,10 @@ watch(
   () => props.visible,
   (newValue) => {
     settingVisible.value = newValue;
+    if (newValue) {
+      // 每次打开时重新计算剩余数量
+      localAwards.value = createAwardsWithRemaining();
+    }
   }
 );
 
@@ -122,5 +159,71 @@ watch(
   }
 );
 </script>
+
+<template>
+  <a-modal
+    v-model:open="settingVisible"
+    title="奖项设置"
+    width="600px"
+    @ok="handleOk"
+    @cancel="handleCancel"
+    okText="保存"
+    cancelText="取消"
+  >
+    <div style="margin-bottom: 16px; padding: 12px; background: #f6f8fa; border-radius: 6px; font-size: 12px; color: #666;">
+      <div><strong>使用说明：</strong></div>
+      <div>• 原始数量：奖项的初始设置数量（可编辑）</div>
+      <div>• 剩余数量：当前可抽奖的数量（可编辑，不能超过原始数量）</div>
+      <div>• 重置剩余数量：将所有奖项剩余数量恢复为原始设置</div>
+      <div>• 手动设置剩余数量：保存当前表格中的剩余数量设置</div>
+    </div>
+    <a-table
+      :dataSource="localAwards"
+      :pagination="false"
+      :columns="columns"
+      rowKey="key"
+      size="small"
+      bordered
+    >
+      <template #bodyCell="{ column, record, index }">
+        <template v-if="column.key === 'label'">
+          <a-input v-model:value="record.label" />
+        </template>
+        <template v-else-if="column.key === 'originalCount'">
+          <a-input-number v-model:value="record.originalCount" :min="1" :max="99" />
+        </template>
+        <template v-else-if="column.key === 'remainingCount'">
+          <a-input-number 
+            v-model:value="record.remainingCount" 
+            :min="0" 
+            :max="record.originalCount"
+            size="small"
+            style="width: 80px"
+            :style="{ 
+              color: record.remainingCount === 0 ? '#ff4d4f' : '#52c41a',
+              fontWeight: record.remainingCount === 0 ? 'bold' : 'normal'
+            }"
+          />
+        </template>
+        <template v-else-if="column.key === 'action'">
+          <a-popconfirm
+            title="确定删除该奖项？"
+            okText="删除"
+            okType="danger"
+            cancelText="取消"
+            @confirm="removeAward(index)"
+          >
+            <a-button type="link" danger>删除</a-button>
+          </a-popconfirm>
+        </template>
+      </template>
+    </a-table>
+    <div style="margin-top: 16px; text-align: center">
+      <a-button type="dashed" @click="addAward">添加奖项</a-button>
+      <a-button type="dashed" class="margin-left10" @click="resetAwardCounts">重置剩余数量</a-button>
+      <a-button type="dashed" class="margin-left10" @click="setRemainingCounts">手动设置剩余数量</a-button>
+    </div>
+  </a-modal>
+</template>
 
 <style scoped></style>

@@ -161,6 +161,30 @@ const openAwardSetting = () => {
 };
 const handleAwardSettingSave = (newAwards) => {
   awardStore.setAwards(newAwards);
+  // 更新权重数据结构
+  updateWeightData();
+};
+//#endregion
+
+//#region 权重数据更新
+const updateWeightData = () => {
+  if (lotteryData.value.length > 0) {
+    lotteryData.value = lotteryData.value.map((item) => {
+      const awardWeights = { ...item.awardWeights };
+      // 确保包含所有奖项的权重
+      awardStore.awards.forEach((award, index) => {
+        const key = index + 1;
+        if (!(key in awardWeights)) {
+          awardWeights[key] = 1; // 默认权重为1
+        }
+      });
+      
+      return {
+        ...item,
+        awardWeights,
+      };
+    });
+  }
 };
 //#endregion
 
@@ -199,7 +223,7 @@ const handleLottery = () => {
   if (lockedList.length > 0) {
     // 有锁定，判断锁定且权重>0的人
     const lockedWithWeight = lockedList.filter(
-      (item) => (item.awardWeights?.[selectedAward.value] ?? 1) > 0
+      (item) => (item.awardWeights?.[idx + 1] ?? 1) > 0
     );
     if (lockedWithWeight.length === 0) {
       message.error("锁定的人员当前奖项权重都为0，无法抽奖");
@@ -208,7 +232,7 @@ const handleLottery = () => {
   } else {
     // 没有锁定，判断所有权重
     const weights = lotteryData.value.map(
-      (item) => item.awardWeights?.[selectedAward.value] ?? 1
+      (item) => item.awardWeights?.[idx + 1] ?? 1
     );
     const total = weights.reduce((a, b) => a + b, 0);
     if (total === 0) {
@@ -257,10 +281,11 @@ const stopLottery = async () => {
     return;
   }
   try {
+    const idx = awardStore.awards.findIndex((a) => a.key === selectedAward.value);
     // 先查找是否有锁定 锁定且权重>0才可抽中
     const lockedList = lotteryData.value.filter(
       (item) =>
-        item.locked && (item.awardWeights?.[selectedAward.value] ?? 1) > 0
+        item.locked && (item.awardWeights?.[idx + 1] ?? 1) > 0
     );
     let winnerIndexResult;
     if (lockedList.length > 0) {
@@ -308,10 +333,10 @@ const stopLottery = async () => {
     // 写入中奖名单
     awardStore.addWinner(selectedAward.value, winnerData);
     // 更新奖项剩余数量
-    const idx = awardStore.awards.findIndex(
+    const remainingIdx = awardStore.awards.findIndex(
       (a) => a.key === selectedAward.value
     );
-    const awardKey = `award0${idx + 1}`;
+    const awardKey = `award0${remainingIdx + 1}`;
     const newAwardLog = { ...awardStore.awardLog };
     newAwardLog[awardKey] -= 1;
     awardStore.setAwardLog(newAwardLog);

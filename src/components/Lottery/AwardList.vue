@@ -18,7 +18,7 @@ const awardGroups = computed(() =>
   awardStore.awards
     .map((award) => ({
       key: award.key,
-      title: award.label + "奖",
+      title: award.label,
       data: awardStore.winnerMap[award.key] || [],
     }))
     .filter((group) => group.data.length > 0)

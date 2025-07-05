@@ -46,12 +46,14 @@ const getImageUrl = (name, type) => {
 }
 
 /**
- * 权重抽奖函数
+ * 根据权重随机选择索引
  * @param {array} list 名单
- * @param {number} awardType 奖项
+ * @param {string} awardType 奖项key
  */
 const weightedRandomIndex = (list, awardType) => {
-  const weights = list.map((item) => item.awardWeights?.[awardType] ?? 1);
+  // 将奖项key转换为索引
+  const awardIndex = parseInt(awardType.replace('award', ''));
+  const weights = list.map((item) => item.awardWeights?.[awardIndex] ?? 1);
   const total = weights.reduce((a, b) => a + b, 0);
 
   if (total === 0) {

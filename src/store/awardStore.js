@@ -30,18 +30,26 @@ export const useAwardStore = defineStore("awardStore", {
       this.awards = newAwards;
       storage.set("awards", this.awards);
 
-      // 只为新增奖项初始化数量，已有奖项保留原剩余数量
+      // 更新奖项剩余数量
       const newLog = { ...this.awardLog };
       newAwards.forEach((item, idx) => {
         const key = `award0${idx + 1}`;
         if (!(key in newLog)) {
+          // 新增奖项，设置初始数量
           newLog[key] = item.count;
+        } else {
+          // 已存在的奖项，如果新数量大于当前剩余数量，则更新剩余数量
+          const currentRemaining = newLog[key];
+          if (item.count > currentRemaining) {
+            newLog[key] = item.count;
+          }
         }
       });
 
       // 删除被移除奖项的数量
       Object.keys(newLog).forEach(key => {
-        if (!newAwards[parseInt(key.replace("award0", "")) - 1]) {
+        const awardIndex = parseInt(key.replace("award0", "")) - 1;
+        if (!newAwards[awardIndex]) {
           delete newLog[key];
         }
       });

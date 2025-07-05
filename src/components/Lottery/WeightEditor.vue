@@ -1,6 +1,7 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { message } from "ant-design-vue";
+import { useAwardStore } from "@/store/awardStore";
 
 defineOptions({
   name: "WeightEditor",
@@ -13,22 +14,91 @@ const props = defineProps({
 
 const emit = defineEmits(["update:visible", "save"]);
 
+const awardStore = useAwardStore();
 const weightVisible = ref(false);
 // 权重数据副本
 const weightData = ref([]);
+
+// 动态生成表格列
+const columns = computed(() => {
+  const baseColumns = [
+    {
+      title: "姓名",
+      key: "name",
+      width: 150,
+      fixed: "left",
+    }
+  ];
+  
+  // 动态添加奖项列
+  awardStore.awards.forEach((award, index) => {
+    baseColumns.push({
+      title: `${award.label}权重`,
+      key: `award${index + 1}`,
+      width: 120,
+      align: "center",
+    });
+  });
+  
+  // 添加锁定列
+  baseColumns.push({
+    title: "锁定",
+    key: "locked",
+    width: 80,
+    align: "center",
+  });
+  
+  return baseColumns;
+});
 
 // 监听数据变化，创建副本
 watch(
   () => props.lotteryData,
   (newData) => {
     if (newData && newData.length > 0) {
-      weightData.value = newData.map((item) => ({
-        ...item,
-        awardWeights: { ...item.awardWeights },
-      }));
+      weightData.value = newData.map((item) => {
+        // 确保权重数据结构包含所有奖项
+        const awardWeights = { ...item.awardWeights };
+        awardStore.awards.forEach((award, index) => {
+          const key = index + 1;
+          if (!(key in awardWeights)) {
+            awardWeights[key] = 1; // 默认权重为1
+          }
+        });
+        
+        return {
+          ...item,
+          awardWeights,
+        };
+      });
     }
   },
   { immediate: true }
+);
+
+// 监听奖项变化，更新权重数据结构
+watch(
+  () => awardStore.awards,
+  () => {
+    if (weightData.value.length > 0) {
+      weightData.value = weightData.value.map((item) => {
+        const awardWeights = { ...item.awardWeights };
+        // 确保包含所有奖项的权重
+        awardStore.awards.forEach((award, index) => {
+          const key = index + 1;
+          if (!(key in awardWeights)) {
+            awardWeights[key] = 1; // 默认权重为1
+          }
+        });
+        
+        return {
+          ...item,
+          awardWeights,
+        };
+      });
+    }
+  },
+  { deep: true }
 );
 
 watch(
@@ -45,46 +115,6 @@ watch(
   }
 );
 
-// 表格列定义
-const columns = [
-  {
-    title: "姓名",
-    key: "name",
-    width: 150,
-    fixed: "left",
-  },
-  {
-    title: "一等奖权重",
-    key: "award1",
-    width: 120,
-    align: "center",
-  },
-  {
-    title: "二等奖权重",
-    key: "award2",
-    width: 120,
-    align: "center",
-  },
-  {
-    title: "三等奖权重",
-    key: "award3",
-    width: 120,
-    align: "center",
-  },
-  {
-    title: "纪念奖权重",
-    key: "award4",
-    width: 120,
-    align: "center",
-  },
-  {
-    title: "锁定",
-    key: "locked",
-    width: 80,
-    align: "center",
-  },
-];
-
 // 权重变更处理
 const handleWeightChange = () => {
   // 权重变更时自动保存到副本
@@ -93,7 +123,11 @@ const handleWeightChange = () => {
 // 重置所有权重为0
 const resetAllWeights = () => {
   weightData.value.forEach((item) => {
-    item.awardWeights = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    const awardWeights = {};
+    awardStore.awards.forEach((award, index) => {
+      awardWeights[index + 1] = 0;
+    });
+    item.awardWeights = awardWeights;
   });
   message.success("已重置所有权重为0");
 };
@@ -101,7 +135,11 @@ const resetAllWeights = () => {
 // 设置默认权重为1
 const setDefaultWeights = () => {
   weightData.value.forEach((item) => {
-    item.awardWeights = { 1: 1, 2: 1, 3: 1, 4: 1 };
+    const awardWeights = {};
+    awardStore.awards.forEach((award, index) => {
+      awardWeights[index + 1] = 1;
+    });
+    item.awardWeights = awardWeights;
   });
   message.success("已设置默认权重为1");
 };

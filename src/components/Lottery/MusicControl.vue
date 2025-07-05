@@ -3,6 +3,10 @@ import { ref, onMounted, watch } from "vue";
 import { useMusicStore } from "@/store/musicStore";
 import shijiMp3 from "@/assets/audio/shiji.mp3";
 
+defineOptions({
+  name: "MusicControl",
+});
+
 const musicStore = useMusicStore();
 const audioElement = ref(null);
 
