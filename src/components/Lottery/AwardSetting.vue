@@ -83,27 +83,11 @@ const addAward = () => {
     remainingCount: 1,
   };
   localAwards.value.push(newAward);
-  
-  // 同时更新奖项存储
-  const newAwards = localAwards.value.map((item) => ({
-    key: item.key,
-    label: item.label,
-    count: item.originalCount,
-  }));
-  awardStore.setAwards(newAwards);
 };
 
 // 删除
 const removeAward = (index) => {
   localAwards.value.splice(index, 1);
-  
-  // 同时更新奖项存储
-  const newAwards = localAwards.value.map((item) => ({
-    key: item.key,
-    label: item.label,
-    count: item.originalCount,
-  }));
-  awardStore.setAwards(newAwards);
 };
 
 // 重置
@@ -162,6 +146,8 @@ const handleOk = () => {
 
 const handleCancel = () => {
   settingVisible.value = false;
+  // 取消时重新加载原始数据，丢弃所有未保存的修改
+  localAwards.value = createAwardsWithRemaining();
 };
 
 watch(
