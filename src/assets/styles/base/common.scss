@@ -1,0 +1,293 @@
+/* Common Styles - 公共样式 */
+
+/* 布局类 */
+.main {
+  position: relative;
+  width: var(--container-width);
+  height: 100%;
+  margin: 5rem auto 0 auto;
+}
+
+.top-head {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: var(--header-height);
+  z-index: 2;
+  background: url("../../images/top_border.png") repeat-x;
+}
+
+/* 侧边栏样式 */
+aside {
+  position: absolute;
+  top: 0;
+  width: var(--sidebar-width);
+  height: 100%;
+  z-index: 1;
+  text-align: center;
+
+  &.aside-left {
+    left: 0;
+  }
+
+  &.aside-right {
+    right: 0;
+  }
+
+  .aside-main {
+    width: 100%;
+    height: 100%;
+    background: var(--background-white);
+    padding-top: 4rem;
+    box-shadow: var(--shadow-md);
+  }
+
+  img.switch {
+    margin-top: var(--spacing-lg);
+    cursor: pointer;
+  }
+}
+
+/* 确保边框元素不受switch动画影响 */
+.wrap-border-left,
+.wrap-border-right {
+  animation: none !important;
+  transform: none !important;
+}
+
+/* 按钮基础样式 */
+.btn {
+  text-align: center;
+  border-radius: var(--border-radius-md);
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-base);
+  font-family: var(--font-family-chinese);
+  font-weight: 600;
+
+  &.btn-red {
+    color: var(--background-white);
+    background: var(--primary-color);
+    box-shadow: 0 6px #B92C1C;
+  }
+
+  &.btn-red-outline {
+    width: 35%;
+    margin: 1rem auto 0 auto;
+    color: var(--primary-color);
+    border: 3px solid var(--primary-color);
+    box-shadow: 0 6px rgba(253, 54, 31, 0.5);
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    border-radius: 50px;
+    background: linear-gradient(145deg, var(--background-white), var(--background-light));
+    position: relative;
+    overflow: hidden;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(253, 54, 31, 0.6);
+      border-color: var(--primary-hover);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 12px rgba(253, 54, 31, 0.4);
+    }
+  }
+}
+
+/* 模态框基础样式 */
+.modal-open {
+  overflow: hidden;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--z-index-modal);
+  overflow: hidden;
+  outline: 0;
+
+  &.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+    transform: translate(0, -25%);
+  }
+
+  &.in .modal-dialog {
+    transform: translate(0, 0);
+  }
+
+  .modal-dialog {
+    position: relative;
+    width: auto;
+    height: 80%;
+    margin: 10px;
+  }
+
+  .modal-content {
+    position: relative;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    outline: 0;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: #000;
+
+    &.fade {
+      opacity: 0;
+    }
+
+    &.in {
+      opacity: 0.5;
+    }
+  }
+
+  .modal-header {
+    min-height: 16.43px;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .modal-title {
+    margin: 0;
+    line-height: 1.42857143;
+  }
+
+  .modal-body {
+    position: relative;
+    padding: 15px;
+  }
+
+  .modal-footer {
+    padding: 15px;
+    text-align: right;
+    border-top: 1px solid var(--border-color);
+  }
+}
+
+.modal-open .modal {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* 关闭按钮 */
+.close {
+  float: right;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1;
+  color: #000;
+  text-shadow: 0 1px 0 #aaa;
+
+  &:hover,
+  &:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+    opacity: 0.5;
+  }
+
+  &.button {
+    display: none;
+    position: fixed;
+    top: 6%;
+    left: 57%;
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 0;
+    cursor: pointer;
+    background: 0 0;
+    border: 0;
+    z-index: 1050;
+  }
+
+  span {
+    font-size: 5rem;
+    color: var(--gold-light);
+  }
+}
+
+/* 动画效果 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 全局加载 */
+.global-spin {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-index-loading);
+  pointer-events: all;
+}
+
+/* 页脚 */
+footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 2rem;
+  z-index: 3;
+  background: url("../../images/langhua.png") repeat-x;
+  background-size: contain;
+}
+
+/* 控制按钮 */
+#music-control {
+  z-index: 99;
+  position: fixed;
+  bottom: 3%;
+  left: 0.5%;
+  width: 3rem;
+  height: 3rem;
+  background: url("../../images/music.png") 0 0 no-repeat;
+  background-size: contain;
+}
+
+#clear-control {
+  z-index: 99;
+  position: fixed;
+  bottom: 3%;
+  right: 0.5%;
+  width: 3rem;
+  height: 3rem;
+  background: url("../../images/clear.png") 0 0 no-repeat;
+  background-size: contain;
+}
+
+/* 响应式媒体查询 */
+@media (min-width: 768px) {
+  .modal-dialog {
+    width: 20%;
+    margin: 30px auto;
+  }
+}

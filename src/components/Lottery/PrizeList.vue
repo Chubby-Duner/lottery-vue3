@@ -42,6 +42,6 @@ const toggleList = () => {
   </aside>
 </template>
 
-<style scoped>
-@import "@/assets/styles/style.css";
+<style lang="scss">
+@use "@/assets/styles/index.scss";
 </style>

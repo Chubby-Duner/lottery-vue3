@@ -1,0 +1,279 @@
+/* Lottery Main Styles - 抽奖主样式 */
+
+/* 抽奖主容器 */
+.lottery-main {
+  position: relative;
+  margin: 0 auto;
+  height: 100%;
+  width: 100%;
+}
+
+/* 边框容器 */
+.wrap-border-main {
+  position: absolute;
+  width: 100%;
+  height: 65%;
+  z-index: -5;
+  top: 2%;
+}
+
+.wrap-border {
+  position: absolute;
+  width: 21.5rem;
+  height: 21.5rem;
+  background-size: contain;
+
+  &.wrap-border-top {
+    top: 0.2%;
+    left: 9%;
+    bottom: 0;
+    height: 97.4%;
+    width: 81%;
+    margin: 0 auto;
+    border-top: 4.5px solid #CB141D;
+    border-bottom: 4.5px solid #CB141D;
+  }
+
+  &.wrap-border-left {
+    left: 0;
+    right: 0;
+    bottom: 7%;
+    height: 80%;
+    width: 98.7%;
+    border-left: 4.5px solid #CB141D;
+  }
+
+  &.wrap-border-right {
+    top: 10%;
+    right: 0;
+    height: 80%;
+    width: 4.3px;
+    background: #CB141D;
+  }
+
+  &.wrap-border-1 {
+    top: 0;
+    left: 0;
+  }
+
+  &.wrap-border-2 {
+    top: 0;
+    right: 0;
+  }
+
+  &.wrap-border-3 {
+    bottom: 0;
+    left: 0;
+  }
+
+  &.wrap-border-4 {
+    bottom: 0;
+    right: 0;
+  }
+}
+
+/* 主容器 */
+.wrap-main {
+  position: relative;
+  top: 2%;
+  height: 65%;
+  overflow: hidden;
+
+  .stop-time {
+    display: none;
+    position: absolute;
+    top: 40%;
+    height: 11rem;
+    font-size: 11rem;
+    font-family: var(--font-family-chinese);
+    color: #CB141D;
+  }
+
+  #stop_left {
+    padding-left: 2%;
+  }
+
+  #stop_right {
+    right: -1%;
+    padding-right: 2%;
+  }
+}
+
+#lottery-wrap {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+
+  .sure-active {
+    background: linear-gradient(90deg, var(--gold-bg) 0%, var(--gold-lighter) 100%);
+    border: 3px solid var(--gold-color);
+    box-shadow: 0 0 16px 4px var(--gold-lighter), 0 2px 8px var(--gold-color);
+    font-weight: bold;
+    font-size: 1.25em;
+    color: #b48800 !important;
+    z-index: 2;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 2.3, 0.3, 1);
+  }
+}
+
+/* 抽奖列表项 */
+.lottery-list {
+  position: relative;
+  margin: 0 auto 1.5rem auto;
+  width: 100%;
+}
+
+.lottery-avatar {
+  height: 80px;
+  width: 80px;
+  margin-left: 8rem;
+  margin-top: 1.2rem;
+  border-radius: 80px;
+  overflow: hidden;
+
+  &.turqoise {
+    box-shadow: 0 0 0 4px white, inset 0 0 0 1px rgba(254, 54, 31, 0.2), 0 0 0 8px rgba(254, 54, 31, 0.9);
+  }
+
+  img {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* 抽奖内容 */
+.lottery-content {
+  position: relative;
+  margin-left: 3rem;
+  padding: 1.5rem;
+  width: 80.5%;
+  height: 6rem;
+  transition: all 0.4s;
+  border-radius: 5px;
+  box-shadow: var(--shadow-sm);
+  background: rgba(255, 255, 255, 0.8);
+
+  .beauty {
+    position: absolute;
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    overflow: hidden;
+
+    &.border-01 {
+      top: 3px;
+      left: 3px;
+      background: url("../../../images/border-01.png") no-repeat;
+      background-size: contain;
+    }
+
+    &.border-02 {
+      top: 3px;
+      right: 3px;
+      background: url("../../../images/border-02.png") no-repeat;
+      background-size: contain;
+    }
+
+    &.border-03 {
+      bottom: 3px;
+      left: 3px;
+      background: url("../../../images/border-03.png") no-repeat;
+      background-size: contain;
+    }
+
+    &.border-04 {
+      bottom: 3px;
+      right: 3px;
+      background: url("../../../images/border-04.png") no-repeat;
+      background-size: contain;
+    }
+  }
+
+  &:before {
+    content: "";
+    display: block;
+    position: absolute;
+    left: -20px;
+    right: auto;
+    top: 40%;
+    border: 10px solid transparent;
+    border-right-color: var(--primary-color);
+  }
+
+  &:after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 40%;
+    left: -17px;
+    right: auto;
+    border: 10px solid transparent;
+    border-right-color: #fff;
+  }
+
+  .content-title {
+    margin: 0 0 10px;
+    text-align: center;
+
+    .lottery-name {
+      font-size: var(--font-size-xxl);
+      color: var(--secondary-color);
+      font-weight: bold;
+      font-family: var(--font-family-chinese);
+    }
+
+    .company {
+      font-size: var(--font-size-base);
+      font-weight: 500;
+      color: var(--secondary-light);
+      font-family: var(--font-family-primary);
+    }
+  }
+
+  .content-detail {
+    b {
+      color: var(--primary-color);
+      font-weight: bold;
+      font-family: var(--font-family-chinese);
+    }
+
+    span {
+      margin: 15px 0 10px;
+      line-height: 25px;
+      font-size: var(--font-size-base);
+      font-weight: 400;
+      font-family: var(--font-family-chinese);
+    }
+  }
+}
+
+/* 抽奖箭头 */
+.lottery-arrow {
+  position: absolute;
+  right: 0;
+  top: 50%;
+}
+
+/* 奖项信息 */
+.lotterty-infogo {
+  margin: 3rem auto 0 auto;
+  text-align: center;
+
+  h3 {
+    display: inline-block;
+    color: var(--primary-color);
+    font-size: var(--font-size-xxl);
+    font-weight: bold;
+    font-family: var(--font-family-chinese);
+  }
+
+  .line {
+    margin: 2rem auto 1rem auto;
+    width: 20%;
+    height: 2px;
+    background: var(--primary-color);
+  }
+}

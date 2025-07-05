@@ -1,14 +1,9 @@
 <script setup>
-import { ref } from 'vue'
-import { message } from 'ant-design-vue'
-import { translateKeys } from '@/composables/utils'
-
 import AwardList from '@/components/Lottery/AwardList.vue'
 import PrizeList from '@/components/Lottery/PrizeList.vue'
 import LotteryMain from '@/components/Lottery/index.vue'
-import SnowEffect from '@/components/Lottery/SnowEffect.vue'
+// import SnowEffect from '@/components/Lottery/SnowEffect.vue'
 import MusicControl from '@/components/Lottery/MusicControl.vue'
-import ClearDataControl from '@/components/Lottery/ClearDataControl.vue'
 
 defineOptions({
   name: "Lottery"
@@ -19,8 +14,6 @@ defineOptions({
 <template>
   <div class="lottery-container">
   
-    <!-- ***************************** -->
-
     <header class="top-head"></header>
     
     <AwardList />
@@ -30,7 +23,6 @@ defineOptions({
 
     <!-- 添加音乐和清除控制 -->
     <MusicControl />
-    <!-- <ClearDataControl /> -->
     
     
     <!-- 两种雪花效果 -->
@@ -59,15 +51,13 @@ defineOptions({
   </div>
 </template>
 
-<style>
+<style lang="scss">
 /* 全局样式 */
-@import '@/assets/styles/style.css';
+@use '@/assets/styles/index.scss';
 @import '@/assets/styles/animate.css';
 
 .lottery-container {
-  /* position: relative; */
   width: 100%;
   height: 100%;
-  /* overflow: hidden; */
 }
 </style>

@@ -548,7 +548,12 @@ const clearAllData = () => {
           </a-button>
         </div>
         <div class="btn weight-edit-section">
-          <a-button danger @click="resetAllData"> 重置数据 </a-button>
+          <a-button danger @click="resetAllData">
+            <template #icon>
+              <SettingOutlined />
+            </template>
+            重置数据
+          </a-button>
         </div>
       </div>
     </div>
@@ -624,6 +629,7 @@ const clearAllData = () => {
   />
 </template>
 
-<style scoped>
-@import "@/assets/styles/style.css";
+<style lang="scss" scoped>
+// @use "@/assets/styles/index.scss";
+@import url("@/assets/styles/index.scss");
 </style>

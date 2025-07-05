@@ -1,0 +1,226 @@
+/* Responsive Layout - 响应式布局 */
+
+/* 大屏幕 (1200px+) */
+@media (max-width: 1200px) {
+  .main {
+    width: 70%;
+  }
+
+  .dashboard {
+    gap: 10px;
+    margin-top: 5.5rem;
+
+    &:first-of-type {
+      gap: 6px;
+      padding: 0 1.5rem;
+    }
+
+    &:nth-of-type(2) {
+      margin-top: 1.5rem;
+      gap: 6px;
+    }
+  }
+
+  .lottery-content {
+    margin-left: 2.5rem;
+    padding: 1.2rem;
+  }
+
+  .lottery-avatar {
+    margin-left: 6rem;
+  }
+}
+
+/* 中等屏幕 (768px - 1199px) */
+@media (max-width: 768px) {
+  .main {
+    width: 85%;
+  }
+
+  aside {
+    width: 12%;
+  }
+
+  .dashboard {
+    gap: 8px;
+    margin-top: 5rem;
+
+    &:first-of-type {
+      gap: 4px;
+      padding: 0 1rem;
+    }
+
+    &:nth-of-type(2) {
+      margin-top: 1.2rem;
+      gap: 4px;
+    }
+  }
+
+  .lottery-content {
+    margin-left: 2rem;
+    padding: 1rem;
+    width: 85%;
+  }
+
+  .lottery-avatar {
+    margin-left: 4rem;
+    height: 70px;
+    width: 70px;
+
+    img {
+      width: 70px;
+      height: 70px;
+    }
+  }
+
+  .lotterty-infogo {
+    h3 {
+      font-size: 2.5rem;
+    }
+  }
+
+  .btn-red-outline {
+    width: 40%;
+    font-size: var(--font-size-lg);
+  }
+}
+
+/* 小屏幕 (480px - 767px) */
+@media (max-width: 480px) {
+  .main {
+    width: 95%;
+    margin: 3rem auto 0 auto;
+  }
+
+  aside {
+    width: 10%;
+  }
+
+  .dashboard {
+    gap: 6px;
+    margin-top: 4.5rem;
+
+    &:first-of-type {
+      gap: 3px;
+      padding: 0 0.8rem;
+    }
+
+    &:nth-of-type(2) {
+      margin-top: 1rem;
+      gap: 3px;
+    }
+  }
+
+  .lottery-content {
+    margin-left: 1.5rem;
+    padding: 0.8rem;
+    width: 90%;
+    height: 5rem;
+  }
+
+  .lottery-avatar {
+    margin-left: 2rem;
+    height: 60px;
+    width: 60px;
+
+    img {
+      width: 60px;
+      height: 60px;
+    }
+  }
+
+  .lotterty-infogo {
+    margin: 2rem auto 0 auto;
+
+    h3 {
+      font-size: 2rem;
+    }
+
+    .line {
+      width: 30%;
+    }
+  }
+
+  .btn-red-outline {
+    width: 45%;
+    font-size: var(--font-size-sm);
+  }
+
+  .top-head {
+    height: 50px;
+  }
+
+  .aside-main {
+    padding-top: 3rem;
+  }
+}
+
+/* 超小屏幕 (< 480px) */
+@media (max-width: 360px) {
+  .main {
+    width: 98%;
+    margin: 2rem auto 0 auto;
+  }
+
+  aside {
+    width: 8%;
+  }
+
+  .dashboard {
+    gap: 4px;
+    margin-top: 4rem;
+
+    &:first-of-type {
+      gap: 2px;
+      padding: 0 0.5rem;
+    }
+
+    &:nth-of-type(2) {
+      margin-top: 0.8rem;
+      gap: 2px;
+    }
+  }
+
+  .lottery-content {
+    margin-left: 1rem;
+    padding: 0.6rem;
+    width: 95%;
+    height: 4.5rem;
+  }
+
+  .lottery-avatar {
+    margin-left: 1rem;
+    height: 50px;
+    width: 50px;
+
+    img {
+      width: 50px;
+      height: 50px;
+    }
+  }
+
+  .lotterty-infogo {
+    margin: 1.5rem auto 0 auto;
+
+    h3 {
+      font-size: 1.8rem;
+    }
+
+    .line {
+      width: 40%;
+    }
+  }
+
+  .btn-red-outline {
+    width: 50%;
+    font-size: 1.3rem;
+  }
+
+  .top-head {
+    height: 40px;
+  }
+
+  .aside-main {
+    padding-top: 2rem;
+  }
+}

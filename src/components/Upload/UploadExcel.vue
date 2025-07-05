@@ -35,6 +35,16 @@ const excelData = ref({
   results: null, // 表格数据
 });
 
+// 分页配置
+const paginationConfig = ref({
+  pageSize: 10,
+  showSizeChanger: true,
+  showQuickJumper: true,
+  showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+  pageSizeOptions: ['5', '10', '20', '50'],
+  size: 'small'
+});
+
 /* ========== 计算属性 ========== */
 // 表格数据（添加唯一key）
 const tableData = computed(() => {
@@ -199,6 +209,8 @@ const resetAll = () => {
   excelData.value = { header: null, results: null };
   previewData.value = false;
   loading.value = false;
+  // 重置分页状态
+  resetPagination();
 };
 
 // 关闭导入窗口
@@ -224,6 +236,18 @@ watch(
     emit("update:visible", val);
   }
 );
+
+// 分页事件处理
+const handleTableChange = (pagination) => {
+  paginationConfig.value.pageSize = pagination.pageSize;
+  paginationConfig.value.current = pagination.current;
+};
+
+// 重置分页状态
+const resetPagination = () => {
+  paginationConfig.value.pageSize = 10;
+  paginationConfig.value.current = 1;
+};
 </script>
 
 <template>
@@ -235,6 +259,7 @@ watch(
     :footer="null"
     :maskClosable="false"
     @cancel="closeImportModal"
+    style="top: 20px;"
   >
     <div class="excel-uploader">
       <!-- 拖拽区域 -->
@@ -295,34 +320,55 @@ watch(
   <a-modal
     v-model:open="previewData"
     title="数据预览"
-    width="90%"
+    width="80%"
     :footer="null"
     :maskClosable="false"
+    style="top: 60px;"
   >
-    <div class="preview-header">
-      <span>共 {{ tableData.length }} 条记录</span>
-      <a-button type="primary" @click="confirmImport" :loading="loading">
-        确认导入
-      </a-button>
+    <!-- 固定的说明区域 -->
+    <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center;">
+        <span style="margin-right: 8px;">📊</span>
+        数据预览说明
+      </div>
+      <div style="font-size: 12px; line-height: 1.6; opacity: 0.95;">
+        <div style="margin-bottom: 4px;">• <strong>共 {{ tableData.length }} 条记录</strong>：请仔细检查数据是否正确</div>
+        <div style="margin-bottom: 4px;">• <strong>空值显示</strong>：空单元格会显示为"空值"</div>
+        <div style="margin-bottom: 4px;">• <strong>数字格式</strong>：数字会自动格式化显示</div>
+        <div>• <strong>确认导入</strong>：确认无误后点击"确认导入"按钮</div>
+      </div>
     </div>
 
+    <!-- 表格区域 -->
     <a-table
       :dataSource="tableData"
       :columns="previewColumns"
       bordered
-      size="middle"
-      :scroll="{ x: 'max-content', y: 500 }"
-      :pagination="{
-        pageSize: 10,
-        hideOnSinglePage: true,
-        showSizeChanger: false,
-      }"
+      size="small"
+      :scroll="{ x: 'max-content', y: 300 }"
+      :pagination="paginationConfig"
       rowKey="__id"
+      style="border-radius: 8px; overflow: hidden; margin-bottom: 16px;"
+      @change="handleTableChange"
     >
       <template #emptyText>
         <a-empty description="没有可显示的数据" />
       </template>
     </a-table>
+
+    <!-- 固定的按钮区域 -->
+    <div style="text-align: center; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+      <a-space size="middle">
+        <a-button type="primary" @click="confirmImport" :loading="loading" style="border-radius: 6px;">
+          <template #icon>✅</template>
+          确认导入
+        </a-button>
+        <a-button @click="previewData = false" style="border-radius: 6px;">
+          <template #icon>❌</template>
+          取消
+        </a-button>
+      </a-space>
+    </div>
   </a-modal>
 </template>
 
@@ -371,12 +417,5 @@ watch(
   justify-content: center;
   gap: 16px;
   margin-top: 16px;
-}
-
-.preview-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
 }
 </style>

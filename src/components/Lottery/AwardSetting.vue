@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch } from "vue";
 import { message } from "ant-design-vue";
 import { useAwardStore } from "@/store/awardStore";
 
@@ -34,6 +34,29 @@ const createAwardsWithRemaining = () => {
   }));
 };
 
+// 分页配置
+const paginationConfig = ref({
+  pageSize: 10,
+  showSizeChanger: true,
+  showQuickJumper: true,
+  showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+  pageSizeOptions: ['5', '10', '20', '50'],
+  size: 'small'
+});
+
+// 分页事件处理
+const handleTableChange = (pagination) => {
+  paginationConfig.value.pageSize = pagination.pageSize;
+  paginationConfig.value.current = pagination.current;
+};
+
+// 重置分页状态
+const resetPagination = () => {
+  paginationConfig.value.pageSize = 10;
+  paginationConfig.value.current = 1;
+};
+
+// 监听数据变化，创建副本
 watch(
   () => props.awards,
   (val) => {
@@ -148,6 +171,8 @@ watch(
     if (newValue) {
       // 每次打开时重新计算剩余数量
       localAwards.value = createAwardsWithRemaining();
+      // 重置分页状态
+      resetPagination();
     }
   }
 );
@@ -164,41 +189,52 @@ watch(
   <a-modal
     v-model:open="settingVisible"
     title="奖项设置"
-    width="600px"
+    width="80%"
     @ok="handleOk"
     @cancel="handleCancel"
     okText="保存"
     cancelText="取消"
+    style="top: 60px;"
   >
-    <div style="margin-bottom: 16px; padding: 12px; background: #f6f8fa; border-radius: 6px; font-size: 12px; color: #666;">
-      <div><strong>使用说明：</strong></div>
-      <div>• 原始数量：奖项的初始设置数量（可编辑）</div>
-      <div>• 剩余数量：当前可抽奖的数量（可编辑，不能超过原始数量）</div>
-      <div>• 重置剩余数量：将所有奖项剩余数量恢复为原始设置</div>
-      <div>• 手动设置剩余数量：保存当前表格中的剩余数量设置</div>
+    <!-- 固定的说明区域 -->
+    <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+      <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center;">
+        <span style="margin-right: 8px;">📋</span>
+        使用说明
+      </div>
+      <div style="font-size: 12px; line-height: 1.6; opacity: 0.95;">
+        <div style="margin-bottom: 4px;">• <strong>原始数量</strong>：奖项的初始设置数量（可编辑）</div>
+        <div style="margin-bottom: 4px;">• <strong>剩余数量</strong>：当前可抽奖的数量（可编辑，不能超过原始数量）</div>
+        <div style="margin-bottom: 4px;">• <strong>重置剩余数量</strong>：将所有奖项剩余数量恢复为原始设置</div>
+        <div>• <strong>手动设置剩余数量</strong>：保存当前表格中的剩余数量设置</div>
+      </div>
     </div>
+
+    <!-- 表格区域 -->
     <a-table
       :dataSource="localAwards"
-      :pagination="false"
+      :pagination="paginationConfig"
       :columns="columns"
       rowKey="key"
       size="small"
       bordered
+      :scroll="{ y: 300 }"
+      style="border-radius: 8px; overflow: hidden; margin-bottom: 16px;"
+      @change="handleTableChange"
     >
       <template #bodyCell="{ column, record, index }">
         <template v-if="column.key === 'label'">
-          <a-input v-model:value="record.label" />
+          <a-input v-model:value="record.label" style="border-radius: 4px;" />
         </template>
         <template v-else-if="column.key === 'originalCount'">
-          <a-input-number v-model:value="record.originalCount" :min="1" :max="99" />
+          <a-input-number v-model:value="record.originalCount" :min="1" :max="99" style="border-radius: 4px; width: 80px;" />
         </template>
         <template v-else-if="column.key === 'remainingCount'">
           <a-input-number 
             v-model:value="record.remainingCount" 
             :min="0" 
             :max="record.originalCount"
-            size="small"
-            style="width: 80px"
+            style="width: 80px; border-radius: 4px;"
             :style="{ 
               color: record.remainingCount === 0 ? '#ff4d4f' : '#52c41a',
               fontWeight: record.remainingCount === 0 ? 'bold' : 'normal'
@@ -213,15 +249,30 @@ watch(
             cancelText="取消"
             @confirm="removeAward(index)"
           >
-            <a-button type="link" danger>删除</a-button>
+            <a-button type="link" danger style="padding: 4px 8px; border-radius: 4px;">
+              🗑️ 删除
+            </a-button>
           </a-popconfirm>
         </template>
       </template>
     </a-table>
-    <div style="margin-top: 16px; text-align: center">
-      <a-button type="dashed" @click="addAward">添加奖项</a-button>
-      <a-button type="dashed" class="margin-left10" @click="resetAwardCounts">重置剩余数量</a-button>
-      <a-button type="dashed" class="margin-left10" @click="setRemainingCounts">手动设置剩余数量</a-button>
+
+    <!-- 固定的按钮区域 -->
+    <div style="text-align: center; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+      <a-space size="middle">
+        <a-button type="primary" @click="addAward" style="border-radius: 6px;">
+          <template #icon>➕</template>
+          添加奖项
+        </a-button>
+        <a-button @click="resetAwardCounts" style="border-radius: 6px;">
+          <template #icon>🔄</template>
+          重置剩余数量
+        </a-button>
+        <a-button @click="setRemainingCounts" style="border-radius: 6px;">
+          <template #icon>✏️</template>
+          手动设置剩余数量
+        </a-button>
+      </a-space>
     </div>
   </a-modal>
 </template>

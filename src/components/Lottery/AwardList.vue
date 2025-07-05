@@ -105,8 +105,8 @@ const showLess = (awardKey) => {
   </aside>
 </template>
 
-<style scoped>
-@import "@/assets/styles/style.css";
+<style lang="scss">
+@use "@/assets/styles/index.scss";
 
 .empty-tip {
   margin-top: 50px;

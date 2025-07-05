@@ -1,0 +1,20 @@
+/* 样式入口文件 - 使用 @forward 组织所有模块 */
+
+/* 全局样式 - 必须首先加载 */
+@use './global.scss';
+
+/* 基础样式 */
+@forward './base/variables';
+@forward './base/reset';
+@forward './base/common';
+
+/* 布局样式 */
+@forward './layout/responsive';
+
+/* 组件样式 */
+@forward './components/lottery/lottery-main';
+@forward './components/lottery/lottery-buttons';
+
+/* 工具样式 */
+@forward './utils/animations';
+@forward './utils/effects';

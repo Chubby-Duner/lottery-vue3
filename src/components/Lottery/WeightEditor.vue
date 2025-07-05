@@ -19,13 +19,23 @@ const weightVisible = ref(false);
 // 权重数据副本
 const weightData = ref([]);
 
+// 分页配置
+const paginationConfig = ref({
+  pageSize: 10,
+  showSizeChanger: true,
+  showQuickJumper: true,
+  showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+  pageSizeOptions: ['5', '10', '20', '50'],
+  size: 'small'
+});
+
 // 动态生成表格列
 const columns = computed(() => {
   const baseColumns = [
     {
       title: "姓名",
       key: "name",
-      width: 150,
+      width: 160,
       fixed: "left",
     }
   ];
@@ -105,6 +115,10 @@ watch(
   () => props.visible,
   (newValue) => {
     weightVisible.value = newValue;
+    if (newValue) {
+      // 重置分页状态
+      resetPagination();
+    }
   }
 );
 
@@ -161,32 +175,56 @@ const handleOk = () => {
 const handleCancel = () => {
   weightVisible.value = false;
 };
+
+// 分页事件处理
+const handleTableChange = (pagination) => {
+  paginationConfig.value.pageSize = pagination.pageSize;
+  paginationConfig.value.current = pagination.current;
+};
+
+// 重置分页状态
+const resetPagination = () => {
+  paginationConfig.value.pageSize = 10;
+  paginationConfig.value.current = 1;
+};
 </script>
 
 <template>
   <a-modal
     v-model:open="weightVisible"
     title="权重设置"
-    width="600"
+    width="80%"
     :footer="null"
     @ok="handleOk"
     @cancel="handleCancel"
+    style="top: 60px;"
   >
     <div class="weight-editor">
-      <a-alert
-        message="权重说明"
-        description="有锁定人时只从锁定人中抽取。没有锁定人时按权重抽奖。权重越大：中奖概率越高。权重为0：不参与该奖项抽奖。所有权重为0：提示无法抽奖"
-        type="info"
-        show-icon
-        style="margin-bottom: 16px"
-      />
+      <!-- 固定的说明区域 -->
+      <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center;">
+          <span style="margin-right: 8px;">⚖️</span>
+          权重说明
+        </div>
+        <div style="font-size: 12px; line-height: 1.6; opacity: 0.95;">
+          <div style="margin-bottom: 4px;">• <strong>有锁定人时</strong>：只从锁定人中抽取</div>
+          <div style="margin-bottom: 4px;">• <strong>没有锁定人时</strong>：按权重抽奖</div>
+          <div style="margin-bottom: 4px;">• <strong>权重越大</strong>：中奖概率越高</div>
+          <div style="margin-bottom: 4px;">• <strong>权重为0</strong>：不参与该奖项抽奖</div>
+          <div>• <strong>所有权重为0</strong>：提示无法抽奖</div>
+        </div>
+      </div>
 
+      <!-- 表格区域 -->
       <a-table
         :dataSource="weightData"
         :columns="columns"
-        :pagination="false"
+        :pagination="paginationConfig"
         size="small"
         bordered
+        :scroll="{ y: 300 }"
+        style="border-radius: 8px; overflow: hidden; margin-bottom: 16px;"
+        @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">
@@ -203,23 +241,39 @@ const handleCancel = () => {
               "
               :min="0"
               :max="100"
-              size="small"
-              style="width: 80px"
+              style="width: 80px; border-radius: 4px;"
               @change="handleWeightChange"
             />
           </template>
           <template v-else-if="column.key === 'locked'">
-            <a-switch v-model:checked="record.locked" />
+            <a-switch 
+              v-model:checked="record.locked" 
+              size="small"
+              style="border-radius: 12px;"
+            />
           </template>
         </template>
       </a-table>
 
-      <div class="weight-actions" style="margin-top: 16px; text-align: center">
-        <a-space>
-          <a-button @click="resetAllWeights">重置所有权重</a-button>
-          <a-button @click="setDefaultWeights">设置默认权重</a-button>
-          <a-button type="primary" @click="handleOk">保存设置</a-button>
-          <a-button @click="handleCancel">取消</a-button>
+      <!-- 固定的按钮区域 -->
+      <div style="text-align: center; padding: 16px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+        <a-space size="middle">
+          <a-button @click="resetAllWeights" style="border-radius: 6px;">
+            <template #icon>🔄</template>
+            重置所有权重
+          </a-button>
+          <a-button @click="setDefaultWeights" style="border-radius: 6px;">
+            <template #icon>⚙️</template>
+            设置默认权重
+          </a-button>
+          <a-button type="primary" @click="handleOk" style="border-radius: 6px;">
+            <template #icon>💾</template>
+            保存设置
+          </a-button>
+          <a-button @click="handleCancel" style="border-radius: 6px;">
+            <template #icon>❌</template>
+            取消
+          </a-button>
         </a-space>
       </div>
     </div>
@@ -227,28 +281,22 @@ const handleCancel = () => {
 </template>
 
 <style scoped>
-.weight-editor {
-  max-height: 500px;
-  overflow-y: auto;
-}
-
 .person-info {
   text-align: left;
+  padding: 4px 0;
 }
 
 .person-name {
   font-weight: bold;
   color: #333;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .person-en {
-  font-size: 12px;
+  font-size: 11px;
   color: #666;
   margin-top: 2px;
-}
-
-.weight-actions {
-  border-top: 1px solid #f0f0f0;
-  padding-top: 16px;
+  line-height: 1.2;
 }
 </style>

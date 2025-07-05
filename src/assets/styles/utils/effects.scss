@@ -1,0 +1,184 @@
+/* Effects - 特效样式 */
+
+/* 奖项容器样式 */
+.award-main {
+  margin-top: 1.5rem;
+}
+
+.award-con {
+  margin-top: 0.5rem;
+  padding: 2%;
+  
+  .award-title {
+    width: 80%;
+    margin: 0 auto;
+    padding-bottom: 1rem;
+    color: var(--primary-color);
+    font-size: var(--font-size-xl);
+    font-weight: 800;
+    text-align: center;
+    font-family: var(--font-family-chinese);
+    border-bottom: 2px solid var(--primary-color);
+  }
+  
+  .win {
+    margin-top: 0.6rem;
+    
+    .win-li {
+      padding: 0 5% 0 20%;
+      margin: 0.5rem auto 0 auto;
+      
+      .delete {
+        display: none;
+        padding: 0.2rem;
+        margin: 1rem 0 0 2rem;
+        font-size: var(--font-size-base);
+        color: var(--primary-color);
+        text-decoration: none;
+        border-radius: 5rem;
+        border: 1px solid var(--primary-color);
+      }
+      
+      .name {
+        line-height: 4rem;
+        margin-left: 2rem;
+        color: var(--secondary-color);
+        font-size: var(--font-size-xl);
+        font-family: var(--font-family-chinese);
+      }
+      
+      .avatar {
+        img {
+          width: 4rem;
+          height: 4rem;
+          border-radius: 100%;
+        }
+      }
+    }
+  }
+}
+
+/* 特殊奖项样式 */
+#liwu-con {
+  .award-title {
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .win {
+    .win-li {
+      margin: 0.2rem auto 0 auto;
+      
+      .name {
+        font-size: var(--font-size-base);
+      }
+    }
+  }
+}
+
+#award-01,
+#award-02,
+#award-03 {
+  display: none;
+}
+
+#award-04 {
+  display: none;
+  
+  .win {
+    .name {
+      line-height: 3rem;
+      font-size: var(--font-size-lg);
+    }
+    
+    .avatar {
+      img {
+        width: 3rem;
+        height: 3rem;
+      }
+    }
+    
+    .win-li {
+      margin: 0 auto 0 auto;
+    }
+  }
+}
+
+#award04-toggle {
+  display: none;
+  width: 50%;
+  margin: 1rem auto 1rem auto;
+  padding: 0.5rem 1rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--secondary-color);
+  font-size: var(--font-size-xl);
+  font-family: var(--font-family-chinese);
+  border-radius: 2px;
+  border: 1px solid var(--secondary-color);
+}
+
+/* 奖项列表按钮 */
+.award-list-btn {
+  margin: 4rem;
+}
+
+/* 抽奖按钮 */
+.lottery-btn {
+  margin: 0 12px;
+}
+
+/* 模态框内容样式 */
+.modal-content {
+  #lottery-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+  
+  #lottery-avatar {
+    position: absolute;
+    top: 11.2%;
+    left: 19.2%;
+    width: 61%;
+    text-align: center;
+  }
+  
+  #lottery-name {
+    position: absolute;
+    bottom: 27%;
+    width: 100%;
+    text-align: center;
+    font-size: 5rem;
+    color: var(--gold-color);
+    font-weight: bold;
+    font-family: var(--font-family-chinese);
+  }
+  
+  #lottery-img {
+    width: 100%;
+    display: none;
+  }
+  
+  #lottery-canvas {
+    width: 100%;
+  }
+}
+
+/* 模态框滚动条测量 */
+.modal-scrollbar-measure {
+  position: absolute;
+  top: -9999px;
+  width: 50px;
+  height: 50px;
+  overflow: scroll;
+}
+
+/* 响应式模态框 */
+@media (min-width: 768px) {
+  .modal-dialog {
+    width: 20%;
+    margin: 30px auto;
+  }
+} 
