@@ -434,7 +434,9 @@ const stopLottery = async () => {
   
   // 立即设置状态，防止重复调用
   isStarted.value = false;
-  isMoving.value = false;
+  // 注意：这里不停止动画，让动画在倒计时期间继续运行
+  // 调整动画速度，让倒计时期间动画更慢一些
+  speed.value = 15;
   
   try {
     const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
@@ -461,16 +463,14 @@ const stopLottery = async () => {
     winnerNameZh.value = winner.namezh;
     winnerNameEn.value = winner.nameen;
 
-
-    // 显示倒计时
+    // 显示倒计时（动画继续运行）
     await showCountdownSequence();
-    // 显示结果
-    showResult.value = true;
-    canStop.value = true;
-    // 停止主动画
+    
+    // 倒计时结束后，停止动画并显示结果
     isMoving.value = false;
     cancelAnimation();
-    isStarted.value = false;
+    showResult.value = true;
+    canStop.value = true;
     speed.value = 8;
 
     // 更新奖项数据

@@ -270,6 +270,17 @@
   width: 100%;
   height: 100%;
   will-change: transform;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  perspective: 1000px;
+
+  &.lottery-animation {
+    transition: transform 0.1s linear;
+  }
+
+  &.lottery-css-animation {
+    animation: smoothScroll 20s linear infinite;
+  }
 
   .sure-active {
     background: linear-gradient(90deg, var(--gold-bg) 0%, var(--gold-lighter) 100%);
@@ -281,6 +292,16 @@
     z-index: 2;
     position: relative;
     transition: all 0.3s cubic-bezier(0.4, 2.3, 0.3, 1);
+  }
+}
+
+/* CSS动画关键帧 */
+@keyframes smoothScroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, -50%, 0);
   }
 }
 
