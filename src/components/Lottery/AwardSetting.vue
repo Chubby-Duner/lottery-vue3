@@ -172,7 +172,7 @@ watch(
 </script>
 
 <template>
-  <a-modal v-model:open="settingVisible" title="奖项设置" width="80%" @ok="handleOk" @cancel="handleCancel" okText="保存" cancelText="取消" style="top: 60px">
+  <a-modal v-model:open="settingVisible" title="奖项设置" width="80%" @ok="handleOk" @cancel="handleCancel" okText="保存" cancelText="取消">
     <!-- 固定的说明区域 -->
     <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1)">
       <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center">

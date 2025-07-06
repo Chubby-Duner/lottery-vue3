@@ -91,12 +91,12 @@ const handleKeyPress = e => {
         } else {
           awardIndex = keyNumber - 1; // 1-9键对应第1-9个奖项
         }
-      } else if (e.key >= 'a' && e.key <= 'z') {
+      } else if (e.key >= "a" && e.key <= "z") {
         // 处理字母键：a-z对应第11-36个奖项
-        awardIndex = 10 + (e.key.charCodeAt(0) - 'a'.charCodeAt(0));
-      } else if (e.key >= 'A' && e.key <= 'Z') {
+        awardIndex = 10 + (e.key.charCodeAt(0) - "a".charCodeAt(0));
+      } else if (e.key >= "A" && e.key <= "Z") {
         // 处理大写字母键：A-Z对应第11-36个奖项
-        awardIndex = 10 + (e.key.charCodeAt(0) - 'A'.charCodeAt(0));
+        awardIndex = 10 + (e.key.charCodeAt(0) - "A".charCodeAt(0));
       }
       
       if (awardIndex >= 0 && awardIndex < awardStore.awards.length) {
@@ -119,15 +119,23 @@ const handleKeyDown = e => {
   }
 };
 
+// 页面刷新前清空所有数据
+const handleBeforeUnload = () => {
+  awardStore.clearAll();
+};
+
 onMounted(() => {
   window.addEventListener("keypress", handleKeyPress);
   window.addEventListener("keydown", handleKeyDown);
+  // 监听页面刷新事件
+  window.addEventListener("beforeunload", handleBeforeUnload);
 });
 
 onUnmounted(() => {
   cancelAnimation();
   window.removeEventListener("keypress", handleKeyPress);
   window.removeEventListener("keydown", handleKeyDown);
+  window.removeEventListener("beforeunload", handleBeforeUnload);
 });
 
 // ===================== 业务逻辑区 =====================
@@ -488,9 +496,14 @@ const clearAllData = () => {
 
 <template>
   <div class="main">
-    <!-- <div class="lotterty-infogo">
-      <img src="@/assets/images/logo.png">
-    </div> -->
+    <div class="lottery-logo">
+      <img src="@/assets/images/yun.png" class="cloud-left" alt="云朵" />
+      <div class="logo-text">
+        <h1>抽奖系统</h1>
+        <p>LOTTERY SYSTEM</p>
+      </div>
+      <img src="@/assets/images/yun.png" class="cloud-right" alt="云朵" />
+    </div>
     <div v-if="lotteryData.length > 0" class="lottery-main">
       <div class="wrap-border-main">
         <img src="@/assets/images/wrap-border-1.png" class="wrap-border wrap-border-1" />
@@ -640,47 +653,4 @@ const clearAllData = () => {
   <a-spin v-if="fullScreenLoading" :spinning="true" size="large" class="global-spin" />
 </template>
 
-<style lang="scss" scoped>
-.keyboard-hint {
-  font-size: 10px;
-  color: #999;
-  margin-top: 2px;
-  opacity: 0.7;
-  font-weight: normal;
-}
-
-.cirle-btn.award:hover .keyboard-hint {
-  opacity: 1;
-  color: #666;
-}
-
-.keyboard-shortcuts {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 12px;
-  z-index: 1000;
-  max-width: 300px;
-}
-
-.shortcuts-title {
-  font-weight: bold;
-  margin-bottom: 8px;
-  color: #ffd700;
-}
-
-.shortcuts-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.shortcut-item {
-  opacity: 0.9;
-  line-height: 1.4;
-}
-</style>
+ <style lang="scss" scoped></style>

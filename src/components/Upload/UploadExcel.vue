@@ -252,7 +252,7 @@ const resetPagination = () => {
 
 <template>
   <!-- 主导入模态框 -->
-  <a-modal v-model:open="importModal" title="导入数据" width="50%" :footer="null" :maskClosable="false" @cancel="closeImportModal" style="top: 20px">
+  <a-modal v-model:open="importModal" title="导入数据" width="50%" :footer="null" :maskClosable="false" @cancel="closeImportModal">
     <div class="excel-uploader">
       <!-- 拖拽区域 -->
       <div class="drop-area" @drop.prevent="handleDrop" @dragover.prevent="handleDragover">

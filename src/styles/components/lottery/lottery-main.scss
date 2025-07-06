@@ -1,5 +1,93 @@
 /* Lottery Main Styles - 抽奖主样式 */
 
+/* Logo 样式 */
+.lottery-logo {
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0 0 0;
+
+  .cloud-left {
+    width: 60px;
+    height: auto;
+    transform: scaleX(-1); /* 水平翻转 */
+    margin-right: 20px;
+  }
+
+  .cloud-right {
+    width: 60px;
+    height: auto;
+    margin-left: 20px;
+  }
+
+  .logo-text {
+    text-align: center;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+
+    h1 {
+      font-size: 36px;
+      font-weight: bold;
+      margin: 0;
+      color: #ff4d4f;
+      text-shadow: 2px 2px 4px rgba(255, 77, 79, 0.3);
+    }
+
+    p {
+      font-size: 14px;
+      margin: 5px 0 0 0;
+      color: #ff7875;
+      letter-spacing: 2px;
+    }
+  }
+}
+
+/* 键盘快捷键提示 */
+.keyboard-shortcuts {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  z-index: 1000;
+  max-width: 300px;
+
+  .shortcuts-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #ffd700;
+  }
+
+  .shortcuts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .shortcut-item {
+    opacity: 0.9;
+    line-height: 1.4;
+  }
+}
+
+/* 奖项按钮键盘提示 */
+.keyboard-hint {
+  font-size: 10px;
+  color: #999;
+  margin-top: 2px;
+  opacity: 0.7;
+  font-weight: normal;
+}
+
+.cirle-btn.award:hover .keyboard-hint {
+  opacity: 1;
+  color: #666;
+}
+
 /* 抽奖主容器 */
 .lottery-main {
   position: relative;

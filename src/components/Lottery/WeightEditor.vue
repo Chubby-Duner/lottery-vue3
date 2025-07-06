@@ -190,7 +190,7 @@ const resetPagination = () => {
 </script>
 
 <template>
-  <a-modal v-model:open="weightVisible" title="权重设置" width="80%" :footer="null" @ok="handleOk" @cancel="handleCancel" style="top: 60px">
+  <a-modal v-model:open="weightVisible" title="权重设置" width="80%" :footer="null" @ok="handleOk" @cancel="handleCancel">
     <div class="weight-editor">
       <!-- 固定的说明区域 -->
       <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1)">
