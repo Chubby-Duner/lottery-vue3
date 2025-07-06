@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
 import { message, Modal } from "ant-design-vue";
 import { SettingOutlined } from "@ant-design/icons-vue";
 import { useAwardStore } from "@/store/awardStore";
+import { useMusicStore } from "@/store/musicStore";
 import { getImageUrl, weightedRandomIndex } from "@/composables/utils";
 import UploadExcel from "@/components/Upload/UploadExcel.vue";
 import LotteryResult from "./LotteryResult.vue";
@@ -15,6 +16,8 @@ defineOptions({
 
 // 获取奖项剩余数量，中奖名单等数据
 const awardStore = useAwardStore();
+// 获取音乐控制
+const musicStore = useMusicStore();
 
 // ===================== 状态变量 =====================
 //#region 倒计时相关
@@ -59,45 +62,72 @@ const buttonText = computed(() => {
 });
 
 // ===================== 生命周期与事件监听 =====================
-// 键盘事件
+// 键盘事件 - 处理普通字符键
 const handleKeyPress = e => {
   switch (e.key) {
     case " ":
       handleLottery();
       break;
-    case "1":
-      selectAward("award1");
-      break;
-    case "2":
-      selectAward("award2");
-      break;
-    case "3":
-      selectAward("award3");
-      break;
-    case "4":
-      selectAward("award4");
-      break;
     case "Enter":
-      closeResult();
-      break;
-    case "Delete":
-      // 触发清除数据
-      document.getElementById("clear-control")?.click();
+      // 只有在抽奖结束后才允许关闭结果
+      if (!isStarted.value && canStop.value) {
+        closeResult();
+      }
       break;
     case "m":
+    case "M":
       // 触发音乐开关
-      document.getElementById("music-control")?.click();
+      toggleMusic();
+      break;
+    default:
+      // 动态处理数字键和字母键选择奖项
+      const keyNumber = parseInt(e.key);
+      let awardIndex = -1;
+      
+      if (!isNaN(keyNumber) && keyNumber >= 0 && keyNumber <= 9) {
+        // 处理数字键：0键对应第10个奖项，1-9键对应第1-9个奖项
+        if (keyNumber === 0) {
+          awardIndex = 9; // 0键对应第10个奖项（索引9）
+        } else {
+          awardIndex = keyNumber - 1; // 1-9键对应第1-9个奖项
+        }
+      } else if (e.key >= 'a' && e.key <= 'z') {
+        // 处理字母键：a-z对应第11-36个奖项
+        awardIndex = 10 + (e.key.charCodeAt(0) - 'a'.charCodeAt(0));
+      } else if (e.key >= 'A' && e.key <= 'Z') {
+        // 处理大写字母键：A-Z对应第11-36个奖项
+        awardIndex = 10 + (e.key.charCodeAt(0) - 'A'.charCodeAt(0));
+      }
+      
+      if (awardIndex >= 0 && awardIndex < awardStore.awards.length) {
+        const targetAward = awardStore.awards[awardIndex];
+        if (targetAward) {
+          selectAward(targetAward.key);
+        }
+      }
+      break;
+  }
+};
+
+// 键盘事件 - 处理特殊键（如Delete、Backspace等）
+const handleKeyDown = e => {
+  switch (e.key) {
+    case "Delete":
+      // 重置数据
+      resetAllData();
       break;
   }
 };
 
 onMounted(() => {
   window.addEventListener("keypress", handleKeyPress);
+  window.addEventListener("keydown", handleKeyDown);
 });
 
 onUnmounted(() => {
   cancelAnimation();
   window.removeEventListener("keypress", handleKeyPress);
+  window.removeEventListener("keydown", handleKeyDown);
 });
 
 // ===================== 业务逻辑区 =====================
@@ -122,6 +152,12 @@ async function showCountdownSequence() {
 }
 //#endregion
 
+//#region 音乐控制相关
+const toggleMusic = () => {
+  musicStore.toggleMusic();
+};
+//#endregion
+
 //#region 导入数据相关
 const beforeUpload = file => {
   const isLt1M = file.size / 1024 / 1024 < 1;
@@ -134,10 +170,15 @@ const beforeUpload = file => {
 
 const handleSuccess = ({ header, results }) => {
   try {
-    // 设置默认权重
+    // 动态设置默认权重
+    const defaultWeights = {};
+    awardStore.awards.forEach((award, index) => {
+      defaultWeights[index + 1] = 1; // 默认每个奖项权重为1
+    });
+    
     lotteryData.value = results.map(item => ({
       ...item,
-      awardWeights: { 1: 1, 2: 1, 3: 1, 4: 1 }, // 默认每个奖项权重为1
+      awardWeights: defaultWeights,
       locked: false
     }));
     // 备份导入数据
@@ -300,13 +341,11 @@ const stopLottery = async () => {
       }
     }
     winnerIndex.value = winnerIndexResult;
-    console.log(winnerIndexResult, 'winnerIndexResult')
 
     // 更新获奖者信息
     const winner = lotteryData.value[winnerIndex.value];
     winnerNameZh.value = winner.namezh;
     winnerNameEn.value = winner.nameen;
-    console.log(winner, 'winner')
 
 
     // 显示倒计时
@@ -378,6 +417,11 @@ const closeResult = () => {
 
 // 重置数据
 const resetAllData = () => {
+  // 如果正在抽奖中，给出提示
+  if (isStarted.value) {
+    message.warning("正在抽奖中，建议等抽奖结束后再重置数据");
+  }
+  
   Modal.confirm({
     title: "确定要重置所有数据吗？",
     content: "此操作会恢复到导入数据后的初始状态，所有抽奖结果和名单将被清空。",
@@ -386,12 +430,25 @@ const resetAllData = () => {
     async onOk() {
       fullScreenLoading.value = true;
       try {
+        // 停止当前抽奖
+        if (isStarted.value) {
+          isStarted.value = false;
+          isMoving.value = false;
+          cancelAnimation();
+        }
+        
         awardStore.resetAllToImportBackup();
         // 恢复 lotteryData，补全自定义字段
         if (awardStore.lotteryDataBackup && awardStore.lotteryDataBackup.length > 0) {
+          // 动态设置默认权重
+          const defaultWeights = {};
+          awardStore.awards.forEach((award, index) => {
+            defaultWeights[index + 1] = 1; // 默认每个奖项权重为1
+          });
+          
           lotteryData.value = awardStore.lotteryDataBackup.map(item => ({
             ...item,
-            awardWeights: item.awardWeights || { 1: 1, 2: 1, 3: 1, 4: 1 },
+            awardWeights: item.awardWeights || defaultWeights,
             locked: typeof item.locked === "boolean" ? item.locked : false
           }));
           await nextTick();
@@ -476,6 +533,11 @@ const clearAllData = () => {
             <div class="cirle-btn award" :id="'award-' + item.key" :class="{ 'award-active': selectedAward === item.key }" @click="selectAward(item.key)">
               {{ item.label }}<br />
               <small>剩余: {{ awardStore.awardLog[`award0${idx + 1}`] }}</small>
+              <div class="keyboard-hint">
+                <span v-if="idx + 1 <= 9">按 {{ idx + 1 }} 键</span>
+                <span v-else-if="idx + 1 === 10">按 0 键</span>
+                <span v-else>按 {{ String.fromCharCode(97 + idx - 10) }} 键</span>
+              </div>
             </div>
           </template>
         </div>
@@ -511,6 +573,21 @@ const clearAllData = () => {
             </template>
             重置数据
           </a-button>
+        </div>
+      </div>
+
+      <!-- 键盘快捷键提示 -->
+      <div v-if="lotteryData.length > 0" class="keyboard-shortcuts">
+        <div class="shortcuts-title">键盘快捷键：</div>
+        <div class="shortcuts-list">
+          <span class="shortcut-item">空格键：开始/停止抽奖</span>
+          <span class="shortcut-item" v-if="awardStore.awards.length <= 9">数字键1-{{ awardStore.awards.length }}：选择奖项</span>
+          <span class="shortcut-item" v-else-if="awardStore.awards.length === 10">数字键1-9,0：选择奖项</span>
+          <span class="shortcut-item" v-else-if="awardStore.awards.length <= 36">数字键1-9,0 + 字母键a-{{ String.fromCharCode(97 + awardStore.awards.length - 11) }}：选择奖项</span>
+          <span class="shortcut-item" v-else>数字键1-9, 0 + 字母键a-z：选择前36个奖项</span>
+          <span class="shortcut-item">Enter：关闭结果（抽奖结束后）</span>
+          <span class="shortcut-item">Delete：重置数据</span>
+          <span class="shortcut-item">M：音乐开关</span>
         </div>
       </div>
     </div>
@@ -564,4 +641,46 @@ const clearAllData = () => {
 </template>
 
 <style lang="scss" scoped>
+.keyboard-hint {
+  font-size: 10px;
+  color: #999;
+  margin-top: 2px;
+  opacity: 0.7;
+  font-weight: normal;
+}
+
+.cirle-btn.award:hover .keyboard-hint {
+  opacity: 1;
+  color: #666;
+}
+
+.keyboard-shortcuts {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  z-index: 1000;
+  max-width: 300px;
+}
+
+.shortcuts-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #ffd700;
+}
+
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shortcut-item {
+  opacity: 0.9;
+  line-height: 1.4;
+}
 </style>
