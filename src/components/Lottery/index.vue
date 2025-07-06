@@ -62,11 +62,21 @@ const buttonText = computed(() => {
 });
 
 // ===================== 生命周期与事件监听 =====================
+// 防抖变量
+let lastKeyPressTime = 0;
+const KEY_PRESS_DEBOUNCE = 500; // 500ms 防抖
+
 // 键盘事件 - 处理普通字符键
 const handleKeyPress = e => {
+  const now = Date.now();
+  
   switch (e.key) {
     case " ":
-      handleLottery();
+      // 防抖处理
+      if (now - lastKeyPressTime > KEY_PRESS_DEBOUNCE) {
+        handleLottery();
+        lastKeyPressTime = now;
+      }
       break;
     case "Enter":
       // 只有在抽奖结束后才允许关闭结果
@@ -305,7 +315,7 @@ const handleLottery = () => {
   }
   if (!isStarted.value && isMoving.value) {
     startLottery();
-  } else if (isStarted.value && !isLocked.value) {
+  } else if (isStarted.value && !isLocked.value && isMoving.value) {
     stopLottery();
   }
 };
@@ -330,6 +340,16 @@ const stopLottery = async () => {
     message.error("还没结束，请稍等...");
     return;
   }
+  
+  // 防止重复调用
+  if (!isStarted.value || isMoving.value === false) {
+    return;
+  }
+  
+  // 立即设置状态，防止重复调用
+  isStarted.value = false;
+  isMoving.value = false;
+  
   try {
     const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
     // 先查找是否有锁定 锁定且权重>0才可抽中
