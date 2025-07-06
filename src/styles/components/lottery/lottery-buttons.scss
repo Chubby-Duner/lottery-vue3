@@ -11,37 +11,11 @@
   flex-wrap: wrap;
   padding: 0 1rem;
 
-  /* 第一个dashboard（奖项按钮）的特殊样式 */
-  // &:first-of-type {
-  //   flex-wrap: nowrap;
-  //   overflow-x: auto;
-  //   overflow-y: hidden;
-  //   justify-content: flex-start;
-  //   padding: 0 2rem;
-  //   gap: 8px;
-  //   scrollbar-width: none;
-  //   -ms-overflow-style: none;
-  //   min-height: 80px;
-
-  //   &::-webkit-scrollbar {
-  //     display: none;
-  //   }
-  // }
-
-  /* 第二个dashboard（奖项设置按钮）的特殊样式 */
-  // &:nth-of-type(2) {
-  //   margin-top: 1.5rem;
-  //   gap: 8px;
-  //   flex-wrap: wrap;
-  //   align-items: center;
-  //   justify-content: center;
-  // }
-
   /* 奖项按钮容器样式 */
   .award-buttons-container {
     display: flex;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
     flex-shrink: 0;
     min-width: max-content;
@@ -92,12 +66,12 @@
   /* 奖项按钮样式 */
   .cirle-btn {
     display: inline-block;
-    width: 65px;
-    height: 65px;
+    width: 60px;
+    height: 60px;
     color: var(--primary-color);
-    padding: 0.5rem;
+    padding: 0.4rem;
     cursor: pointer;
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg);
     font-weight: 700;
     font-family: var(--font-family-chinese);
     border: 2px solid var(--primary-color);
@@ -114,7 +88,7 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    min-width: 65px;
+    min-width: 60px;
 
     &:hover {
       transform: translateY(-2px) scale(1.02);
@@ -132,9 +106,9 @@
     }
 
     small {
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       font-weight: 600;
-      margin-top: 0.3rem;
+      margin-top: 0.2rem;
       opacity: 0.9;
       display: block;
       line-height: 1.0;
@@ -143,7 +117,10 @@
 }
 
 .dashboard-setting {
-  margin: 1rem auto 0 auto;
+  margin: 0.5rem auto 0 auto;
+  padding-bottom: 1rem;
+  position: relative;
+  z-index: 10;
 }
 
 /* 选中状态样式 */
@@ -183,15 +160,17 @@
   min-width: 120px;
   height: auto;
   line-height: 1.2;
+  will-change: transform;
+  transform: translateZ(0);
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-2px) translateZ(0);
     box-shadow: 0 6px 16px rgba(253, 54, 31, 0.5);
     border-color: var(--primary-hover);
   }
 
   &:active {
-    transform: translateY(0);
+    transform: translateY(0) translateZ(0);
     box-shadow: 0 3px 8px rgba(253, 54, 31, 0.3);
   }
 

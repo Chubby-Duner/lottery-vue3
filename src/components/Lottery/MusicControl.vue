@@ -51,7 +51,7 @@ const toggleMusic = () => {
 <style scoped>
 #music-control {
   position: fixed;
-  bottom: 20px;
+  bottom: 50px;
   right: 20px;
   width: 40px;
   height: 40px;

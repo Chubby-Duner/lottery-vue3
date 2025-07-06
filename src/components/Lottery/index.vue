@@ -45,6 +45,7 @@ const animationFrame = ref(null);
 const speed = ref(6);
 const lotteryWrap = ref(null);
 const wrapMain = ref(null);
+const animationPaused = ref(false); // 添加动画暂停标志
 
 // 权重编辑相关
 const weightEditorVisible = ref(false);
@@ -52,6 +53,8 @@ const weightEditorVisible = ref(false);
 const awardSettingVisible = ref(false);
 // 全屏loading
 const fullScreenLoading = ref(false);
+// 快捷键提示显示状态
+const showShortcuts = ref(false);
 
 // ===================== 计算属性 =====================
 const buttonText = computed(() => {
@@ -207,7 +210,10 @@ const handleSuccess = ({ header, results }) => {
     }
     nextTick(() => {
       wrapPosition.value = 0; // 重置
-      startAnimation();
+      // 只有在动画没有被暂停时才启动
+      if (!animationPaused.value) {
+        startAnimation();
+      }
     });
   } catch (error) {
     console.error("handleSuccess ~ error:", error);
@@ -220,13 +226,51 @@ const getTemplateUrl = () => {
 //#endregion
 
 //#region 奖项设置相关
+// 防抖变量
+let awardSettingClickTime = 0;
+const AWARD_SETTING_DEBOUNCE = 300; // 300ms 防抖
+
 const openAwardSetting = () => {
+  const now = Date.now();
+  if (now - awardSettingClickTime < AWARD_SETTING_DEBOUNCE) {
+    return; // 防抖处理
+  }
+  awardSettingClickTime = now;
+  
+  // 当奖项数量多时，暂停动画以提高性能
+  if (awardStore.awards.length > 8) {
+    cancelAnimation();
+    animationPaused.value = true; // 标记动画被暂停
+  }
+  
   awardSettingVisible.value = true;
 };
+
 const handleAwardSettingSave = newAwards => {
   awardStore.setAwards(newAwards);
   // 更新权重数据结构
   updateWeightData();
+  
+  // 如果之前暂停了动画，现在恢复
+  if (animationPaused.value && isMoving.value) {
+    animationPaused.value = false; // 先重置暂停标志
+    nextTick(() => {
+      startAnimation();
+    });
+  }
+};
+
+// 监听奖项设置弹窗关闭
+const handleAwardSettingClose = () => {
+  awardSettingVisible.value = false;
+  
+  // 如果之前暂停了动画，现在恢复
+  if (animationPaused.value && isMoving.value) {
+    animationPaused.value = false; // 先重置暂停标志
+    nextTick(() => {
+      startAnimation();
+    });
+  }
 };
 //#endregion
 
@@ -253,16 +297,55 @@ const updateWeightData = () => {
 //#endregion
 
 //#region 权重编辑相关
+// 防抖变量
+let weightEditorClickTime = 0;
+const WEIGHT_EDITOR_DEBOUNCE = 300; // 300ms 防抖
+
 const openWeightEditor = () => {
+  const now = Date.now();
+  if (now - weightEditorClickTime < WEIGHT_EDITOR_DEBOUNCE) {
+    return; // 防抖处理
+  }
+  weightEditorClickTime = now;
+  
   if (lotteryData.value.length === 0) {
     message.warning("请先导入抽奖数据");
     return;
   }
+  
+  // 当奖项数量多时，暂停动画以提高性能
+  if (awardStore.awards.length > 8) {
+    cancelAnimation();
+    animationPaused.value = true; // 标记动画被暂停
+  }
+  
   weightEditorVisible.value = true;
 };
+
 const handleWeightSave = updatedData => {
   lotteryData.value = updatedData;
   message.success("权重设置已更新");
+  
+  // 如果之前暂停了动画，现在恢复
+  if (animationPaused.value && isMoving.value) {
+    animationPaused.value = false; // 先重置暂停标志
+    nextTick(() => {
+      startAnimation();
+    });
+  }
+};
+
+// 监听权重编辑弹窗关闭
+const handleWeightEditorClose = () => {
+  weightEditorVisible.value = false;
+  
+  // 如果之前暂停了动画，现在恢复
+  if (animationPaused.value && isMoving.value) {
+    animationPaused.value = false; // 先重置暂停标志
+    nextTick(() => {
+      startAnimation();
+    });
+  }
 };
 //#endregion
 
@@ -310,7 +393,10 @@ const handleLottery = () => {
     winnerIndex.value = -1;
     showResult.value = false;
     canStop.value = false;
-    startAnimation();
+    // 只有在动画没有被暂停时才启动
+    if (!animationPaused.value) {
+      startAnimation();
+    }
     return;
   }
   if (!isStarted.value && isMoving.value) {
@@ -412,24 +498,72 @@ const stopLottery = async () => {
 
 //#region 动画相关
 const startAnimation = () => {
+  // 如果动画被暂停，则不启动
+  if (animationPaused.value) {
+    return;
+  }
+  
   let lastTime = 0;
+  let scrollHeight = 0; // 缓存scrollHeight，避免重复查询DOM
+  let frameCount = 0; // 帧数计数器
+  let lastFrameTime = 0; // 上一帧时间
+  let performanceWarning = false; // 性能警告标志
+  
   const animate = timestamp => {
     if (!isMoving.value) return;
     if (!lotteryWrap.value) return; // 防止空指针
+    
+    // 性能检测：计算FPS
+    frameCount++;
+    if (timestamp - lastFrameTime >= 1000) { // 每秒检测一次
+      const fps = frameCount;
+      frameCount = 0;
+      lastFrameTime = timestamp;
+      
+      // 如果FPS低于30，启用性能优化模式
+      if (fps < 30 && !performanceWarning) {
+        performanceWarning = true;
+        console.warn('动画性能较低，启用优化模式');
+      }
+    }
+    
+    // 只在第一次或必要时更新scrollHeight
+    if (scrollHeight === 0) {
+      scrollHeight = lotteryWrap.value.scrollHeight;
+    }
+    
     const deltaTime = timestamp - lastTime;
     lastTime = timestamp;
-    wrapPosition.value -= speed.value;
-    if (-wrapPosition.value >= lotteryWrap.value.scrollHeight / 2) {
+    
+    // 性能优化模式：降低动画速度
+    const currentSpeed = performanceWarning ? speed.value * 0.7 : speed.value;
+    wrapPosition.value -= currentSpeed;
+    
+    // 使用缓存的scrollHeight
+    if (-wrapPosition.value >= scrollHeight / 2) {
       wrapPosition.value = 0;
     }
+    
     animationFrame.value = window.requestAnimationFrame(animate);
   };
+  
+  // 立即获取一次scrollHeight
+  if (lotteryWrap.value) {
+    scrollHeight = lotteryWrap.value.scrollHeight;
+  }
+  
+  // 重置性能警告
+  performanceWarning = false;
+  frameCount = 0;
+  lastFrameTime = 0;
+  
   animationFrame.value = window.requestAnimationFrame(animate);
 };
 
 const cancelAnimation = () => {
   if (animationFrame.value) {
-    cancelAnimationFrame(animationFrame.value);
+    window.cancelAnimationFrame(animationFrame.value);
+    animationFrame.value = null;
   }
 };
 //#endregion
@@ -481,7 +615,10 @@ const resetAllData = () => {
           }));
           await nextTick();
           wrapPosition.value = 0;
-          startAnimation();
+          // 只有在动画没有被暂停时才启动
+          if (!animationPaused.value) {
+            startAnimation();
+          }
         } else {
           lotteryData.value = [];
         }
@@ -561,18 +698,26 @@ const clearAllData = () => {
 
       <div class="dashboard">
         <!-- 奖项按钮区域 -->
-        <div class="award-buttons-container">
-          <template v-for="(item, idx) in awardStore.awards" :key="item.key">
-            <div class="cirle-btn award" :id="'award-' + item.key" :class="{ 'award-active': selectedAward === item.key }" @click="selectAward(item.key)">
-              {{ item.label }}<br />
-              <small>剩余: {{ awardStore.awardLog[`award0${idx + 1}`] }}</small>
-              <div class="keyboard-hint">
-                <span v-if="idx + 1 <= 9">按 {{ idx + 1 }} 键</span>
-                <span v-else-if="idx + 1 === 10">按 0 键</span>
-                <span v-else>按 {{ String.fromCharCode(97 + idx - 10) }} 键</span>
+        <div class="award-buttons-scroll-container">
+          <div class="award-buttons-container">
+            <template v-for="(item, idx) in awardStore.awards" :key="item.key">
+              <div 
+                class="cirle-btn award" 
+                :id="'award-' + item.key" 
+                :class="{ 'award-active': selectedAward === item.key }" 
+                @click="selectAward(item.key)"
+                :style="awardStore.awards.length > 12 ? { 'will-change': 'transform' } : {}"
+              >
+                {{ item.label }}<br />
+                <small>剩余: {{ awardStore.awardLog[`award0${idx + 1}`] }}</small>
+                <div class="keyboard-hint" v-if="awardStore.awards.length <= 20">
+                  <span v-if="idx + 1 <= 9">按 {{ idx + 1 }} 键</span>
+                  <span v-else-if="idx + 1 === 10">按 0 键</span>
+                  <span v-else>按 {{ String.fromCharCode(97 + idx - 10) }} 键</span>
+                </div>
               </div>
-            </div>
-          </template>
+            </template>
+          </div>
         </div>
 
         <!-- 抽奖按钮 -->
@@ -610,17 +755,20 @@ const clearAllData = () => {
       </div>
 
       <!-- 键盘快捷键提示 -->
-      <div v-if="lotteryData.length > 0" class="keyboard-shortcuts">
-        <div class="shortcuts-title">键盘快捷键：</div>
-        <div class="shortcuts-list">
-          <span class="shortcut-item">空格键：开始/停止抽奖</span>
-          <span class="shortcut-item" v-if="awardStore.awards.length <= 9">数字键1-{{ awardStore.awards.length }}：选择奖项</span>
-          <span class="shortcut-item" v-else-if="awardStore.awards.length === 10">数字键1-9,0：选择奖项</span>
-          <span class="shortcut-item" v-else-if="awardStore.awards.length <= 36">数字键1-9,0 + 字母键a-{{ String.fromCharCode(97 + awardStore.awards.length - 11) }}：选择奖项</span>
-          <span class="shortcut-item" v-else>数字键1-9, 0 + 字母键a-z：选择前36个奖项</span>
-          <span class="shortcut-item">Enter：关闭结果（抽奖结束后）</span>
-          <span class="shortcut-item">Delete：重置数据</span>
-          <span class="shortcut-item">M：音乐开关</span>
+      <div v-if="lotteryData.length > 0" class="keyboard-shortcuts-trigger" @mouseenter="showShortcuts = true" @mouseleave="showShortcuts = false">
+        <span class="shortcuts-icon">?</span>
+        <div v-if="showShortcuts" class="keyboard-shortcuts-popup">
+          <div class="shortcuts-title">键盘快捷键：</div>
+          <div class="shortcuts-list">
+            <span class="shortcut-item">空格键：开始/停止抽奖</span>
+            <span class="shortcut-item" v-if="awardStore.awards.length <= 9">数字键1-{{ awardStore.awards.length }}：选择奖项</span>
+            <span class="shortcut-item" v-else-if="awardStore.awards.length === 10">数字键1-9,0：选择奖项</span>
+            <span class="shortcut-item" v-else-if="awardStore.awards.length <= 36">数字键1-9,0 + 字母键a-{{ String.fromCharCode(97 + awardStore.awards.length - 11) }}：选择奖项</span>
+            <span class="shortcut-item" v-else>数字键1-9, 0 + 字母键a-z：选择前36个奖项</span>
+            <span class="shortcut-item">Enter：关闭结果（抽奖结束后）</span>
+            <span class="shortcut-item">Delete：重置数据</span>
+            <span class="shortcut-item">M：音乐开关</span>
+          </div>
         </div>
       </div>
     </div>
@@ -664,10 +812,10 @@ const clearAllData = () => {
   <UploadExcel v-model:visible="importModal" :on-success="handleSuccess" :before-upload="beforeUpload" />
 
   <!-- 权重编辑 -->
-  <WeightEditor v-model:visible="weightEditorVisible" :lottery-data="lotteryData" @save="handleWeightSave" />
+  <WeightEditor v-model:visible="weightEditorVisible" :lottery-data="lotteryData" @save="handleWeightSave" @close="handleWeightEditorClose" />
 
   <!-- 奖项设置 -->
-  <AwardSetting v-model:visible="awardSettingVisible" :awards="awardStore.awards" @save="handleAwardSettingSave" />
+  <AwardSetting v-model:visible="awardSettingVisible" :awards="awardStore.awards" @save="handleAwardSettingSave" @close="handleAwardSettingClose" />
 
   <!-- 全屏loading -->
   <a-spin v-if="fullScreenLoading" :spinning="true" size="large" class="global-spin" />

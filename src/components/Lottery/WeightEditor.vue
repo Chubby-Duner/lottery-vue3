@@ -12,7 +12,7 @@ const props = defineProps({
   lotteryData: Array
 });
 
-const emit = defineEmits(["update:visible", "save"]);
+const emit = defineEmits(["update:visible", "save", "close"]);
 
 const awardStore = useAwardStore();
 const weightVisible = ref(false);
@@ -174,6 +174,7 @@ const handleOk = () => {
 // 取消编辑
 const handleCancel = () => {
   weightVisible.value = false;
+  emit("close");
 };
 
 // 分页事件处理

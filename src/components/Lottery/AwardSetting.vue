@@ -11,7 +11,7 @@ const props = defineProps({
   visible: Boolean,
   awards: Array
 });
-const emit = defineEmits(["update:visible", "save"]);
+const emit = defineEmits(["update:visible", "save", "close"]);
 
 const awardStore = useAwardStore();
 const settingVisible = ref(false);
@@ -146,6 +146,7 @@ const handleOk = () => {
 
 const handleCancel = () => {
   settingVisible.value = false;
+  emit("close");
   // 取消时重新加载原始数据，丢弃所有未保存的修改
   localAwards.value = createAwardsWithRemaining();
 };
