@@ -6,9 +6,11 @@
   "author": "chubbyduner",
   "scripts": {
     "dev": "vite",
+    "serve": "pnpm dev",
     "build": "rimraf dist && vite build",
     "preview": "vite preview",
-    "preview:build": "pnpm build && vite preview"
+    "preview:build": "pnpm build && vite preview",
+    "clean:cache": "rimraf pnpm-lock.yaml && rimraf node_modules && pnpm store prune && pnpm install"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
@@ -25,6 +27,7 @@
     "postcss-html": "^1.8.0",
     "postcss-load-config": "^6.0.1",
     "postcss-scss": "^4.0.9",
+    "rimraf": "^6.0.1",
     "sass": "^1.89.1",
     "stylelint": "^16.20.0",
     "stylelint-config-recess-order": "^6.0.0",
