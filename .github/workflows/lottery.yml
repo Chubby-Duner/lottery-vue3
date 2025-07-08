@@ -1,9 +1,8 @@
-name: Build and Deploy
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - master  # 根据你的实际分支名调整
+    branches: [master]
 
 jobs:
   deploy:
@@ -25,14 +24,14 @@ jobs:
       - name: Install and Build
         run: |
           pnpm install
-          pnpm add pinia  # 确保 Pinia 已安装
           echo "VITE_PUBLIC_PATH=/lottery-vue3/" > .env.production
           pnpm build
+          ls -la dist  # 检查构建产物
 
-      - name: Deploy to gh-pages
+      - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          branch: gh-pages      # 目标分支（会自动创建）
-          folder: dist          # 构建输出目录
-          target-folder: .      # 部署到根目录（若需子目录改为 `lottery-vue3`）
+          branch: gh-pages
+          folder: dist
+          target-folder: lottery-vue3  # 确保部署到子目录
           clean: true
