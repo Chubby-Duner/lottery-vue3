@@ -30,7 +30,7 @@ jobs:
       - name: Deploy 🔧
         run: |
           pnpm install --no-frozen-lockfile
-          sed -i "s#VITE_PUBLIC_PATH = /#VITE_PUBLIC_PATH = /vue-pure-admin/#g" $(pwd)/.env.production
+          sed -i "s#VITE_PUBLIC_PATH = /#VITE_PUBLIC_PATH = /lottery-vue3/#g" $(pwd)/.env.production
           pnpm build
           cd dist
           touch README.md .nojekyll
