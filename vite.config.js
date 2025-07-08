@@ -7,7 +7,7 @@ import { root, alias, pathResolve, warpperEnv } from "./build/utils";
 export default ({ mode }) => {
   const { VITE_PORT, VITE_PUBLIC_PATH } = warpperEnv(loadEnv(mode, root));
   return {
-    base: "/lottery-vue3/",
+    base: VITE_PUBLIC_PATH,
     root,
     resolve: {
       alias
@@ -29,8 +29,6 @@ export default ({ mode }) => {
       include: ['pinia'],  // 显式包含 Pinia
     },
     build: {
-      outDir: 'dist',
-      assetsDir: 'assets',
       // https://cn.vitejs.dev/guide/build.html#browser-compatibility
       target: "es2015",
       sourcemap: false,
@@ -44,12 +42,12 @@ export default ({ mode }) => {
         output: {
           chunkFileNames: "static/js/[name]-[hash].js",
           entryFileNames: "static/js/[name]-[hash].js",
-          assetFileNames: "static/[ext]/[name]-[hash].[ext]"
+          assetFileNames: "static/[ext]/[name]-[hash].[ext]",
           // 手动分包
-          // manualChunks: {
-          //   vue: ["vue", "pinia", "vue-router"],
-          //   "ant-design-vue": ["ant-design-vue"],
-          // }
+          manualChunks: {
+            vue: ["vue", "pinia", "vue-router"],
+            "ant-design-vue": ["ant-design-vue"],
+          }
         }
       }
     }
