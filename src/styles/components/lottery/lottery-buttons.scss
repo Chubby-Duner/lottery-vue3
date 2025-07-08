@@ -4,6 +4,7 @@
 .dashboard {
   margin: 9rem auto 0 auto;
   text-align: center;
+  height: 125px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -120,6 +121,7 @@
   margin: 0.5rem auto 0 auto;
   padding-bottom: 1rem;
   position: relative;
+  height: 50px;
   z-index: 10;
 }
 

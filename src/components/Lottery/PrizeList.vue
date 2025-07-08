@@ -34,7 +34,7 @@ const toggleList = () => {
         </div>
       </div>
     </transition>
-    
+
     <!-- 灯笼 - 同一个灯笼，跟随区域移动 -->
     <img src="@/assets/images/lantern.png" alt="" width="85" @click="toggleList" class="switch" :class="{ 'switch-expanded': showList }" />
   </aside>
