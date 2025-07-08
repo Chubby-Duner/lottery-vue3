@@ -7,7 +7,7 @@ import { root, alias, pathResolve, warpperEnv } from "./build/utils";
 export default ({ mode }) => {
   const { VITE_PORT, VITE_PUBLIC_PATH } = warpperEnv(loadEnv(mode, root));
   return {
-    base: '/lottery-vue3/',
+    base: VITE_PUBLIC_PATH,
     root,
     resolve: {
       alias
@@ -30,6 +30,7 @@ export default ({ mode }) => {
     },
     build: {
       outDir: 'dist',
+      assetsDir: 'assets',
       // https://cn.vitejs.dev/guide/build.html#browser-compatibility
       target: "es2015",
       sourcemap: false,
