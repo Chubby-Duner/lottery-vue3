@@ -1,42 +1,37 @@
 name: Build and Deploy
-permissions:
-  contents: write
+
 on:
   push:
     branches:
-      - pages
-      
+      - master  # 根据你的实际分支名调整
+
 jobs:
   deploy:
-    concurrency: ci-${{ github.ref }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout 🛎️
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: https://registry.npmjs.com/
 
-      - uses: pnpm/action-setup@v3
-        name: Install pnpm
-        id: pnpm-install
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
         with:
           version: 9
-          run_install: false
 
-      - name: Deploy 🔧
+      - name: Install and Build
         run: |
-          pnpm install --no-frozen-lockfile
-          sed -i "s#VITE_PUBLIC_PATH = /#VITE_PUBLIC_PATH = /lottery-vue3/#g" $(pwd)/.env.production
+          pnpm install
+          echo "VITE_PUBLIC_PATH=/lottery-vue3/" > .env.production
           pnpm build
-          cd dist
-          touch README.md .nojekyll
 
-      - name: Deploy 🚀
+      - name: Deploy to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist
+          branch: gh-pages      # 目标分支（会自动创建）
+          folder: dist          # 构建输出目录
+          target-folder: .      # 部署到根目录（若需子目录改为 `lottery-vue3`）
           clean: true
