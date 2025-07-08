@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 
 // 路由配置
 const routes = [
@@ -11,7 +11,7 @@ const routes = [
 
 // 创建路由实例
 const router = createRouter({
-  history: createWebHistory("/lottery-vue3/"),
+  history: createWebHashHistory(),
   routes
 })
 
