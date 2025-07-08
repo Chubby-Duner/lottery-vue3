@@ -25,6 +25,7 @@ jobs:
       - name: Install and Build
         run: |
           pnpm install
+          pnpm add pinia  # 确保 Pinia 已安装
           echo "VITE_PUBLIC_PATH=/lottery-vue3/" > .env.production
           pnpm build
 

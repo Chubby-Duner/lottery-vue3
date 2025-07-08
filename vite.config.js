@@ -25,6 +25,9 @@ export default ({ mode }) => {
       }
     },
     plugins: [vue()],
+    optimizeDeps: {
+      include: ['pinia'],  // 显式包含 Pinia
+    },
     build: {
       outDir: 'dist',
       // https://cn.vitejs.dev/guide/build.html#browser-compatibility
