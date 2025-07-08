@@ -93,7 +93,7 @@ const showLess = awardKey => {
 
 .switch {
   position: absolute;
-  left: 52%;
+  left: 86px;
   transform: translateX(-50%);
   z-index: 10;
   cursor: pointer;

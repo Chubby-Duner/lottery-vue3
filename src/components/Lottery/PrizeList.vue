@@ -56,7 +56,7 @@ const toggleList = () => {
 
 .switch {
   position: absolute;
-  left: 48%;
+  right: 2px;
   transform: translateX(-50%);
   z-index: 10;
   cursor: pointer;
