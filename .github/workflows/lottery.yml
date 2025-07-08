@@ -26,7 +26,6 @@ jobs:
       - name: Install and Build
         run: |
           pnpm install
-          echo "VITE_PUBLIC_PATH=/lottery-vue3/" > .env.production
           pnpm build
 
       - name: Deploy
