@@ -7,7 +7,7 @@ import { root, alias, pathResolve, warpperEnv } from "./build/utils";
 export default ({ mode }) => {
   const { VITE_PORT, VITE_PUBLIC_PATH } = warpperEnv(loadEnv(mode, root));
   return {
-    base: VITE_PUBLIC_PATH,
+    base: '/lottery-vue3/',
     root,
     resolve: {
       alias
