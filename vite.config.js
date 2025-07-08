@@ -43,12 +43,12 @@ export default ({ mode }) => {
         output: {
           chunkFileNames: "static/js/[name]-[hash].js",
           entryFileNames: "static/js/[name]-[hash].js",
-          assetFileNames: "static/[ext]/[name]-[hash].[ext]",
+          assetFileNames: "static/[ext]/[name]-[hash].[ext]"
           // 手动分包
-          manualChunks: {
-            vue: ["vue", "Pinia", "vue-router"],
-            "ant-design-vue": ["ant-design-vue"],
-          }
+          // manualChunks: {
+          //   vue: ["vue", "pinia", "vue-router"],
+          //   "ant-design-vue": ["ant-design-vue"],
+          // }
         }
       }
     }
