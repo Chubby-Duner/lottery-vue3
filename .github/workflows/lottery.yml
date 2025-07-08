@@ -7,6 +7,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 关键权限
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,15 +26,14 @@ jobs:
       - name: Install and Build
         run: |
           pnpm install
-          pnpm add pinia
           echo "VITE_PUBLIC_PATH=/lottery-vue3/" > .env.production
           pnpm build
-          ls -la dist  # 检查构建产物
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: dist
-          target-folder: lottery-vue3  # 确保部署到子目录
+          target-folder: lottery-vue3  # 匹配你的子路径
           clean: true
+          force: true  # 解决冲突
