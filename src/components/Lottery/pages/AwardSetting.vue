@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { message } from "ant-design-vue";
 import { useAwardStore } from "@/store/awardStore";
 
@@ -11,11 +11,13 @@ const props = defineProps({
   visible: Boolean,
   awards: Array
 });
-const emit = defineEmits(["update:visible", "save", "close"]);
+const emit = defineEmits(["update:visible", "save", "close", "onOpen", "onClose"]);
 
 const awardStore = useAwardStore();
 const settingVisible = ref(false);
 const localAwards = ref([]);
+const searchKeyword = ref("");
+const selectedRowKeys = ref([]);
 
 // 计算实际的剩余数量
 const getRemainingCount = awardKey => {
@@ -32,6 +34,33 @@ const createAwardsWithRemaining = () => {
     remainingCount: getRemainingCount(item.key),
     originalCount: item.count // 保留原始数量用于重置
   }));
+};
+
+// 过滤后的奖项数据
+const filteredAwards = computed(() => {
+  if (!searchKeyword.value) return localAwards.value;
+  return localAwards.value.filter(item =>
+    item.label.includes(searchKeyword.value)
+  );
+});
+
+// 多选配置（computed 保证响应式）
+const rowSelection = computed(() => ({
+  selectedRowKeys: selectedRowKeys.value,
+  onChange: (selectedKeys) => {
+    selectedRowKeys.value = selectedKeys;
+  },
+}));
+
+// 批量删除
+const batchRemoveAwards = () => {
+  if (selectedRowKeys.value.length === 0) {
+    message.warning("请先选择要删除的奖项");
+    return;
+  }
+  localAwards.value = localAwards.value.filter(item => !selectedRowKeys.value.includes(item.key));
+  selectedRowKeys.value = [];
+  message.success("已批量删除选中奖项");
 };
 
 // 分页配置
@@ -158,8 +187,12 @@ watch(
     if (newValue) {
       // 每次打开时重新计算剩余数量
       localAwards.value = createAwardsWithRemaining();
-      // 重置分页状态
+      // 重置状态
+      searchKeyword.value = "";
       resetPagination();
+      emit("onOpen");
+    } else {
+      emit("onClose");
     }
   }
 );
@@ -188,8 +221,26 @@ watch(
       </div>
     </div>
 
+    <!-- 搜索区域 -->
+    <a-input-search
+      v-model:value="searchKeyword"
+      placeholder="请输入奖项名称进行搜索"
+      allowClear
+      style="width: 240px; margin-bottom: 16px"
+    />
+
     <!-- 表格区域 -->
-    <a-table :dataSource="localAwards" :pagination="paginationConfig" :columns="columns" rowKey="key" size="small" bordered :scroll="{ y: 300 }" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px" @change="handleTableChange">
+    <a-table
+      :dataSource="filteredAwards"
+      :pagination="paginationConfig"
+      :columns="columns"
+      rowKey="key"
+      size="small"
+      bordered
+      :scroll="{ y: 300 }"
+      @change="handleTableChange"
+      :rowSelection="rowSelection"
+    >
       <template #bodyCell="{ column, record, index }">
         <template v-if="column.key === 'label'">
           <a-input v-model:value="record.label" style="border-radius: 4px" />
@@ -231,6 +282,10 @@ watch(
         <a-button @click="setRemainingCounts" style="border-radius: 6px">
           <template #icon>✏️</template>
           手动设置剩余数量
+        </a-button>
+        <a-button danger @click="batchRemoveAwards" style="border-radius: 6px">
+          <template #icon>🗑️</template>
+          批量删除
         </a-button>
       </a-space>
     </div>

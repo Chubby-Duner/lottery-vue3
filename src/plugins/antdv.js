@@ -14,6 +14,7 @@ import {
   Space,
   Switch,
   Input,
+  InputSearch,
   Popconfirm
 } from 'ant-design-vue'
 
@@ -32,6 +33,7 @@ const components = [
   Space,
   Switch,
   Input,
+  InputSearch,
   Popconfirm
 ]
 

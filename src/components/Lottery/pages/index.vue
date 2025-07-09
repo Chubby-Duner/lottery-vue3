@@ -64,6 +64,8 @@ const animationPaused = ref(false); // 添加动画暂停标志
 const isLotteryProcessing = ref(false);
 // 停止抽奖防抖标志
 const isStopping = ref(false);
+// 控制全局键盘监听开关
+const keyboardEnabled = ref(true);
 
 // 先声明动画相关方法，避免循环依赖
 let startAnimation, cancelAnimation;
@@ -86,7 +88,9 @@ const { weightEditorVisible, openWeightEditor, handleWeightSave, handleWeightEdi
   startAnimation: () => startAnimation(),
   cancelAnimation: () => cancelAnimation(),
   message,
-  nextTick
+  nextTick,
+  onOpen: () => { keyboardEnabled.value = false; },
+  onClose: () => { keyboardEnabled.value = true; }
 });
 // 奖项设置相关
 const { awardSettingVisible, openAwardSetting, handleAwardSettingSave, handleAwardSettingClose } = useAwardSetting({
@@ -95,7 +99,9 @@ const { awardSettingVisible, openAwardSetting, handleAwardSettingSave, handleAwa
   animationPaused,
   startAnimation: () => startAnimation(),
   cancelAnimation: () => cancelAnimation(),
-  nextTick
+  nextTick,
+  onOpen: () => { keyboardEnabled.value = false; },
+  onClose: () => { keyboardEnabled.value = true; }
 });
 
 // ===================== 计算属性 =====================
@@ -306,7 +312,8 @@ useKeyboardShortcuts({
   toggleMusic,
   selectAward,
   resetAllData,
-  cancelAnimation
+  cancelAnimation,
+  enabled: keyboardEnabled
 });
 </script>
 
@@ -384,10 +391,24 @@ useKeyboardShortcuts({
   <UploadExcel v-model:visible="importModal" :on-success="handleSuccess" :before-upload="beforeUpload" />
 
   <!-- 权重编辑 -->
-  <WeightEditor v-model:visible="weightEditorVisible" :lottery-data="lotteryData" @save="handleWeightSave" @close="handleWeightEditorClose" />
+  <WeightEditor
+    v-model:visible="weightEditorVisible"
+    :lottery-data="lotteryData"
+    @save="handleWeightSave"
+    @close="handleWeightEditorClose"
+    @onOpen="keyboardEnabled = false"
+    @onClose="keyboardEnabled = true"
+  />
 
   <!-- 奖项设置 -->
-  <AwardSetting v-model:visible="awardSettingVisible" :awards="awardStore.awards" @save="handleAwardSettingSaveWrap" @close="handleAwardSettingClose" />
+  <AwardSetting
+    v-model:visible="awardSettingVisible"
+    :awards="awardStore.awards"
+    @save="handleAwardSettingSaveWrap"
+    @close="handleAwardSettingClose"
+    @onOpen="keyboardEnabled = false"
+    @onClose="keyboardEnabled = true"
+  />
 </template>
 
 <style lang="scss" scoped></style>

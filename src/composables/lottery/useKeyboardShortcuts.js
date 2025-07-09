@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, watch } from 'vue'
 
 // #region 键盘快捷键处理
 export default function useKeyboardShortcuts({
@@ -12,7 +12,8 @@ export default function useKeyboardShortcuts({
   toggleMusic,
   selectAward,
   resetAllData,
-  cancelAnimation
+  cancelAnimation,
+  enabled = undefined
 }) {
   // 防抖变量
   let lastKeyPressTime = 0;
@@ -86,21 +87,41 @@ export default function useKeyboardShortcuts({
     awardStore.clearAll();
   };
 
-  // 注册事件监听器
-  onMounted(() => {
+  // 事件监听注册/移除逻辑
+  const addListeners = () => {
     window.addEventListener("keypress", handleKeyPress);
     window.addEventListener("keydown", handleKeyDown);
-    // 监听页面刷新事件
     window.addEventListener("beforeunload", handleBeforeUnload);
-  });
-
-  // 清理事件监听器
-  onUnmounted(() => {
-    cancelAnimation();
+  };
+  const removeListeners = () => {
     window.removeEventListener("keypress", handleKeyPress);
     window.removeEventListener("keydown", handleKeyDown);
     window.removeEventListener("beforeunload", handleBeforeUnload);
-  });
+  };
+
+  // 支持动态开关
+  if (enabled) {
+    watch(enabled, (val) => {
+      if (val) {
+        addListeners();
+      } else {
+        removeListeners();
+      }
+    }, { immediate: true });
+    onUnmounted(() => {
+      removeListeners();
+      cancelAnimation();
+    });
+  } else {
+    // 默认行为
+    onMounted(() => {
+      addListeners();
+    });
+    onUnmounted(() => {
+      removeListeners();
+      cancelAnimation();
+    });
+  }
 
   return {
     handleKeyPress,

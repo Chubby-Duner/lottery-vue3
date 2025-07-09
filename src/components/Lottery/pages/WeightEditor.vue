@@ -12,12 +12,26 @@ const props = defineProps({
   lotteryData: Array
 });
 
-const emit = defineEmits(["update:visible", "save", "close"]);
+const emit = defineEmits(["update:visible", "save", "close", "onOpen", "onClose"]);
 
 const awardStore = useAwardStore();
 const weightVisible = ref(false);
 // 权重数据副本
 const weightData = ref([]);
+const searchKeyword = ref("");
+
+// 过滤后的数据
+const filteredWeightData = computed(() => {
+  if (!searchKeyword.value) return weightData.value;
+  return weightData.value.filter(item => {
+    const namezh = item.namezh || "";
+    const nameen = item.nameen || "";
+    return (
+      namezh.includes(searchKeyword.value) ||
+      nameen.toLowerCase().includes(searchKeyword.value.toLowerCase())
+    );
+  });
+});
 
 // 分页配置
 const paginationConfig = ref({
@@ -116,8 +130,12 @@ watch(
   newValue => {
     weightVisible.value = newValue;
     if (newValue) {
-      // 重置分页状态
+      // 重置状态
+      searchKeyword.value = "";
       resetPagination();
+      emit("onOpen");
+    } else {
+      emit("onClose");
     }
   }
 );
@@ -208,8 +226,16 @@ const resetPagination = () => {
         </div>
       </div>
 
+      <!-- 搜索区域 -->
+      <a-input-search
+        v-model:value="searchKeyword"
+        placeholder="请输入姓名进行搜索"
+        allowClear
+        style="width: 240px; margin-bottom: 16px"
+      />
+
       <!-- 表格区域 -->
-      <a-table :dataSource="weightData" :columns="columns" :pagination="paginationConfig" size="small" bordered :scroll="{ y: 300 }" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px" @change="handleTableChange">
+      <a-table :dataSource="filteredWeightData" :columns="columns" :pagination="paginationConfig" size="small" bordered :scroll="{ y: 300 }" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px" @change="handleTableChange">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">
             <div class="person-info">
