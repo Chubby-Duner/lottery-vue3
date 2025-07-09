@@ -1,19 +1,18 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
 import { message } from "ant-design-vue";
-import { SettingOutlined } from "@ant-design/icons-vue";
-import KeyboardShortcuts from "../features/KeyboardShortcuts.vue";
 import { useAwardStore } from "@/store/awardStore";
 import { useMusicStore } from "@/store/musicStore";
 import { getImageUrl } from "@/composables/utils";
 import UploadExcel from "@/components/Upload/UploadExcel.vue";
+import LotteryLogo from "./LotteryLogo.vue";
 import LotteryResult from "./LotteryResult.vue";
 import WeightEditor from "./WeightEditor.vue";
 import AwardSetting from "./AwardSetting.vue";
 import Countdown from "../features/Countdown.vue";
 import ImportEmptyBlock from "../features/ImportEmptyBlock.vue";
 import AwardControlPanel from "../features/AwardControlPanel.vue";
-import LotteryLogo from "./LotteryLogo.vue";
+import KeyboardShortcuts from "../features/KeyboardShortcuts.vue";
 
 import useCountdown from "@/composables/lottery/useCountdown";
 import useAwardSetting from "@/composables/lottery/useAwardSetting";
@@ -190,7 +189,8 @@ const handleAwardSettingSaveWrap = newAwards => {
 const {
   selectAward,
   startLottery,
-  stopLottery: _stopLottery
+  stopLottery: _stopLottery,
+  exportWinners
 } = useLottery({
   isStarted,
   isMoving,
@@ -269,10 +269,6 @@ const stopLottery = async () => {
   isLotteryProcessing.value = false;
   isStopping.value = false;
 };
-//#endregion
-
-//#region 动画相关
-// 已在顶部初始化
 //#endregion
 
 //#region 其它功能
@@ -367,17 +363,8 @@ useKeyboardShortcuts({
         @openAwardSetting="openAwardSetting"
         @openWeightEditor="openWeightEditor"
         @resetAllData="resetAllData"
-      >
-        <template #icon-award-setting>
-          <SettingOutlined />
-        </template>
-        <template #icon-weight-editor>
-          <SettingOutlined />
-        </template>
-        <template #icon-reset-data>
-          <SettingOutlined />
-        </template>
-      </AwardControlPanel>
+        @exportWinners="exportWinners"
+      />
 
       <!-- 键盘快捷键提示 -->
       <KeyboardShortcuts v-if="lotteryData.length > 0" :award-length="awardStore.awards.length" />

@@ -1,12 +1,15 @@
 <script setup>
 import { defineProps, defineEmits } from "vue";
+import { SettingOutlined, ExportOutlined, ClearOutlined } from "@ant-design/icons-vue";
+
 const props = defineProps({
   awards: { type: Array, required: true },
   selectedAward: { type: String, required: true },
   awardLog: { type: Object, required: true },
   buttonText: { type: String, required: true }
 });
-const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "openWeightEditor", "resetAllData"]);
+
+const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "openWeightEditor", "resetAllData", "exportWinners"]);
 </script>
 
 <template>
@@ -39,7 +42,7 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
     <div class="btn weight-edit-section">
       <a-button @click="$emit('openAwardSetting')">
         <template #icon>
-          <slot name="icon-award-setting" />
+          <SettingOutlined />
         </template>
         奖项设置
       </a-button>
@@ -47,15 +50,23 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
     <div class="btn weight-edit-section">
       <a-button @click="$emit('openWeightEditor')">
         <template #icon>
-          <slot name="icon-weight-editor" />
+          <SettingOutlined />
         </template>
         权重设置
       </a-button>
     </div>
     <div class="btn weight-edit-section">
+      <a-button type="primary" @click="$emit('exportWinners')">
+        <template #icon>
+          <ExportOutlined />
+        </template>
+        导出中奖名单
+      </a-button>
+    </div>
+    <div class="btn weight-edit-section">
       <a-button danger @click="$emit('resetAllData')">
         <template #icon>
-          <slot name="icon-reset-data" />
+          <ClearOutlined />
         </template>
         重置数据
       </a-button>

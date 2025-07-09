@@ -1,4 +1,5 @@
 import { weightedRandomIndex } from '@/composables/utils'
+import * as XLSX from "xlsx";
 
 // #region 抽奖相关
 export default function useLottery({
@@ -127,7 +128,7 @@ export default function useLottery({
       winnerIndex.value = winnerIndexResult;
       // 更新获奖者信息
       const winner = lotteryData.value[winnerIndex.value];
-      if ( winnerIndex.value < 0 || winnerIndex.value >= lotteryData.value.length || !winner) {
+      if (winnerIndex.value < 0 || winnerIndex.value >= lotteryData.value.length || !winner) {
         winnerNameZh.value = "Invalid Winner";
         winnerNameEn.value = "Invalid Winner";
       } else {
@@ -165,10 +166,36 @@ export default function useLottery({
     }
   };
 
+  // 导出中奖名单
+  const exportWinners = () => {
+    const awards = awardStore.awards;
+    const winnerMap = awardStore.winnerMap;
+    // 检查是否有任何奖项有中奖人
+    const hasWinner = awards.some(award => (winnerMap[award.key] || []).length > 0);
+    if (!hasWinner) {
+      message.error("暂无任何中奖名单，无法导出！");
+      return;
+    }
+    const exportData = awards.map(award => {
+      const winners = (winnerMap[award.key] || []).map(
+        item => item.namezh || item.nameZh || item.nameZH || item.name
+      );
+      return {
+        奖项: award.label || award.name,
+        中奖人员: winners.join("、") || "无"
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "中奖名单");
+    XLSX.writeFile(wb, "中奖名单.xlsx");
+  };
+
   return {
     selectAward,
     handleLottery,
     startLottery,
-    stopLottery
+    stopLottery,
+    exportWinners
   }
 } 
