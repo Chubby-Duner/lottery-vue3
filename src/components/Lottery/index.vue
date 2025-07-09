@@ -2,13 +2,21 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
 import { message, Modal } from "ant-design-vue";
 import { SettingOutlined } from "@ant-design/icons-vue";
+import KeyboardShortcuts from './KeyboardShortcuts.vue';
 import { useAwardStore } from "@/store/awardStore";
 import { useMusicStore } from "@/store/musicStore";
-import { getImageUrl, weightedRandomIndex } from "@/composables/utils";
+import { getImageUrl } from "@/composables/utils";
 import UploadExcel from "@/components/Upload/UploadExcel.vue";
 import LotteryResult from "./LotteryResult.vue";
 import WeightEditor from "./WeightEditor.vue";
 import AwardSetting from "./AwardSetting.vue";
+
+import useCountdown from '@/composables/lottery/useCountdown'
+import useAwardSetting from '@/composables/lottery/useAwardSetting'
+import useWeightEditor from '@/composables/lottery/useWeightEditor'
+import useAnimation from '@/composables/lottery/useAnimation'
+import useLottery from '@/composables/lottery/useLottery'
+import useResetData from '@/composables/lottery/useResetData'
 
 defineOptions({
   name: "LotteryMain"
@@ -21,8 +29,7 @@ const musicStore = useMusicStore();
 
 // ===================== 状态变量 =====================
 //#region 倒计时相关
-const showCountdown = ref(false);
-const countdownText = ref("叁");
+const { showCountdown, countdownText, showCountdownSequence } = useCountdown();
 //#endregion
 
 //#region 导入数据相关
@@ -46,11 +53,44 @@ const speed = ref(6);
 const lotteryWrap = ref(null);
 const wrapMain = ref(null);
 const animationPaused = ref(false); // 添加动画暂停标志
+// 抽奖流程锁，防止未出结果时重复抽奖
+const isLotteryProcessing = ref(false);
+// 停止抽奖防抖标志
+const isStopping = ref(false);
+
+// 先声明动画相关方法，避免循环依赖
+let startAnimation, cancelAnimation;
+const animation = useAnimation({
+  isMoving,
+  wrapPosition,
+  lotteryWrap,
+  animationFrame,
+  speed,
+  animationPaused
+});
+startAnimation = animation.startAnimation;
+cancelAnimation = animation.cancelAnimation;
 
 // 权重编辑相关
-const weightEditorVisible = ref(false);
+const { weightEditorVisible, openWeightEditor, handleWeightSave, handleWeightEditorClose } = useWeightEditor({
+  lotteryData,
+  awardStore,
+  isMoving,
+  animationPaused,
+  startAnimation: () => startAnimation(),
+  cancelAnimation: () => cancelAnimation(),
+  message,
+  nextTick
+});
 // 奖项设置相关
-const awardSettingVisible = ref(false);
+const { awardSettingVisible, openAwardSetting, handleAwardSettingSave, handleAwardSettingClose } = useAwardSetting({
+  awardStore,
+  isMoving,
+  animationPaused,
+  startAnimation: () => startAnimation(),
+  cancelAnimation: () => cancelAnimation(),
+  nextTick
+});
 // 全屏loading
 const fullScreenLoading = ref(false);
 // 快捷键提示显示状态
@@ -154,23 +194,7 @@ onUnmounted(() => {
 // ===================== 业务逻辑区 =====================
 
 //#region 倒计时相关
-async function showCountdownSequence() {
-  showCountdown.value = true;
-  
-  // 叁
-  countdownText.value = "叁";
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  // 贰
-  countdownText.value = "贰";
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  // 壹
-  countdownText.value = "壹";
-  await new Promise(resolve => setTimeout(resolve, 600));
-  
-  showCountdown.value = false;
-}
+// 已抽离到 useCountdown.js
 //#endregion
 
 //#region 音乐控制相关
@@ -226,52 +250,7 @@ const getTemplateUrl = () => {
 //#endregion
 
 //#region 奖项设置相关
-// 防抖变量
-let awardSettingClickTime = 0;
-const AWARD_SETTING_DEBOUNCE = 300; // 300ms 防抖
-
-const openAwardSetting = () => {
-  const now = Date.now();
-  if (now - awardSettingClickTime < AWARD_SETTING_DEBOUNCE) {
-    return; // 防抖处理
-  }
-  awardSettingClickTime = now;
-  
-  // 当奖项数量多时，暂停动画以提高性能
-  if (awardStore.awards.length > 8) {
-    cancelAnimation();
-    animationPaused.value = true; // 标记动画被暂停
-  }
-  
-  awardSettingVisible.value = true;
-};
-
-const handleAwardSettingSave = newAwards => {
-  awardStore.setAwards(newAwards);
-  // 更新权重数据结构
-  updateWeightData();
-  
-  // 如果之前暂停了动画，现在恢复
-  if (animationPaused.value && isMoving.value) {
-    animationPaused.value = false; // 先重置暂停标志
-    nextTick(() => {
-      startAnimation();
-    });
-  }
-};
-
-// 监听奖项设置弹窗关闭
-const handleAwardSettingClose = () => {
-  awardSettingVisible.value = false;
-  
-  // 如果之前暂停了动画，现在恢复
-  if (animationPaused.value && isMoving.value) {
-    animationPaused.value = false; // 先重置暂停标志
-    nextTick(() => {
-      startAnimation();
-    });
-  }
-};
+// 已抽离到 useAwardSetting.js
 //#endregion
 
 //#region 权重数据更新
@@ -294,97 +273,72 @@ const updateWeightData = () => {
     });
   }
 };
+
+// 包装 handleAwardSettingSave，先保存奖项再更新权重
+const handleAwardSettingSaveWrap = (newAwards) => {
+  handleAwardSettingSave(newAwards);
+  updateWeightData();
+};
 //#endregion
 
 //#region 权重编辑相关
-// 防抖变量
-let weightEditorClickTime = 0;
-const WEIGHT_EDITOR_DEBOUNCE = 300; // 300ms 防抖
-
-const openWeightEditor = () => {
-  const now = Date.now();
-  if (now - weightEditorClickTime < WEIGHT_EDITOR_DEBOUNCE) {
-    return; // 防抖处理
-  }
-  weightEditorClickTime = now;
-  
-  if (lotteryData.value.length === 0) {
-    message.warning("请先导入抽奖数据");
-    return;
-  }
-  
-  // 当奖项数量多时，暂停动画以提高性能
-  if (awardStore.awards.length > 8) {
-    cancelAnimation();
-    animationPaused.value = true; // 标记动画被暂停
-  }
-  
-  weightEditorVisible.value = true;
-};
-
-const handleWeightSave = updatedData => {
-  lotteryData.value = updatedData;
-  message.success("权重设置已更新");
-  
-  // 如果之前暂停了动画，现在恢复
-  if (animationPaused.value && isMoving.value) {
-    animationPaused.value = false; // 先重置暂停标志
-    nextTick(() => {
-      startAnimation();
-    });
-  }
-};
-
-// 监听权重编辑弹窗关闭
-const handleWeightEditorClose = () => {
-  weightEditorVisible.value = false;
-  
-  // 如果之前暂停了动画，现在恢复
-  if (animationPaused.value && isMoving.value) {
-    animationPaused.value = false; // 先重置暂停标志
-    nextTick(() => {
-      startAnimation();
-    });
-  }
-};
+// 已抽离到 useWeightEditor.js
 //#endregion
 
 //#region 抽奖相关
-const selectAward = awardKey => {
-  if (isStarted.value) {
-    message.error("正在抽奖中，不允许更改奖项设置");
-    return;
-  }
-  selectedAward.value = awardKey;
-  awardStore.setSelectAward(awardKey);
-};
+// 包装 useLottery，增加流程锁逻辑
+const { selectAward, startLottery, stopLottery: _stopLottery } = useLottery({
+  isStarted,
+  isMoving,
+  isLocked,
+  canStop,
+  showResult,
+  winnerIndex,
+  winnerNameZh,
+  winnerNameEn,
+  wrapPosition,
+  speed,
+  selectedAward,
+  lotteryData,
+  awardStore,
+  animationPaused,
+  startAnimation: () => startAnimation(),
+  cancelAnimation: () => cancelAnimation(),
+  showCountdownSequence,
+  message,
+  nextTick
+});
 
+// 包装 handleLottery，修正锁逻辑和剩余数量校验
 const handleLottery = () => {
-  const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
-  const awardKey = `award0${idx + 1}`;
-  if (awardStore.awardLog[awardKey] <= 0) {
-    message.error("该奖项已经抽完啦，请选择其它奖项哦！");
+  // 重新开始时重置流程锁
+  if (!isStarted.value && !isMoving.value) {
+    isLotteryProcessing.value = false;
+  }
+  // “开始抽奖”时加锁
+  if (!isStarted.value && isMoving.value) {
+    // 先校验剩余数量
+    const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
+    const awardKey = `award0${idx + 1}`;
+    if (awardStore.awardLog[awardKey] <= 0) {
+      message.error('该奖项已经抽完啦，请选择其它奖项哦！');
+      return;
+    }
+    if (isLotteryProcessing.value) {
+      message.warning('抽奖进行中，请等待结果...');
+      return;
+    }
+    isLotteryProcessing.value = true;
+    startLottery();
     return;
   }
-  const lockedList = lotteryData.value.filter(item => item.locked);
-  if (lockedList.length > 0) {
-    // 有锁定，判断锁定且权重>0的人
-    const lockedWithWeight = lockedList.filter(item => (item.awardWeights?.[idx + 1] ?? 1) > 0);
-    if (lockedWithWeight.length === 0) {
-      message.error("锁定的人员当前奖项权重都为0，无法抽奖");
-      return;
-    }
-  } else {
-    // 没有锁定，判断所有权重
-    const weights = lotteryData.value.map(item => item.awardWeights?.[idx + 1] ?? 1);
-    const total = weights.reduce((a, b) => a + b, 0);
-    if (total === 0) {
-      message.error("当前奖项所有权重都为0，无法抽奖");
-      return;
-    }
+  // “停止抽奖”时不判断锁，始终允许，但防抖
+  if (isStarted.value && !isLocked.value && isMoving.value) {
+    stopLottery();
+    return;
   }
+  // 重新开始
   if (!isStarted.value && !isMoving.value) {
-    // 重新开始：重置状态并重新滚动，不刷新页面
     wrapPosition.value = 0;
     isMoving.value = true;
     isStarted.value = false;
@@ -393,260 +347,48 @@ const handleLottery = () => {
     winnerIndex.value = -1;
     showResult.value = false;
     canStop.value = false;
-    // 只有在动画没有被暂停时才启动
     if (!animationPaused.value) {
       startAnimation();
     }
-    return;
   }
-  if (!isStarted.value && isMoving.value) {
-    startLottery();
-  } else if (isStarted.value && !isLocked.value && isMoving.value) {
-    stopLottery();
-  }
-};
+}
 
-const startLottery = () => {
-  isStarted.value = true;
-  isMoving.value = true;
-  isLocked.value = true;
-  // 加速动画
-  setTimeout(() => (speed.value = 15), 1000);
-  setTimeout(() => (speed.value = 20), 1500);
-  setTimeout(() => (speed.value = 30), 3000);
-  setTimeout(() => (speed.value = 50), 3500);
-  setTimeout(() => {
-    speed.value = 90;
-    isLocked.value = false;
-  }, 4000);
-};
-
+// 包装 stopLottery，结束后解锁，防止多次触发
 const stopLottery = async () => {
-  if (isLocked.value) {
-    message.error("还没结束，请稍等...");
-    return;
-  }
-  
-  // 防止重复调用
-  if (!isStarted.value || isMoving.value === false) {
-    return;
-  }
-  
-  // 立即设置状态，防止重复调用
-  isStarted.value = false;
-  // 注意：这里不停止动画，让动画在倒计时期间继续运行
-  // 调整动画速度，让倒计时期间动画更慢一些
-  speed.value = 15;
-  
-  try {
-    const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
-    // 先查找是否有锁定 锁定且权重>0才可抽中
-    const lockedList = lotteryData.value.filter(item => item.locked && (item.awardWeights?.[idx + 1] ?? 1) > 0);
-    let winnerIndexResult;
-    if (lockedList.length > 0) {
-      // 只从锁定的人中随机抽取
-      const idx = Math.floor(Math.random() * lockedList.length);
-      const winner = lockedList[idx];
-      winnerIndexResult = lotteryData.value.findIndex(item => item.nameen === winner.nameen);
-    } else {
-      // 正常权重抽奖
-      winnerIndexResult = weightedRandomIndex(lotteryData.value, selectedAward.value);
-      if (winnerIndexResult === -1) {
-        message.error("当前奖项所有权重都为0，无法抽奖");
-        return;
-      }
-    }
-    winnerIndex.value = winnerIndexResult;
-
-    // 更新获奖者信息
-    const winner = lotteryData.value[winnerIndex.value];
-    winnerNameZh.value = winner.namezh;
-    winnerNameEn.value = winner.nameen;
-
-    // 显示倒计时（动画继续运行）
-    await showCountdownSequence();
-    
-    // 倒计时结束后，停止动画并显示结果
-    isMoving.value = false;
-    cancelAnimation();
-    showResult.value = true;
-    canStop.value = true;
-    speed.value = 8;
-
-    // 更新奖项数据
-    // 中奖人对象
-    const winnerData = {
-      nameen: winnerNameEn.value,
-      namezh: winnerNameZh.value
-    };
-    // 写入中奖名单
-    awardStore.addWinner(selectedAward.value, winnerData);
-    // 更新奖项剩余数量
-    const remainingIdx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
-    const awardKey = `award0${remainingIdx + 1}`;
-    const newAwardLog = { ...awardStore.awardLog };
-    newAwardLog[awardKey] -= 1;
-    awardStore.setAwardLog(newAwardLog);
-    // 从抽奖池中移除获奖者
-    lotteryData.value = lotteryData.value.filter(item => item.nameen !== winner.nameen);
-    winnerIndex.value = -1;
-  } catch (error) {
-    console.error("Function stopLottery ~ error:", error);
-  }
-};
+  if (isStopping.value) return;
+  isStopping.value = true;
+  await _stopLottery();
+  isLotteryProcessing.value = false;
+  isStopping.value = false;
+}
 //#endregion
 
 //#region 动画相关
-const startAnimation = () => {
-  // 如果动画被暂停，则不启动
-  if (animationPaused.value) {
-    return;
-  }
-  
-  let lastTime = 0;
-  let scrollHeight = 0; // 缓存scrollHeight，避免重复查询DOM
-  let frameCount = 0; // 帧数计数器
-  let lastFrameTime = 0; // 上一帧时间
-  let performanceWarning = false; // 性能警告标志
-  
-  const animate = timestamp => {
-    if (!isMoving.value) return;
-    if (!lotteryWrap.value) return; // 防止空指针
-    
-    // 性能检测：计算FPS
-    frameCount++;
-    if (timestamp - lastFrameTime >= 1000) { // 每秒检测一次
-      const fps = frameCount;
-      frameCount = 0;
-      lastFrameTime = timestamp;
-      
-      // 如果FPS低于30，启用性能优化模式
-      if (fps < 30 && !performanceWarning) {
-        performanceWarning = true;
-        console.warn('动画性能较低，启用优化模式');
-      }
-    }
-    
-    // 只在第一次或必要时更新scrollHeight
-    if (scrollHeight === 0) {
-      scrollHeight = lotteryWrap.value.scrollHeight;
-    }
-    
-    const deltaTime = timestamp - lastTime;
-    lastTime = timestamp;
-    
-    // 性能优化模式：降低动画速度
-    const currentSpeed = performanceWarning ? speed.value * 0.7 : speed.value;
-    wrapPosition.value -= currentSpeed;
-    
-    // 使用缓存的scrollHeight
-    if (-wrapPosition.value >= scrollHeight / 2) {
-      wrapPosition.value = 0;
-    }
-    
-    animationFrame.value = window.requestAnimationFrame(animate);
-  };
-  
-  // 立即获取一次scrollHeight
-  if (lotteryWrap.value) {
-    scrollHeight = lotteryWrap.value.scrollHeight;
-  }
-  
-  // 重置性能警告
-  performanceWarning = false;
-  frameCount = 0;
-  lastFrameTime = 0;
-  
-  animationFrame.value = window.requestAnimationFrame(animate);
-};
-
-const cancelAnimation = () => {
-  if (animationFrame.value) {
-    window.cancelAnimationFrame(animationFrame.value);
-    animationFrame.value = null;
-  }
-};
+// 已在顶部初始化
 //#endregion
 
 //#region 其它功能
+const { resetAllData, clearAllData } = useResetData({
+  isStarted,
+  isMoving,
+  animationPaused,
+  awardStore,
+  lotteryData,
+  wrapPosition,
+  startAnimation: () => startAnimation(),
+  cancelAnimation: () => cancelAnimation(),
+  message,
+  nextTick,
+  fullScreenLoading
+});
+
 const closeResult = () => {
   if (!canStop.value) {
     message.error("还没结束，无法关闭！");
     return;
   }
   showResult.value = false;
-};
-
-// 重置数据
-const resetAllData = () => {
-  // 如果正在抽奖中，给出提示
-  if (isStarted.value) {
-    message.warning("正在抽奖中，建议等抽奖结束后再重置数据");
-  }
-  
-  Modal.confirm({
-    title: "确定要重置所有数据吗？",
-    content: "此操作会恢复到导入数据后的初始状态，所有抽奖结果和名单将被清空。",
-    okText: "确定",
-    cancelText: "取消",
-    async onOk() {
-      fullScreenLoading.value = true;
-      try {
-        // 停止当前抽奖
-        if (isStarted.value) {
-          isStarted.value = false;
-          isMoving.value = false;
-          cancelAnimation();
-        }
-        
-        awardStore.resetAllToImportBackup();
-        // 恢复 lotteryData，补全自定义字段
-        if (awardStore.lotteryDataBackup && awardStore.lotteryDataBackup.length > 0) {
-          // 动态设置默认权重
-          const defaultWeights = {};
-          awardStore.awards.forEach((award, index) => {
-            defaultWeights[index + 1] = 1; // 默认每个奖项权重为1
-          });
-          
-          lotteryData.value = awardStore.lotteryDataBackup.map(item => ({
-            ...item,
-            awardWeights: item.awardWeights || defaultWeights,
-            locked: typeof item.locked === "boolean" ? item.locked : false
-          }));
-          await nextTick();
-          wrapPosition.value = 0;
-          // 只有在动画没有被暂停时才启动
-          if (!animationPaused.value) {
-            startAnimation();
-          }
-        } else {
-          lotteryData.value = [];
-        }
-        message.success("已重置为导入初始状态");
-      } finally {
-        fullScreenLoading.value = false;
-      }
-    }
-  });
-};
-
-// 清空所有数据
-const clearAllData = () => {
-  Modal.confirm({
-    title: "确定要清空所有数据吗？",
-    content: "此操作会清空上一次操作所产生的所有数据。",
-    okText: "确定",
-    cancelText: "取消",
-    async onOk() {
-      fullScreenLoading.value = true;
-      try {
-        awardStore.clearAll();
-        message.success("已清空所有数据");
-      } finally {
-        fullScreenLoading.value = false;
-      }
-    }
-  });
+  isLotteryProcessing.value = false; // 关闭结果弹窗后允许下一次抽奖
 };
 //#endregion
 </script>
@@ -755,22 +497,7 @@ const clearAllData = () => {
       </div>
 
       <!-- 键盘快捷键提示 -->
-      <div v-if="lotteryData.length > 0" class="keyboard-shortcuts-trigger" @mouseenter="showShortcuts = true" @mouseleave="showShortcuts = false">
-        <span class="shortcuts-icon">?</span>
-        <div v-if="showShortcuts" class="keyboard-shortcuts-popup">
-          <div class="shortcuts-title">键盘快捷键：</div>
-          <div class="shortcuts-list">
-            <span class="shortcut-item">空格键：开始/停止抽奖</span>
-            <span class="shortcut-item" v-if="awardStore.awards.length <= 9">数字键1-{{ awardStore.awards.length }}：选择奖项</span>
-            <span class="shortcut-item" v-else-if="awardStore.awards.length === 10">数字键1-9,0：选择奖项</span>
-            <span class="shortcut-item" v-else-if="awardStore.awards.length <= 36">数字键1-9,0 + 字母键a-{{ String.fromCharCode(97 + awardStore.awards.length - 11) }}：选择奖项</span>
-            <span class="shortcut-item" v-else>数字键1-9, 0 + 字母键a-z：选择前36个奖项</span>
-            <span class="shortcut-item">Enter：关闭结果（抽奖结束后）</span>
-            <span class="shortcut-item">Delete：重置数据</span>
-            <span class="shortcut-item">M：音乐开关</span>
-          </div>
-        </div>
-      </div>
+      <KeyboardShortcuts v-if="lotteryData.length > 0" :award-length="awardStore.awards.length" />
     </div>
 
     <!-- 导入 -->
@@ -815,7 +542,7 @@ const clearAllData = () => {
   <WeightEditor v-model:visible="weightEditorVisible" :lottery-data="lotteryData" @save="handleWeightSave" @close="handleWeightEditorClose" />
 
   <!-- 奖项设置 -->
-  <AwardSetting v-model:visible="awardSettingVisible" :awards="awardStore.awards" @save="handleAwardSettingSave" @close="handleAwardSettingClose" />
+  <AwardSetting v-model:visible="awardSettingVisible" :awards="awardStore.awards" @save="handleAwardSettingSaveWrap" @close="handleAwardSettingClose" />
 
   <!-- 全屏loading -->
   <a-spin v-if="fullScreenLoading" :spinning="true" size="large" class="global-spin" />
