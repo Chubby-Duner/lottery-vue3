@@ -176,16 +176,24 @@ export default function useLottery({
       message.error("暂无任何中奖名单，无法导出！");
       return;
     }
-    const exportData = awards.map(award => {
-      const winners = (winnerMap[award.key] || []).map(
-        item => item.namezh || item.nameZh || item.nameZH || item.name
-      );
-      return {
-        奖项: award.label || award.name,
-        中奖人员: winners.join("、") || "无"
-      };
-    });
-    const ws = XLSX.utils.json_to_sheet(exportData);
+    // 只导出奖项为表头，下面为中奖名单，不设置任何样式
+    const awardNames = awards.map(award => award.label || award.name);
+    // 中奖名单按列组织
+    const maxWinners = Math.max(...awards.map(award => (winnerMap[award.key] || []).length));
+    const winnerRows = [];
+    for (let i = 0; i < maxWinners; i++) {
+      winnerRows.push(awards.map(award => {
+        const winner = (winnerMap[award.key] || [])[i];
+        return winner ? (winner.namezh || winner.nameZh || winner.nameZH || winner.name) : "";
+      }));
+    }
+    const data = [awardNames, ...winnerRows];
+
+    // 生成sheet
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    // 设置每列宽度
+    ws['!cols'] = awards.map(() => ({ wch: 16 }));
+    // 创建workbook并导出
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "中奖名单");
     XLSX.writeFile(wb, "中奖名单.xlsx");
