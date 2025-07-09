@@ -53,9 +53,7 @@ const showLess = awardKey => {
     <!-- 侧边栏内容区域 -->
     <transition name="drawer">
       <div class="aside-main" v-show="showList">
-        <div class="btn btn-red-outline award-list-btn" @click="toggleList">
-          收起名单
-        </div>
+        <div class="btn btn-red-outline award-list-btn" @click="toggleList">收起名单</div>
         <div class="award-main" v-if="awardGroups.length > 0">
           <template v-for="group in awardGroups" :key="group.key">
             <div class="award-con" v-if="group.data.length > 0">
@@ -80,7 +78,7 @@ const showLess = awardKey => {
         </div>
       </div>
     </transition>
-    
+
     <!-- 灯笼 - 同一个灯笼，跟随区域移动 -->
     <img src="@/assets/images/lantern.png" alt="" width="85" @click="toggleList" class="switch" :class="{ 'switch-expanded': showList }" />
   </aside>

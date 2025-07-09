@@ -20,11 +20,9 @@ export default function useAwardSetting({
       return; // 防抖处理
     }
     awardSettingClickTime = now;
-    // 当奖项数量多时，暂停动画以提高性能
-    if (awardStore.awards.length > 8) {
-      cancelAnimation();
-      animationPaused.value = true; // 标记动画被暂停
-    }
+    // 暂停动画以提高性能
+    cancelAnimation();
+    animationPaused.value = true; // 标记动画被暂停
     awardSettingVisible.value = true;
   };
 

@@ -1,9 +1,9 @@
 <script setup>
-import AwardList from "@/components/Lottery/AwardList.vue";
-import PrizeList from "@/components/Lottery/PrizeList.vue";
-import LotteryMain from "@/components/Lottery/index.vue";
-// import SnowEffect from '@/components/Lottery/SnowEffect.vue'
-import MusicControl from "@/components/Lottery/MusicControl.vue";
+import AwardList from "@/components/Lottery/pages/AwardList.vue";
+import PrizeList from "@/components/Lottery/pages/PrizeList.vue";
+import LotteryMain from "@/components/Lottery/pages/index.vue";
+// import SnowEffect from '@/components/Lottery/features/SnowEffect.vue'
+import MusicControl from "@/components/Lottery/features/MusicControl.vue";
 
 defineOptions({
   name: "Lottery"

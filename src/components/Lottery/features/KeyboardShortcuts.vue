@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref } from "vue";
 const props = defineProps({
   awardLength: {
     type: Number,
@@ -36,7 +36,7 @@ const showShortcuts = ref(false);
   right: 20px;
   z-index: 1000;
   cursor: pointer;
-  
+
   .shortcuts-icon {
     display: flex;
     align-items: center;
@@ -49,7 +49,7 @@ const showShortcuts = ref(false);
     font-size: 18px;
     font-weight: bold;
     transition: all 0.3s ease;
-    
+
     &:hover {
       background: rgba(0, 0, 0, 0.9);
       transform: scale(1.1);
@@ -70,10 +70,10 @@ const showShortcuts = ref(false);
   max-width: 300px;
   white-space: nowrap;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  
+
   /* 添加小箭头 */
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 100%;
     right: 15px;
@@ -98,4 +98,4 @@ const showShortcuts = ref(false);
     line-height: 1.4;
   }
 }
-</style> 
+</style>

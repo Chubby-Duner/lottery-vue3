@@ -11,8 +11,7 @@ export default function useResetData({
   startAnimation,
   cancelAnimation,
   message,
-  nextTick,
-  fullScreenLoading
+  nextTick
 }) {
   // 重置数据
   const resetAllData = () => {
@@ -26,7 +25,6 @@ export default function useResetData({
       okText: '确定',
       cancelText: '取消',
       async onOk() {
-        fullScreenLoading.value = true;
         try {
           // 停止当前抽奖
           if (isStarted.value) {
@@ -57,32 +55,13 @@ export default function useResetData({
             lotteryData.value = [];
           }
           message.success('已重置为导入初始状态');
-        } finally {
-          fullScreenLoading.value = false;
-        }
-      }
-    });
-  };
-  // 清空所有数据
-  const clearAllData = () => {
-    Modal.confirm({
-      title: '确定要清空所有数据吗？',
-      content: '此操作会清空上一次操作所产生的所有数据。',
-      okText: '确定',
-      cancelText: '取消',
-      async onOk() {
-        fullScreenLoading.value = true;
-        try {
-          awardStore.clearAll();
-          message.success('已清空所有数据');
-        } finally {
-          fullScreenLoading.value = false;
+        } catch (error) {
+          console.error("error in resetAllData", error);
         }
       }
     });
   };
   return {
-    resetAllData,
-    clearAllData
+    resetAllData
   }
 } 

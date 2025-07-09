@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
 import { message, Modal } from "ant-design-vue";
 import { SettingOutlined } from "@ant-design/icons-vue";
-import KeyboardShortcuts from './KeyboardShortcuts.vue';
+import KeyboardShortcuts from "../features/KeyboardShortcuts.vue";
 import { useAwardStore } from "@/store/awardStore";
 import { useMusicStore } from "@/store/musicStore";
 import { getImageUrl } from "@/composables/utils";
@@ -11,12 +11,14 @@ import LotteryResult from "./LotteryResult.vue";
 import WeightEditor from "./WeightEditor.vue";
 import AwardSetting from "./AwardSetting.vue";
 
-import useCountdown from '@/composables/lottery/useCountdown'
-import useAwardSetting from '@/composables/lottery/useAwardSetting'
-import useWeightEditor from '@/composables/lottery/useWeightEditor'
-import useAnimation from '@/composables/lottery/useAnimation'
-import useLottery from '@/composables/lottery/useLottery'
-import useResetData from '@/composables/lottery/useResetData'
+import useCountdown from "@/composables/lottery/useCountdown";
+import useAwardSetting from "@/composables/lottery/useAwardSetting";
+import useWeightEditor from "@/composables/lottery/useWeightEditor";
+import useAnimation from "@/composables/lottery/useAnimation";
+import useLottery from "@/composables/lottery/useLottery";
+import useResetData from "@/composables/lottery/useResetData";
+import Countdown from "../features/Countdown.vue";
+import ImportEmptyBlock from "../features/ImportEmptyBlock.vue";
 
 defineOptions({
   name: "LotteryMain"
@@ -91,10 +93,6 @@ const { awardSettingVisible, openAwardSetting, handleAwardSettingSave, handleAwa
   cancelAnimation: () => cancelAnimation(),
   nextTick
 });
-// 全屏loading
-const fullScreenLoading = ref(false);
-// 快捷键提示显示状态
-const showShortcuts = ref(false);
 
 // ===================== 计算属性 =====================
 const buttonText = computed(() => {
@@ -112,7 +110,7 @@ const KEY_PRESS_DEBOUNCE = 500; // 500ms 防抖
 // 键盘事件 - 处理普通字符键
 const handleKeyPress = e => {
   const now = Date.now();
-  
+
   switch (e.key) {
     case " ":
       // 防抖处理
@@ -136,7 +134,7 @@ const handleKeyPress = e => {
       // 动态处理数字键和字母键选择奖项
       const keyNumber = parseInt(e.key);
       let awardIndex = -1;
-      
+
       if (!isNaN(keyNumber) && keyNumber >= 0 && keyNumber <= 9) {
         // 处理数字键：0键对应第10个奖项，1-9键对应第1-9个奖项
         if (keyNumber === 0) {
@@ -151,7 +149,7 @@ const handleKeyPress = e => {
         // 处理大写字母键：A-Z对应第11-36个奖项
         awardIndex = 10 + (e.key.charCodeAt(0) - "A".charCodeAt(0));
       }
-      
+
       if (awardIndex >= 0 && awardIndex < awardStore.awards.length) {
         const targetAward = awardStore.awards[awardIndex];
         if (targetAward) {
@@ -220,7 +218,7 @@ const handleSuccess = ({ header, results }) => {
     awardStore.awards.forEach((award, index) => {
       defaultWeights[index + 1] = 1; // 默认每个奖项权重为1
     });
-    
+
     lotteryData.value = results.map(item => ({
       ...item,
       awardWeights: defaultWeights,
@@ -242,10 +240,6 @@ const handleSuccess = ({ header, results }) => {
   } catch (error) {
     console.error("handleSuccess ~ error:", error);
   }
-};
-
-const getTemplateUrl = () => {
-  return new URL("/template/importTemplate.xlsx", import.meta.url).href;
 };
 //#endregion
 
@@ -275,7 +269,7 @@ const updateWeightData = () => {
 };
 
 // 包装 handleAwardSettingSave，先保存奖项再更新权重
-const handleAwardSettingSaveWrap = (newAwards) => {
+const handleAwardSettingSaveWrap = newAwards => {
   handleAwardSettingSave(newAwards);
   updateWeightData();
 };
@@ -287,7 +281,11 @@ const handleAwardSettingSaveWrap = (newAwards) => {
 
 //#region 抽奖相关
 // 包装 useLottery，增加流程锁逻辑
-const { selectAward, startLottery, stopLottery: _stopLottery } = useLottery({
+const {
+  selectAward,
+  startLottery,
+  stopLottery: _stopLottery
+} = useLottery({
   isStarted,
   isMoving,
   isLocked,
@@ -321,11 +319,11 @@ const handleLottery = () => {
     const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
     const awardKey = `award0${idx + 1}`;
     if (awardStore.awardLog[awardKey] <= 0) {
-      message.error('该奖项已经抽完啦，请选择其它奖项哦！');
+      message.error("该奖项已经抽完啦，请选择其它奖项哦！");
       return;
     }
     if (isLotteryProcessing.value) {
-      message.warning('抽奖进行中，请等待结果...');
+      message.warning("抽奖进行中，请等待结果...");
       return;
     }
     isLotteryProcessing.value = true;
@@ -351,7 +349,7 @@ const handleLottery = () => {
       startAnimation();
     }
   }
-}
+};
 
 // 包装 stopLottery，结束后解锁，防止多次触发
 const stopLottery = async () => {
@@ -360,7 +358,7 @@ const stopLottery = async () => {
   await _stopLottery();
   isLotteryProcessing.value = false;
   isStopping.value = false;
-}
+};
 //#endregion
 
 //#region 动画相关
@@ -368,7 +366,7 @@ const stopLottery = async () => {
 //#endregion
 
 //#region 其它功能
-const { resetAllData, clearAllData } = useResetData({
+const { resetAllData } = useResetData({
   isStarted,
   isMoving,
   animationPaused,
@@ -378,8 +376,7 @@ const { resetAllData, clearAllData } = useResetData({
   startAnimation: () => startAnimation(),
   cancelAnimation: () => cancelAnimation(),
   message,
-  nextTick,
-  fullScreenLoading
+  nextTick
 });
 
 const closeResult = () => {
@@ -443,13 +440,7 @@ const closeResult = () => {
         <div class="award-buttons-scroll-container">
           <div class="award-buttons-container">
             <template v-for="(item, idx) in awardStore.awards" :key="item.key">
-              <div 
-                class="cirle-btn award" 
-                :id="'award-' + item.key" 
-                :class="{ 'award-active': selectedAward === item.key }" 
-                @click="selectAward(item.key)"
-                :style="awardStore.awards.length > 12 ? { 'will-change': 'transform' } : {}"
-              >
+              <div class="cirle-btn award" :id="'award-' + item.key" :class="{ 'award-active': selectedAward === item.key }" @click="selectAward(item.key)" :style="awardStore.awards.length > 12 ? { 'will-change': 'transform' } : {}">
                 {{ item.label }}<br />
                 <small>剩余: {{ awardStore.awardLog[`award0${idx + 1}`] }}</small>
                 <div class="keyboard-hint" v-if="awardStore.awards.length <= 20">
@@ -501,36 +492,11 @@ const closeResult = () => {
     </div>
 
     <!-- 导入 -->
-    <a-empty
-      v-else
-      image="https://gw.alipayobjects.com/mdn/miniapp_social/afts/img/A*pevERLJC9v0AAAAAAAAAAABjAQAAAQ/original"
-      :image-style="{
-        height: '60px'
-      }"
-    >
-      <template #description>
-        <span> 请先导入数据 </span>
-      </template>
-      <a-button type="primary">
-        <a :href="getTemplateUrl()" target="_blank">下载模板</a>
-      </a-button>
-      <a-button class="margin-left10" type="primary" @click="importModal = true">导入抽奖名单数据</a-button>
-      <a-button class="margin-left10" type="primary" @click="clearAllData">清空所有数据</a-button>
-      <!-- <a-button type="primary">导入礼物名单数据</a-button> -->
-    </a-empty>
+    <ImportEmptyBlock v-else @import="importModal = true" />
   </div>
 
   <!-- 倒计时 -->
-  <transition name="fade">
-    <div v-if="showCountdown" class="stop-main">
-      <div class="countdown-container">
-        <div id="stop-time" class="countdown-text" :data-number="countdownText">{{ countdownText }}</div>
-        <div class="countdown-circle"></div>
-        <div class="countdown-particles"></div>
-      </div>
-      <div class="back"></div>
-    </div>
-  </transition>
+  <Countdown :visible="showCountdown" :countdown-text="countdownText" />
 
   <!-- 中奖结果 -->
   <LotteryResult :visible="showResult" :award="selectedAward" :name-zh="winnerNameZh" :name-en="winnerNameEn" @close="showResult = false" />
@@ -544,8 +510,6 @@ const closeResult = () => {
   <!-- 奖项设置 -->
   <AwardSetting v-model:visible="awardSettingVisible" :awards="awardStore.awards" @save="handleAwardSettingSaveWrap" @close="handleAwardSettingClose" />
 
-  <!-- 全屏loading -->
-  <a-spin v-if="fullScreenLoading" :spinning="true" size="large" class="global-spin" />
 </template>
 
- <style lang="scss" scoped></style>
+<style lang="scss" scoped></style>

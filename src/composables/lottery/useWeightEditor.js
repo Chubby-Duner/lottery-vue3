@@ -26,11 +26,8 @@ export default function useWeightEditor({
       message.warning('请先导入抽奖数据');
       return;
     }
-    // 当奖项数量多时，暂停动画以提高性能
-    if (awardStore.awards.length > 8) {
-      cancelAnimation();
-      animationPaused.value = true; // 标记动画被暂停
-    }
+    cancelAnimation();
+    animationPaused.value = true; // 标记动画被暂停
     weightEditorVisible.value = true;
   };
 
