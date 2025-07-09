@@ -41,12 +41,25 @@ const avatarUrl = computed(() => {
         <button class="close-btn" @click="emit('close')">&times;</button>
       </div>
       <div class="result-body">
-        <img :src="avatarUrl" class="avatar" :alt="nameZh" />
-        <div class="winner-name">{{ nameZh }}</div>
+        <template v-if="nameZh === 'Invalid Winner' || !nameZh">
+          <div class="avatar-text">无效中奖者</div>
+        </template>
+        <template v-else>
+          <img :src="avatarUrl" class="avatar" :alt="nameZh" />
+        </template>
+        <div class="winner-name">
+          <template v-if="nameZh === 'Invalid Winner' || !nameZh"> 暂无有效中奖者 </template>
+          <template v-else>
+            {{ nameZh }}
+          </template>
+        </div>
       </div>
       <div class="result-footer">
-        恭喜获得 <b>{{ awardText }}</b
-        >！
+        <template v-if="nameZh === 'Invalid Winner' || !nameZh"> 请检查抽奖数据或重新抽奖 </template>
+        <template v-else>
+          恭喜获得 <b>{{ awardText }}</b
+          >！
+        </template>
       </div>
     </div>
   </div>
@@ -129,5 +142,25 @@ const avatarUrl = computed(() => {
   font-size: 1.4rem;
   color: #d9ad61;
   font-family: "STKaiti", "KaiTi ", serif;
+}
+.avatar-text {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffe082 0%, #ffd54f 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  color: #b8860b;
+  font-weight: bold;
+  margin-bottom: 20px;
+  border: 6px solid #d9ad61;
+  box-shadow: 0 4px 24px rgba(218, 165, 32, 0.18);
+  letter-spacing: 0.2em;
+  text-shadow:
+    1px 2px 8px #fffbe6,
+    0 1px 0 #fffbe6;
+  transition: all 0.2s;
 }
 </style>

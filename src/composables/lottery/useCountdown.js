@@ -5,7 +5,6 @@ import { ref } from 'vue'
 const showCountdown = ref(false);
 const countdownText = ref('叁');
 
-// #region 倒计时相关
 async function showCountdownSequence() {
   showCountdown.value = true;
   // 叁

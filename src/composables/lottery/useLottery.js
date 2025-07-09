@@ -19,8 +19,7 @@ export default function useLottery({
   startAnimation,
   cancelAnimation,
   showCountdownSequence,
-  message,
-  nextTick
+  message
 }) {
   const selectAward = awardKey => {
     if (isStarted.value) {
@@ -128,8 +127,14 @@ export default function useLottery({
       winnerIndex.value = winnerIndexResult;
       // 更新获奖者信息
       const winner = lotteryData.value[winnerIndex.value];
-      winnerNameZh.value = winner.namezh;
-      winnerNameEn.value = winner.nameen;
+      if ( winnerIndex.value < 0 || winnerIndex.value >= lotteryData.value.length || !winner) {
+        winnerNameZh.value = "Invalid Winner";
+        winnerNameEn.value = "Invalid Winner";
+      } else {
+        winnerNameZh.value = winner.namezh;
+        winnerNameEn.value = winner.nameen;
+      }
+
       // 显示倒计时（动画继续运行）
       await showCountdownSequence();
       // 倒计时结束后，停止动画并显示结果

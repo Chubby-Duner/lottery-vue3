@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
-import { message, Modal } from "ant-design-vue";
+import { ref, computed, nextTick } from "vue";
+import { message } from "ant-design-vue";
 import { SettingOutlined } from "@ant-design/icons-vue";
 import KeyboardShortcuts from "../features/KeyboardShortcuts.vue";
 import { useAwardStore } from "@/store/awardStore";
@@ -10,6 +10,10 @@ import UploadExcel from "@/components/Upload/UploadExcel.vue";
 import LotteryResult from "./LotteryResult.vue";
 import WeightEditor from "./WeightEditor.vue";
 import AwardSetting from "./AwardSetting.vue";
+import Countdown from "../features/Countdown.vue";
+import ImportEmptyBlock from "../features/ImportEmptyBlock.vue";
+import AwardControlPanel from "../features/AwardControlPanel.vue";
+import LotteryLogo from "./LotteryLogo.vue";
 
 import useCountdown from "@/composables/lottery/useCountdown";
 import useAwardSetting from "@/composables/lottery/useAwardSetting";
@@ -17,8 +21,7 @@ import useWeightEditor from "@/composables/lottery/useWeightEditor";
 import useAnimation from "@/composables/lottery/useAnimation";
 import useLottery from "@/composables/lottery/useLottery";
 import useResetData from "@/composables/lottery/useResetData";
-import Countdown from "../features/Countdown.vue";
-import ImportEmptyBlock from "../features/ImportEmptyBlock.vue";
+import useKeyboardShortcuts from "@/composables/lottery/useKeyboardShortcuts";
 
 defineOptions({
   name: "LotteryMain"
@@ -41,8 +44,11 @@ const lotteryData = ref([]);
 
 // 状态管理
 const selectedAward = ref(awardStore.selectAward || awardStore.awards[0]?.key || "");
+// 是否抽奖中，动画已经在滚动了
 const isMoving = ref(true);
+// 抽奖是否已经开始
 const isStarted = ref(false);
+// 是否允许停止抽奖
 const isLocked = ref(true);
 const canStop = ref(false);
 const showResult = ref(false);
@@ -76,7 +82,6 @@ cancelAnimation = animation.cancelAnimation;
 // 权重编辑相关
 const { weightEditorVisible, openWeightEditor, handleWeightSave, handleWeightEditorClose } = useWeightEditor({
   lotteryData,
-  awardStore,
   isMoving,
   animationPaused,
   startAnimation: () => startAnimation(),
@@ -102,98 +107,7 @@ const buttonText = computed(() => {
   return "正在抽奖...";
 });
 
-// ===================== 生命周期与事件监听 =====================
-// 防抖变量
-let lastKeyPressTime = 0;
-const KEY_PRESS_DEBOUNCE = 500; // 500ms 防抖
-
-// 键盘事件 - 处理普通字符键
-const handleKeyPress = e => {
-  const now = Date.now();
-
-  switch (e.key) {
-    case " ":
-      // 防抖处理
-      if (now - lastKeyPressTime > KEY_PRESS_DEBOUNCE) {
-        handleLottery();
-        lastKeyPressTime = now;
-      }
-      break;
-    case "Enter":
-      // 只有在抽奖结束后才允许关闭结果
-      if (!isStarted.value && canStop.value) {
-        closeResult();
-      }
-      break;
-    case "m":
-    case "M":
-      // 触发音乐开关
-      toggleMusic();
-      break;
-    default:
-      // 动态处理数字键和字母键选择奖项
-      const keyNumber = parseInt(e.key);
-      let awardIndex = -1;
-
-      if (!isNaN(keyNumber) && keyNumber >= 0 && keyNumber <= 9) {
-        // 处理数字键：0键对应第10个奖项，1-9键对应第1-9个奖项
-        if (keyNumber === 0) {
-          awardIndex = 9; // 0键对应第10个奖项（索引9）
-        } else {
-          awardIndex = keyNumber - 1; // 1-9键对应第1-9个奖项
-        }
-      } else if (e.key >= "a" && e.key <= "z") {
-        // 处理字母键：a-z对应第11-36个奖项
-        awardIndex = 10 + (e.key.charCodeAt(0) - "a".charCodeAt(0));
-      } else if (e.key >= "A" && e.key <= "Z") {
-        // 处理大写字母键：A-Z对应第11-36个奖项
-        awardIndex = 10 + (e.key.charCodeAt(0) - "A".charCodeAt(0));
-      }
-
-      if (awardIndex >= 0 && awardIndex < awardStore.awards.length) {
-        const targetAward = awardStore.awards[awardIndex];
-        if (targetAward) {
-          selectAward(targetAward.key);
-        }
-      }
-      break;
-  }
-};
-
-// 键盘事件 - 处理特殊键（如Delete、Backspace等）
-const handleKeyDown = e => {
-  switch (e.key) {
-    case "Delete":
-      // 重置数据
-      resetAllData();
-      break;
-  }
-};
-
-// 页面刷新前清空所有数据
-const handleBeforeUnload = () => {
-  awardStore.clearAll();
-};
-
-onMounted(() => {
-  window.addEventListener("keypress", handleKeyPress);
-  window.addEventListener("keydown", handleKeyDown);
-  // 监听页面刷新事件
-  window.addEventListener("beforeunload", handleBeforeUnload);
-});
-
-onUnmounted(() => {
-  cancelAnimation();
-  window.removeEventListener("keypress", handleKeyPress);
-  window.removeEventListener("keydown", handleKeyDown);
-  window.removeEventListener("beforeunload", handleBeforeUnload);
-});
-
 // ===================== 业务逻辑区 =====================
-
-//#region 倒计时相关
-// 已抽离到 useCountdown.js
-//#endregion
 
 //#region 音乐控制相关
 const toggleMusic = () => {
@@ -243,10 +157,6 @@ const handleSuccess = ({ header, results }) => {
 };
 //#endregion
 
-//#region 奖项设置相关
-// 已抽离到 useAwardSetting.js
-//#endregion
-
 //#region 权重数据更新
 const updateWeightData = () => {
   if (lotteryData.value.length > 0) {
@@ -275,10 +185,6 @@ const handleAwardSettingSaveWrap = newAwards => {
 };
 //#endregion
 
-//#region 权重编辑相关
-// 已抽离到 useWeightEditor.js
-//#endregion
-
 //#region 抽奖相关
 // 包装 useLottery，增加流程锁逻辑
 const {
@@ -303,12 +209,16 @@ const {
   startAnimation: () => startAnimation(),
   cancelAnimation: () => cancelAnimation(),
   showCountdownSequence,
-  message,
-  nextTick
+  message
 });
 
 // 包装 handleLottery，修正锁逻辑和剩余数量校验
 const handleLottery = () => {
+  // 抽奖前校验数据
+  if (!lotteryData.value || lotteryData.value.length === 0) {
+    message.error("请先导入抽奖数据！");
+    return;
+  }
   // 重新开始时重置流程锁
   if (!isStarted.value && !isMoving.value) {
     isLotteryProcessing.value = false;
@@ -381,26 +291,36 @@ const { resetAllData } = useResetData({
 
 const closeResult = () => {
   if (!canStop.value) {
-    message.error("还没结束，无法关闭！");
+    message.error("抽奖还没结束，无法关闭！");
     return;
   }
   showResult.value = false;
   isLotteryProcessing.value = false; // 关闭结果弹窗后允许下一次抽奖
 };
 //#endregion
+
+// ===================== 生命周期与事件监听 =====================
+// 键盘快捷键处理
+useKeyboardShortcuts({
+  isStarted,
+  canStop,
+  awardStore,
+  handleLottery,
+  closeResult,
+  toggleMusic,
+  selectAward,
+  resetAllData,
+  cancelAnimation
+});
 </script>
 
 <template>
   <div class="main">
-    <div class="lottery-logo">
-      <img src="@/assets/images/yun.png" class="cloud-left" alt="云朵" />
-      <div class="logo-text">
-        <h1>抽奖系统</h1>
-        <p>LOTTERY SYSTEM</p>
-      </div>
-      <img src="@/assets/images/yun.png" class="cloud-right" alt="云朵" />
-    </div>
+    <!-- Logo -->
+    <LotteryLogo />
+
     <div v-if="lotteryData.length > 0" class="lottery-main">
+      <!-- 抽奖区域 -->
       <div class="wrap-border-main">
         <img src="@/assets/images/wrap-border-1.png" class="wrap-border wrap-border-1" />
         <img src="@/assets/images/wrap-border-2.png" class="wrap-border wrap-border-2" />
@@ -435,57 +355,29 @@ const closeResult = () => {
         </div>
       </div>
 
-      <div class="dashboard">
-        <!-- 奖项按钮区域 -->
-        <div class="award-buttons-scroll-container">
-          <div class="award-buttons-container">
-            <template v-for="(item, idx) in awardStore.awards" :key="item.key">
-              <div class="cirle-btn award" :id="'award-' + item.key" :class="{ 'award-active': selectedAward === item.key }" @click="selectAward(item.key)" :style="awardStore.awards.length > 12 ? { 'will-change': 'transform' } : {}">
-                {{ item.label }}<br />
-                <small>剩余: {{ awardStore.awardLog[`award0${idx + 1}`] }}</small>
-                <div class="keyboard-hint" v-if="awardStore.awards.length <= 20">
-                  <span v-if="idx + 1 <= 9">按 {{ idx + 1 }} 键</span>
-                  <span v-else-if="idx + 1 === 10">按 0 键</span>
-                  <span v-else>按 {{ String.fromCharCode(97 + idx - 10) }} 键</span>
-                </div>
-              </div>
-            </template>
-          </div>
-        </div>
-
-        <!-- 抽奖按钮 -->
-        <a-button class="btn btn-red-outline lottery-btn" @click="handleLottery">
-          {{ buttonText }}
-        </a-button>
-      </div>
-
-      <!-- 权重编辑按钮 -->
-      <div v-if="lotteryData.length > 0" class="dashboard dashboard-setting">
-        <div class="btn weight-edit-section">
-          <a-button @click="openAwardSetting">
-            <template #icon>
-              <SettingOutlined />
-            </template>
-            奖项设置
-          </a-button>
-        </div>
-        <div class="btn weight-edit-section">
-          <a-button @click="openWeightEditor">
-            <template #icon>
-              <SettingOutlined />
-            </template>
-            权重设置
-          </a-button>
-        </div>
-        <div class="btn weight-edit-section">
-          <a-button danger @click="resetAllData">
-            <template #icon>
-              <SettingOutlined />
-            </template>
-            重置数据
-          </a-button>
-        </div>
-      </div>
+      <!-- 操作按钮 -->
+      <AwardControlPanel
+        v-if="lotteryData.length > 0"
+        :awards="awardStore.awards"
+        :selectedAward="selectedAward"
+        :awardLog="awardStore.awardLog"
+        :buttonText="buttonText"
+        @selectAward="selectAward"
+        @handleLottery="handleLottery"
+        @openAwardSetting="openAwardSetting"
+        @openWeightEditor="openWeightEditor"
+        @resetAllData="resetAllData"
+      >
+        <template #icon-award-setting>
+          <SettingOutlined />
+        </template>
+        <template #icon-weight-editor>
+          <SettingOutlined />
+        </template>
+        <template #icon-reset-data>
+          <SettingOutlined />
+        </template>
+      </AwardControlPanel>
 
       <!-- 键盘快捷键提示 -->
       <KeyboardShortcuts v-if="lotteryData.length > 0" :award-length="awardStore.awards.length" />
@@ -509,7 +401,6 @@ const closeResult = () => {
 
   <!-- 奖项设置 -->
   <AwardSetting v-model:visible="awardSettingVisible" :awards="awardStore.awards" @save="handleAwardSettingSaveWrap" @close="handleAwardSettingClose" />
-
 </template>
 
 <style lang="scss" scoped></style>

@@ -3,7 +3,6 @@ import { ref } from 'vue'
 // #region 权重编辑相关
 export default function useWeightEditor({
   lotteryData,
-  awardStore,
   isMoving,
   animationPaused,
   startAnimation,
