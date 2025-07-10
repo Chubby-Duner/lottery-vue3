@@ -259,7 +259,7 @@ const resetPagination = () => {
         <upload-outlined class="upload-icon" />
         <div class="upload-text">
           拖拽Excel文件到此处或
-          <a-upload accept=".xlsx,.xls" :showUploadList="false" @change="handleClick">
+          <a-upload accept=".xlsx,.xls" :showUploadList="false" :customRequest="() => {}" @change="handleClick">
             <a-button type="primary" size="small">点击上传</a-button>
           </a-upload>
         </div>
