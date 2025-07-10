@@ -56,6 +56,7 @@ const winnerNameZh = ref("");
 const winnerNameEn = ref("");
 const winnerImage = ref(null);
 const winnerAvatarChar = ref("");
+const winnerWish = ref("");
 const wrapPosition = ref(0);
 const animationFrame = ref(null);
 const speed = ref(6);
@@ -212,6 +213,7 @@ const { selectAward, handleLottery, exportWinners } = useLottery({
   winnerNameEn,
   winnerImage,
   winnerAvatarChar,
+  winnerWish,
   wrapPosition,
   speed,
   selectedAward,
@@ -343,7 +345,7 @@ useKeyboardShortcuts({
   <Countdown :visible="showCountdown" :countdown-text="countdownText" />
 
   <!-- 中奖结果弹窗，传递中奖人image字段，支持动态头像 -->
-  <LotteryResult :visible="showResult" :award="selectedAward" :name-zh="winnerNameZh" :name-en="winnerNameEn" :image="winnerImage" :avatarChar="winnerAvatarChar" @close="showResult = false" />
+  <LotteryResult :visible="showResult" :award="selectedAward" :name-zh="winnerNameZh" :name-en="winnerNameEn" :image="winnerImage" :avatarChar="winnerAvatarChar" :wish="winnerWish" @close="showResult = false" />
 
   <!-- 导入数据 -->
   <UploadExcel v-model:visible="importModal" :on-success="handleSuccess" :before-upload="beforeUpload" />

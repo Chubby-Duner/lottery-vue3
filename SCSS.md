@@ -8,6 +8,7 @@
 
 ```bash
 src/assets/styles/
+├── animate.css                   # 动画库
 ├── index.scss                   # 样式入口文件（使用@forward）
 ├── global.scss                  # 全局CSS变量定义
 ├── base/                        # 基础样式

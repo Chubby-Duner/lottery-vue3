@@ -15,6 +15,7 @@ const props = defineProps({
   avatar: String, // 可选，外部传入头像dataUrl
   image: Object, // 可选，中奖对象带图片字段
   avatarChar: String, // 可选，外部传入头像dataUrl
+  wish: String, // 新增，中奖者愿景及祝福
 });
 
 const emit = defineEmits(["close"]);
@@ -30,7 +31,7 @@ const awardText = computed(() => {
   return props.award;
 });
 
-// 中奖结果头像渲染逻辑：优先外部传入avatar，其次image.dataUrl，最后降级为静态图片
+// 中奖结果头像渲染逻辑：优先外部传入avatar，其次image.dataUrl，最后降级为名称
 const avatarUrl = computed(() => {
   if (props.avatar) return props.avatar;
   if (props.image && typeof props.image === "object" && props.image.dataUrl) return props.image.dataUrl;
@@ -65,6 +66,10 @@ const avatarUrl = computed(() => {
             {{ nameZh }}
           </template>
         </div>
+        <div class="winner-wish" v-if="wish">
+          <b>新年愿景及祝福：</b>
+          <span>{{ wish }}</span>
+        </div>
       </div>
       <div class="result-footer">
         <template v-if="nameZh === 'Invalid Winner' || !nameZh"> 请检查抽奖数据或重新抽奖 </template>
@@ -90,6 +95,7 @@ const avatarUrl = computed(() => {
   justify-content: center;
   z-index: 9999;
 }
+
 .result-dialog {
   background: #fff;
   border-radius: 16px;
@@ -100,6 +106,7 @@ const avatarUrl = computed(() => {
   position: relative;
   animation: pop-in 0.4s;
 }
+
 @keyframes pop-in {
   0% {
     transform: scale(0.7);
@@ -110,18 +117,21 @@ const avatarUrl = computed(() => {
     opacity: 1;
   }
 }
+
 .result-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
 }
+
 .award {
   font-size: 2.8rem;
   color: #d9ad61;
   font-weight: bold;
   font-family: "STKaiti", "KaiTi ", serif;
 }
+
 .close-btn {
   background: none;
   border: none;
@@ -129,11 +139,13 @@ const avatarUrl = computed(() => {
   color: #888;
   cursor: pointer;
 }
+
 .result-body {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
+
 .avatar {
   width: 140px;
   height: 140px;
@@ -142,6 +154,7 @@ const avatarUrl = computed(() => {
   border: 5px solid #d9ad61;
   margin-bottom: 20px;
 }
+
 .winner-name {
   font-size: 2.4rem;
   color: #333;
@@ -149,12 +162,25 @@ const avatarUrl = computed(() => {
   font-family: "STKaiti", "KaiTi ", serif;
   margin-top: 8px;
 }
+
+.winner-wish {
+  margin-top: 12px;
+  font-size: 2rem;
+  color: #b8860b;
+  font-family: "STKaiti", "KaiTi ", serif;
+  background: #fffbe6;
+  border-radius: 8px;
+  padding: 8px 16px;
+  display: inline-block;
+}
+
 .result-footer {
   margin-top: 18px;
-  font-size: 1.4rem;
+  font-size: 1.8rem;
   color: #d9ad61;
   font-family: "STKaiti", "KaiTi ", serif;
 }
+
 .avatar-text {
   width: 160px;
   height: 160px;

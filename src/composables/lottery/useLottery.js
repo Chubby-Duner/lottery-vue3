@@ -14,6 +14,7 @@ export default function useLottery({
   winnerNameEn,
   winnerImage,
   winnerAvatarChar,
+  winnerWish,
   wrapPosition,
   speed,
   selectedAward,
@@ -138,11 +139,13 @@ export default function useLottery({
         winnerNameZh.value = "Invalid Winner";
         winnerNameEn.value = "Invalid Winner";
         winnerAvatarChar.value = "Invalid Winner";
+        winnerWish.value = "Invalid Winner";
         winnerImage.value = null;
       } else {
         winnerNameZh.value = winner.namezh;
         winnerNameEn.value = winner.nameen;
         winnerAvatarChar.value = winner.avatarChar;
+        winnerWish.value = winner.wish;
         winnerImage.value = (winner.image && winner.image.dataUrl) ? { dataUrl: winner.image.dataUrl } : null;
       }
 

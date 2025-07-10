@@ -4,7 +4,6 @@ import * as XLSX from "xlsx";
 import { message } from "ant-design-vue";
 import { UploadOutlined, CheckCircleOutlined } from "@ant-design/icons-vue";
 import { isExcel } from "@/composables/utils";
-import { titleMap } from "@/composables/uploadExcel/uploadColumnMap";
 import { readFileAsArrayBuffer, getHeaderRow, handleImageError } from "@/composables/uploadExcel/uploadUtils";
 import { extractImagesFromExcel, mergeImagesWithData } from "@/composables/uploadExcel/excelImageExtract";
 
@@ -39,6 +38,11 @@ const paginationConfig = ref({
   pageSizeOptions: ["5", "10", "20", "50"],
   size: "small"
 });
+const titleMap = {
+  namezh: "名称",
+  wish: "愿望",
+  image: "头像"
+};
 
 // ========== 计算属性 ==========
 // 表格数据（添加唯一key）
@@ -58,25 +62,28 @@ const hasImages = computed(() => {
 
 // 预览表格的列配置
 const previewColumns = computed(() => {
+  console.log(excelData.value.header)
   if (!excelData.value.header) return [];
-  return excelData.value.header.map(key => ({
-    title: titleMap[key] || key, // 中文表头
-    dataIndex: key,
-    key: key,
-    ellipsis: true,
-    align: "center",
-    customCell: record => {
-      const text = record[key];
-      const style = {};
-      if (text == null) {
-        style.color = "#ccc";
-        style.fontStyle = "italic";
-      } else if (typeof text === "number") {
-        style.textAlign = "center";
+  return excelData.value.header
+    .filter(key => key !== "nameen") // 过滤掉 nameen 字段
+    .map(key => ({
+      title: titleMap[key] || key, // 中文表头
+      dataIndex: key,
+      key: key,
+      ellipsis: true,
+      align: "center",
+      customCell: record => {
+        const text = record[key];
+        const style = {};
+        if (text == null) {
+          style.color = "#ccc";
+          style.fontStyle = "italic";
+        } else if (typeof text === "number") {
+          style.textAlign = "center";
+        }
+        return { style };
       }
-      return { style };
-    }
-  }));
+    }));
 });
 
 // ========== 核心方法 ==========
@@ -262,14 +269,14 @@ const resetPagination = () => {
         <div style="margin-bottom: 4px">
           • <strong>共 {{ tableData.length }} 条记录</strong>：请仔细检查数据是否正确
         </div>
-        <div style="margin-bottom: 4px">• <strong>空值显示</strong>：空单元格会显示为"空值"</div>
+        <div style="margin-bottom: 4px">• <strong>空值显示</strong>：空单元格会显示为"空值"，图片列为空值后期抽奖时就会展示名称</div>
         <div style="margin-bottom: 4px">• <strong>数字格式</strong>：数字会自动格式化显示</div>
         <div style="margin-bottom: 4px">• <strong>图片支持</strong>：Excel中的图片会自动提取并显示</div>
         <div>• <strong>确认导入</strong>：确认无误后点击"确认导入"按钮</div>
       </div>
     </div>
     <!-- 表格区域 -->
-    <a-table :dataSource="tableData" :columns="previewColumns" bordered size="small" :scroll="{ x: 'max-content', y: 300 }" :pagination="paginationConfig" rowKey="__id" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px" @change="handleTableChange">
+    <a-table :dataSource="tableData" :columns="previewColumns" bordered size="small" :scroll="{ x: 'max-content', y: 500 }" :pagination="paginationConfig" rowKey="__id" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px" @change="handleTableChange">
       <template #emptyText>
         <a-empty description="没有可显示的数据" />
       </template>

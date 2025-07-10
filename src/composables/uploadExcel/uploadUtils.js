@@ -33,9 +33,10 @@ export const getHeaderRow = (sheet) => {
   const range = XLSX.utils.decode_range(sheet["!ref"]);
   for (let col = range.s.c; col <= range.e.c; col++) {
     const cell = sheet[XLSX.utils.encode_cell({ c: col, r: range.s.r })];
-    let header = `列${col + 1}`;
-    if (cell && cell.t) header = XLSX.utils.format_cell(cell);
-    headers.push(header);
+    // 只取有内容的表头
+    if (cell && cell.t && XLSX.utils.format_cell(cell).trim() !== "") {
+      headers.push(XLSX.utils.format_cell(cell));
+    }
   }
   return headers;
 };

@@ -227,7 +227,7 @@ const resetPagination = () => {
       <a-input-search v-model:value="searchKeyword" placeholder="请输入姓名进行搜索" allowClear style="width: 240px; margin-bottom: 16px" />
 
       <!-- 表格区域 -->
-      <a-table :dataSource="filteredWeightData" :columns="columns" :pagination="paginationConfig" size="small" bordered :scroll="{ y: 300 }" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px" @change="handleTableChange">
+      <a-table :dataSource="filteredWeightData" :columns="columns" :pagination="paginationConfig" size="small" bordered :scroll="{ y: 500 }" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px" @change="handleTableChange">
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">
             <div class="person-info">

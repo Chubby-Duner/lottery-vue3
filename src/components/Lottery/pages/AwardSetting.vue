@@ -119,10 +119,12 @@ const removeAward = index => {
 
 // 重置
 const resetAwardCounts = () => {
-  awardStore.resetAwardCounts();
-  // 更新本地数据
-  localAwards.value = createAwardsWithRemaining();
-  message.success("奖项剩余数量已重置为原始设置，中奖名单已保留");
+  // 只重置 localAwards 的 remainingCount，不操作 awardStore
+  localAwards.value = localAwards.value.map(item => ({
+    ...item,
+    remainingCount: item.originalCount
+  }));
+  message.success("奖项剩余数量已重置为原始设置，点击保存后生效");
 };
 
 // 手动设置剩余数量
@@ -223,7 +225,7 @@ watch(
     <a-input-search v-model:value="searchKeyword" placeholder="请输入奖项名称进行搜索" allowClear style="width: 240px; margin-bottom: 16px" />
 
     <!-- 表格区域 -->
-    <a-table :dataSource="filteredAwards" :pagination="paginationConfig" :columns="columns" rowKey="key" size="small" bordered :scroll="{ y: 300 }" @change="handleTableChange" :rowSelection="rowSelection">
+    <a-table :dataSource="filteredAwards" :pagination="paginationConfig" :columns="columns" rowKey="key" size="small" bordered :scroll="{ y: 500 }" @change="handleTableChange" :rowSelection="rowSelection">
       <template #bodyCell="{ column, record, index }">
         <template v-if="column.key === 'label'">
           <a-input v-model:value="record.label" style="border-radius: 4px" />
