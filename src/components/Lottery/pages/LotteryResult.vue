@@ -12,7 +12,9 @@ const props = defineProps({
   award: [String, Number],
   nameZh: String,
   nameEn: String,
-  avatar: String // 可选，若未传则自动拼接
+  avatar: String, // 可选，外部传入头像dataUrl
+  image: Object, // 可选，中奖对象带图片字段
+  avatarChar: String, // 可选，外部传入头像dataUrl
 });
 
 const emit = defineEmits(["close"]);
@@ -28,8 +30,11 @@ const awardText = computed(() => {
   return props.award;
 });
 
+// 中奖结果头像渲染逻辑：优先外部传入avatar，其次image.dataUrl，最后降级为静态图片
 const avatarUrl = computed(() => {
-  return props.avatar || `/src/assets/images/avatar/${props.nameEn}.jpg`;
+  if (props.avatar) return props.avatar;
+  if (props.image && typeof props.image === "object" && props.image.dataUrl) return props.image.dataUrl;
+  return "";
 });
 </script>
 
@@ -45,7 +50,14 @@ const avatarUrl = computed(() => {
           <div class="avatar-text">无效中奖者</div>
         </template>
         <template v-else>
-          <img :src="avatarUrl" class="avatar" :alt="nameZh" />
+          <img v-if="avatarUrl" :src="avatarUrl" class="avatar" :alt="nameZh" />
+          <div
+            v-else
+            class="avatar-text"
+            :style="{ width: '140px', height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffe082', borderRadius: '50%', fontSize: '48px', color: '#b8860b', fontWeight: 'bold', border: '5px solid #d9ad61', marginBottom: '20px' }"
+          >
+            {{ avatarChar ? avatarChar : (nameZh ? nameZh[0] : '') }}
+          </div>
         </template>
         <div class="winner-name">
           <template v-if="nameZh === 'Invalid Winner' || !nameZh"> 暂无有效中奖者 </template>

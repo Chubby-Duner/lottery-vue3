@@ -68,4 +68,21 @@ const weightedRandomIndex = (list, awardType) => {
   return 0;
 };
 
-export { formatExcelDate, translateKeys, getImageUrl, weightedRandomIndex }
+/**
+ * 判断是否为Excel
+ * @param {file} file 文件
+ */
+const isExcel = file => /\.(xlsx|xls)$/i.test(file.name);
+
+/**
+ * 获取名字的随机一个字
+ * @param {string} name - 中文姓名
+ * @returns {string} 随机一个字
+ */
+const getRandomChar = (name) => {
+  if (!name) return '';
+  const chars = name.split('');
+  return chars[Math.floor(Math.random() * chars.length)];
+}
+
+export { formatExcelDate, translateKeys, getImageUrl, weightedRandomIndex, isExcel, getRandomChar }

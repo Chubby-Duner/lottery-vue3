@@ -2,6 +2,7 @@
 import {
   Button,
   Upload,
+  UploadDragger,
   Progress,
   Alert,
   Tag,
@@ -21,6 +22,7 @@ import {
 const components = [
   Button,
   Upload,
+  UploadDragger,
   Progress,
   Alert,
   Tag,

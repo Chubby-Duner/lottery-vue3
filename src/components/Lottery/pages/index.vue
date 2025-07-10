@@ -1,9 +1,9 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
+import { getRandomChar } from "@/composables/utils";
 import { message } from "ant-design-vue";
 import { useAwardStore } from "@/store/awardStore";
 import { useMusicStore } from "@/store/musicStore";
-import { getImageUrl } from "@/composables/utils";
 import UploadExcel from "@/components/Upload/UploadExcel.vue";
 import LotteryLogo from "./LotteryLogo.vue";
 import LotteryResult from "./LotteryResult.vue";
@@ -54,6 +54,8 @@ const showResult = ref(false);
 const winnerIndex = ref(-1);
 const winnerNameZh = ref("");
 const winnerNameEn = ref("");
+const winnerImage = ref(null);
+const winnerAvatarChar = ref("");
 const wrapPosition = ref(0);
 const animationFrame = ref(null);
 const speed = ref(6);
@@ -62,8 +64,6 @@ const wrapMain = ref(null);
 const animationPaused = ref(false); // 添加动画暂停标志
 // 抽奖流程锁，防止未出结果时重复抽奖
 const isLotteryProcessing = ref(false);
-// 停止抽奖防抖标志
-const isStopping = ref(false);
 // 控制全局键盘监听开关
 const keyboardEnabled = ref(true);
 
@@ -89,8 +89,12 @@ const { weightEditorVisible, openWeightEditor, handleWeightSave, handleWeightEdi
   cancelAnimation: () => cancelAnimation(),
   message,
   nextTick,
-  onOpen: () => { keyboardEnabled.value = false; },
-  onClose: () => { keyboardEnabled.value = true; }
+  onOpen: () => {
+    keyboardEnabled.value = false;
+  },
+  onClose: () => {
+    keyboardEnabled.value = true;
+  }
 });
 // 奖项设置相关
 const { awardSettingVisible, openAwardSetting, handleAwardSettingSave, handleAwardSettingClose } = useAwardSetting({
@@ -100,8 +104,12 @@ const { awardSettingVisible, openAwardSetting, handleAwardSettingSave, handleAwa
   startAnimation: () => startAnimation(),
   cancelAnimation: () => cancelAnimation(),
   nextTick,
-  onOpen: () => { keyboardEnabled.value = false; },
-  onClose: () => { keyboardEnabled.value = true; }
+  onOpen: () => {
+    keyboardEnabled.value = false;
+  },
+  onClose: () => {
+    keyboardEnabled.value = true;
+  }
 });
 
 // ===================== 计算属性 =====================
@@ -141,7 +149,8 @@ const handleSuccess = ({ header, results }) => {
     lotteryData.value = results.map(item => ({
       ...item,
       awardWeights: defaultWeights,
-      locked: false
+      locked: false,
+      avatarChar: getRandomChar(item.namezh) // 新增：固定头像字
     }));
     // 备份导入数据
     awardStore.setLotteryDataBackup(lotteryData.value);
@@ -191,21 +200,18 @@ const handleAwardSettingSaveWrap = newAwards => {
 //#endregion
 
 //#region 抽奖相关
-// 包装 useLottery，增加流程锁逻辑
-const {
-  selectAward,
-  startLottery,
-  stopLottery: _stopLottery,
-  exportWinners
-} = useLottery({
+const { selectAward, handleLottery, exportWinners } = useLottery({
   isStarted,
   isMoving,
   isLocked,
+  isLotteryProcessing,
   canStop,
   showResult,
   winnerIndex,
   winnerNameZh,
   winnerNameEn,
+  winnerImage,
+  winnerAvatarChar,
   wrapPosition,
   speed,
   selectedAward,
@@ -217,64 +223,6 @@ const {
   showCountdownSequence,
   message
 });
-
-// 包装 handleLottery，修正锁逻辑和剩余数量校验
-const handleLottery = () => {
-  // 抽奖前校验数据
-  if (!lotteryData.value || lotteryData.value.length === 0) {
-    message.error("请先导入抽奖数据！");
-    return;
-  }
-  // 重新开始时重置流程锁
-  if (!isStarted.value && !isMoving.value) {
-    isLotteryProcessing.value = false;
-  }
-  // “开始抽奖”时加锁
-  if (!isStarted.value && isMoving.value) {
-    // 先校验剩余数量
-    const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
-    const awardKey = `award0${idx + 1}`;
-    if (awardStore.awardLog[awardKey] <= 0) {
-      message.error("该奖项已经抽完啦，请选择其它奖项哦！");
-      return;
-    }
-    if (isLotteryProcessing.value) {
-      message.warning("抽奖进行中，请等待结果...");
-      return;
-    }
-    isLotteryProcessing.value = true;
-    startLottery();
-    return;
-  }
-  // “停止抽奖”时不判断锁，始终允许，但防抖
-  if (isStarted.value && !isLocked.value && isMoving.value) {
-    stopLottery();
-    return;
-  }
-  // 重新开始
-  if (!isStarted.value && !isMoving.value) {
-    wrapPosition.value = 0;
-    isMoving.value = true;
-    isStarted.value = false;
-    isLocked.value = true;
-    speed.value = 6;
-    winnerIndex.value = -1;
-    showResult.value = false;
-    canStop.value = false;
-    if (!animationPaused.value) {
-      startAnimation();
-    }
-  }
-};
-
-// 包装 stopLottery，结束后解锁，防止多次触发
-const stopLottery = async () => {
-  if (isStopping.value) return;
-  isStopping.value = true;
-  await _stopLottery();
-  isLotteryProcessing.value = false;
-  isStopping.value = false;
-};
 //#endregion
 
 //#region 其它功能
@@ -315,6 +263,8 @@ useKeyboardShortcuts({
   cancelAnimation,
   enabled: keyboardEnabled
 });
+
+// 页面按钮、快捷键等直接用 useLottery 的 handleLottery
 </script>
 
 <template>
@@ -336,7 +286,15 @@ useKeyboardShortcuts({
         <div id="lottery-wrap" :style="{ transform: `translateY(${wrapPosition}px)` }" ref="lotteryWrap">
           <div v-for="(item, index) in lotteryData" :key="index" class="clearFloat lottery-list" :class="{ 'sure-active': index === winnerIndex }">
             <div class="f-l turqoise lottery-avatar">
-              <img :src="getImageUrl(item.nameen, 'avatar')" :alt="item.namezh" />
+              <!-- 优先显示导入图片，没有则显示名字的随机一个字 -->
+              <img v-if="item.image && typeof item.image === 'object' && item.image.dataUrl" :src="item.image.dataUrl" :alt="item.namezh" />
+              <div
+                v-else
+                class="avatar-text"
+                :style="{ width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffe082', borderRadius: '50%', fontSize: '28px', color: '#b8860b', fontWeight: 'bold', border: '3px solid #d9ad61', margin: '0 auto' }"
+              >
+                {{ item.avatarChar }}
+              </div>
             </div>
             <div class="f-l lottery-content">
               <em class="beauty border-01"></em>
@@ -384,31 +342,17 @@ useKeyboardShortcuts({
   <!-- 倒计时 -->
   <Countdown :visible="showCountdown" :countdown-text="countdownText" />
 
-  <!-- 中奖结果 -->
-  <LotteryResult :visible="showResult" :award="selectedAward" :name-zh="winnerNameZh" :name-en="winnerNameEn" @close="showResult = false" />
+  <!-- 中奖结果弹窗，传递中奖人image字段，支持动态头像 -->
+  <LotteryResult :visible="showResult" :award="selectedAward" :name-zh="winnerNameZh" :name-en="winnerNameEn" :image="winnerImage" :avatarChar="winnerAvatarChar" @close="showResult = false" />
 
   <!-- 导入数据 -->
   <UploadExcel v-model:visible="importModal" :on-success="handleSuccess" :before-upload="beforeUpload" />
 
   <!-- 权重编辑 -->
-  <WeightEditor
-    v-model:visible="weightEditorVisible"
-    :lottery-data="lotteryData"
-    @save="handleWeightSave"
-    @close="handleWeightEditorClose"
-    @onOpen="keyboardEnabled = false"
-    @onClose="keyboardEnabled = true"
-  />
+  <WeightEditor v-model:visible="weightEditorVisible" :lottery-data="lotteryData" @save="handleWeightSave" @close="handleWeightEditorClose" @onOpen="keyboardEnabled = false" @onClose="keyboardEnabled = true" />
 
   <!-- 奖项设置 -->
-  <AwardSetting
-    v-model:visible="awardSettingVisible"
-    :awards="awardStore.awards"
-    @save="handleAwardSettingSaveWrap"
-    @close="handleAwardSettingClose"
-    @onOpen="keyboardEnabled = false"
-    @onClose="keyboardEnabled = true"
-  />
+  <AwardSetting v-model:visible="awardSettingVisible" :awards="awardStore.awards" @save="handleAwardSettingSaveWrap" @close="handleAwardSettingClose" @onOpen="keyboardEnabled = false" @onClose="keyboardEnabled = true" />
 </template>
 
 <style lang="scss" scoped></style>

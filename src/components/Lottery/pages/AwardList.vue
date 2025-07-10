@@ -2,7 +2,6 @@
 import { ref, computed } from "vue";
 import { Empty } from "ant-design-vue";
 import { useAwardStore } from "@/store/awardStore";
-import { getImageUrl } from "@/composables/utils";
 
 defineOptions({
   name: "AwardList"
@@ -61,7 +60,15 @@ const showLess = awardKey => {
               <ul class="win">
                 <li v-for="(winner, index) in group.data.slice(0, visibleCounts[group.key])" :key="index" class="clearfix win-li">
                   <div class="f-l avatar">
-                    <img width="34" :src="getImageUrl(winner.nameen, 'avatar')" />
+                    <!-- 优先使用导入图片，没有则显示名字随机一个字 -->
+                    <img v-if="winner.image && typeof winner.image === 'object' && winner.image.dataUrl" :src="winner.image.dataUrl" width="34" :alt="winner.namezh" style="object-fit: contain; border-radius: 4px; display: block; margin: 0 auto" />
+                    <div
+                      v-else
+                      class="avatar-text"
+                      :style="{ width: '3rem', height: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ffe082', borderRadius: '50%', color: '#b8860b' }"
+                    >
+                      {{ winner.avatarChar }}
+                    </div>
                   </div>
                   <div class="f-l name">{{ winner.namezh }}</div>
                 </li>

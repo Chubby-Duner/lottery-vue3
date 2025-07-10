@@ -26,10 +26,7 @@ const filteredWeightData = computed(() => {
   return weightData.value.filter(item => {
     const namezh = item.namezh || "";
     const nameen = item.nameen || "";
-    return (
-      namezh.includes(searchKeyword.value) ||
-      nameen.toLowerCase().includes(searchKeyword.value.toLowerCase())
-    );
+    return namezh.includes(searchKeyword.value) || nameen.toLowerCase().includes(searchKeyword.value.toLowerCase());
   });
 });
 
@@ -212,12 +209,12 @@ const resetPagination = () => {
   <a-modal v-model:open="weightVisible" title="权重设置" width="80%" :footer="null" @ok="handleOk" @cancel="handleCancel">
     <div class="weight-editor">
       <!-- 固定的说明区域 -->
-      <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1)">
-        <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center">
+      <div class="desc-wrapper" style="margin-bottom: 16px">
+        <div class="desc-title">
           <span style="margin-right: 8px">⚖️</span>
           权重说明
         </div>
-        <div style="font-size: 12px; line-height: 1.6; opacity: 0.95">
+        <div>
           <div style="margin-bottom: 4px">• <strong>有锁定人时</strong>：只从锁定人中抽取</div>
           <div style="margin-bottom: 4px">• <strong>没有锁定人时</strong>：按权重抽奖</div>
           <div style="margin-bottom: 4px">• <strong>权重越大</strong>：中奖概率越高</div>
@@ -227,12 +224,7 @@ const resetPagination = () => {
       </div>
 
       <!-- 搜索区域 -->
-      <a-input-search
-        v-model:value="searchKeyword"
-        placeholder="请输入姓名进行搜索"
-        allowClear
-        style="width: 240px; margin-bottom: 16px"
-      />
+      <a-input-search v-model:value="searchKeyword" placeholder="请输入姓名进行搜索" allowClear style="width: 240px; margin-bottom: 16px" />
 
       <!-- 表格区域 -->
       <a-table :dataSource="filteredWeightData" :columns="columns" :pagination="paginationConfig" size="small" bordered :scroll="{ y: 300 }" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px" @change="handleTableChange">

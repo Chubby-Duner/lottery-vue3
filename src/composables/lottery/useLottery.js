@@ -6,11 +6,14 @@ export default function useLottery({
   isStarted,
   isMoving,
   isLocked,
+  isLotteryProcessing,
   canStop,
   showResult,
   winnerIndex,
   winnerNameZh,
   winnerNameEn,
+  winnerImage,
+  winnerAvatarChar,
   wrapPosition,
   speed,
   selectedAward,
@@ -31,32 +34,41 @@ export default function useLottery({
     awardStore.setSelectAward(awardKey);
   };
 
+  // 封装完整流程的 handleLottery
   const handleLottery = () => {
-    const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
-    const awardKey = `award0${idx + 1}`;
-    if (awardStore.awardLog[awardKey] <= 0) {
-      message.error('该奖项已经抽完啦，请选择其它奖项哦！');
+    // 抽奖前校验数据
+    if (!lotteryData.value || lotteryData.value.length === 0) {
+      message.error("请先导入抽奖数据！");
       return;
     }
-    const lockedList = lotteryData.value.filter(item => item.locked);
-    if (lockedList.length > 0) {
-      // 有锁定，判断锁定且权重>0的人
-      const lockedWithWeight = lockedList.filter(item => (item.awardWeights?.[idx + 1] ?? 1) > 0);
-      if (lockedWithWeight.length === 0) {
-        message.error('锁定的人员当前奖项权重都为0，无法抽奖');
-        return;
-      }
-    } else {
-      // 没有锁定，判断所有权重
-      const weights = lotteryData.value.map(item => item.awardWeights?.[idx + 1] ?? 1);
-      const total = weights.reduce((a, b) => a + b, 0);
-      if (total === 0) {
-        message.error('当前奖项所有权重都为0，无法抽奖');
-        return;
-      }
-    }
+    // 重新开始时重置流程锁
     if (!isStarted.value && !isMoving.value) {
-      // 重新开始：重置状态并重新滚动，不刷新页面
+      isLotteryProcessing.value = false;
+    }
+    // “开始抽奖”时加锁
+    if (!isStarted.value && isMoving.value) {
+      // 先校验剩余数量
+      const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
+      const awardKey = `award0${idx + 1}`;
+      if (awardStore.awardLog[awardKey] <= 0) {
+        message.error("该奖项已经抽完啦，请选择其它奖项哦！");
+        return;
+      }
+      if (isLotteryProcessing.value) {
+        message.warning("抽奖进行中，请等待结果...");
+        return;
+      }
+      isLotteryProcessing.value = true;
+      startLottery();
+      return;
+    }
+    // “停止抽奖”时不判断锁，始终允许，但防抖
+    if (isStarted.value && !isLocked.value && isMoving.value) {
+      stopLottery();
+      return;
+    }
+    // 重新开始
+    if (!isStarted.value && !isMoving.value) {
       wrapPosition.value = 0;
       isMoving.value = true;
       isStarted.value = false;
@@ -65,16 +77,9 @@ export default function useLottery({
       winnerIndex.value = -1;
       showResult.value = false;
       canStop.value = false;
-      // 只有在动画没有被暂停时才启动
       if (!animationPaused.value) {
         startAnimation();
       }
-      return;
-    }
-    if (!isStarted.value && isMoving.value) {
-      startLottery();
-    } else if (isStarted.value && !isLocked.value && isMoving.value) {
-      stopLottery();
     }
   };
 
@@ -128,12 +133,17 @@ export default function useLottery({
       winnerIndex.value = winnerIndexResult;
       // 更新获奖者信息
       const winner = lotteryData.value[winnerIndex.value];
+
       if (winnerIndex.value < 0 || winnerIndex.value >= lotteryData.value.length || !winner) {
         winnerNameZh.value = "Invalid Winner";
         winnerNameEn.value = "Invalid Winner";
+        winnerAvatarChar.value = "Invalid Winner";
+        winnerImage.value = null;
       } else {
         winnerNameZh.value = winner.namezh;
         winnerNameEn.value = winner.nameen;
+        winnerAvatarChar.value = winner.avatarChar;
+        winnerImage.value = (winner.image && winner.image.dataUrl) ? { dataUrl: winner.image.dataUrl } : null;
       }
 
       // 显示倒计时（动画继续运行）
@@ -145,11 +155,15 @@ export default function useLottery({
       canStop.value = true;
       speed.value = 8;
       // 更新奖项数据
-      // 中奖人对象
-      const winnerData = {
-        nameen: winnerNameEn.value,
-        namezh: winnerNameZh.value
+      // 中奖人对象，只存nameen、namezh和image.dataUrl和avatarChar
+      let winnerData = {
+        nameen: winner.nameen,
+        namezh: winner.namezh,
+        avatarChar: winner.avatarChar // 新增，保证名单有头像字
       };
+      if (winner.image && typeof winner.image === 'object' && winner.image.dataUrl) {
+        winnerData.image = { dataUrl: winner.image.dataUrl };
+      }
       // 写入中奖名单
       awardStore.addWinner(selectedAward.value, winnerData);
       // 更新奖项剩余数量

@@ -39,17 +39,15 @@ const createAwardsWithRemaining = () => {
 // 过滤后的奖项数据
 const filteredAwards = computed(() => {
   if (!searchKeyword.value) return localAwards.value;
-  return localAwards.value.filter(item =>
-    item.label.includes(searchKeyword.value)
-  );
+  return localAwards.value.filter(item => item.label.includes(searchKeyword.value));
 });
 
 // 多选配置（computed 保证响应式）
 const rowSelection = computed(() => ({
   selectedRowKeys: selectedRowKeys.value,
-  onChange: (selectedKeys) => {
+  onChange: selectedKeys => {
     selectedRowKeys.value = selectedKeys;
-  },
+  }
 }));
 
 // 批量删除
@@ -208,7 +206,7 @@ watch(
 <template>
   <a-modal v-model:open="settingVisible" title="奖项设置" width="80%" @ok="handleOk" @cancel="handleCancel" okText="保存" cancelText="取消">
     <!-- 固定的说明区域 -->
-    <div style="margin-bottom: 16px; padding: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; color: white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1)">
+    <div class="desc-wrapper" style="margin-bottom: 16px">
       <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center">
         <span style="margin-right: 8px">📋</span>
         使用说明
@@ -222,25 +220,10 @@ watch(
     </div>
 
     <!-- 搜索区域 -->
-    <a-input-search
-      v-model:value="searchKeyword"
-      placeholder="请输入奖项名称进行搜索"
-      allowClear
-      style="width: 240px; margin-bottom: 16px"
-    />
+    <a-input-search v-model:value="searchKeyword" placeholder="请输入奖项名称进行搜索" allowClear style="width: 240px; margin-bottom: 16px" />
 
     <!-- 表格区域 -->
-    <a-table
-      :dataSource="filteredAwards"
-      :pagination="paginationConfig"
-      :columns="columns"
-      rowKey="key"
-      size="small"
-      bordered
-      :scroll="{ y: 300 }"
-      @change="handleTableChange"
-      :rowSelection="rowSelection"
-    >
+    <a-table :dataSource="filteredAwards" :pagination="paginationConfig" :columns="columns" rowKey="key" size="small" bordered :scroll="{ y: 300 }" @change="handleTableChange" :rowSelection="rowSelection">
       <template #bodyCell="{ column, record, index }">
         <template v-if="column.key === 'label'">
           <a-input v-model:value="record.label" style="border-radius: 4px" />

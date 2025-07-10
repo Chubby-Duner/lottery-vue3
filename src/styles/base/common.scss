@@ -322,6 +322,27 @@ footer {
   background-size: contain;
 }
 
+/* 说明区域 */
+.desc-wrapper {
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  line-height: 1.6;
+  opacity: 0.95;
+  margin-bottom: 20px;
+
+  .desc-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+  }
+}
+
 /* 响应式媒体查询 */
 @media (min-width: 768px) {
   .modal-dialog {
