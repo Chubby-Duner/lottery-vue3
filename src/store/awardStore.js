@@ -103,7 +103,7 @@ export const useAwardStore = defineStore("awardStore", {
         { key: "award1", label: "一等奖", count: 1 },
         { key: "award2", label: "二等奖", count: 3 },
         { key: "award3", label: "三等奖", count: 3 },
-        { key: "award4", label: "纪念奖", count: 4 }
+        { key: "award4", label: "纪念奖", count: 5 }
       ];
       storage.set("awards", this.awards);
       this.awardLog = {

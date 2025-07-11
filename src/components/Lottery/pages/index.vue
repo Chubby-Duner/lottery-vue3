@@ -57,6 +57,7 @@ const winnerNameEn = ref("");
 const winnerImage = ref(null);
 const winnerAvatarChar = ref("");
 const winnerWish = ref("");
+const winnerGift = ref(null);
 const wrapPosition = ref(0);
 const animationFrame = ref(null);
 const speed = ref(6);
@@ -113,6 +114,8 @@ const { awardSettingVisible, openAwardSetting, handleAwardSettingSave, handleAwa
   }
 });
 
+
+
 // ===================== 计算属性 =====================
 const buttonText = computed(() => {
   if (!isStarted.value && !isMoving.value) return "重新开始";
@@ -131,11 +134,11 @@ const toggleMusic = () => {
 
 //#region 导入数据相关
 const beforeUpload = file => {
-  const isLt1M = file.size / 1024 / 1024 < 1;
+  const isLt1M = file.size / 1024 / 1024 < 10;
   if (isLt1M) {
     return true;
   }
-  message.error("Please do not upload files larger than 1m in size.");
+  message.error("Please do not upload files larger than 10m in size.");
   return false;
 };
 
@@ -214,6 +217,7 @@ const { selectAward, handleLottery, exportWinners } = useLottery({
   winnerImage,
   winnerAvatarChar,
   winnerWish,
+  winnerGift,
   wrapPosition,
   speed,
   selectedAward,
@@ -345,7 +349,7 @@ useKeyboardShortcuts({
   <Countdown :visible="showCountdown" :countdown-text="countdownText" />
 
   <!-- 中奖结果弹窗，传递中奖人image字段，支持动态头像 -->
-  <LotteryResult :visible="showResult" :award="selectedAward" :name-zh="winnerNameZh" :name-en="winnerNameEn" :image="winnerImage" :avatarChar="winnerAvatarChar" :wish="winnerWish" @close="showResult = false" />
+  <LotteryResult :visible="showResult" :award="selectedAward" :name-zh="winnerNameZh" :name-en="winnerNameEn" :image="winnerImage" :avatarChar="winnerAvatarChar" :wish="winnerWish" :gift="winnerGift" @close="showResult = false" />
 
   <!-- 导入数据 -->
   <UploadExcel v-model:visible="importModal" :on-success="handleSuccess" :before-upload="beforeUpload" />

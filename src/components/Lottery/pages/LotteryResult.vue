@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import { useAwardStore } from "@/store/awardStore";
+import { usePrizeStore } from "@/store/prizeStore";
 import { storeToRefs } from "pinia";
 
 defineOptions({
@@ -16,11 +17,13 @@ const props = defineProps({
   image: Object, // 可选，中奖对象带图片字段
   avatarChar: String, // 可选，外部传入头像dataUrl
   wish: String, // 新增，中奖者愿景及祝福
+  gift: Object, // 新增，中奖者获得的礼物信息
 });
 
 const emit = defineEmits(["close"]);
 
 const awardStore = useAwardStore();
+const prizeStore = usePrizeStore();
 const { awards } = storeToRefs(awardStore);
 
 const awardText = computed(() => {
@@ -29,6 +32,15 @@ const awardText = computed(() => {
     return found.label;
   }
   return props.award;
+});
+
+// 获取礼物信息
+const giftInfo = computed(() => {
+  // 优先使用传入的礼物信息，如果没有则随机选择一个
+  if (props.gift) {
+    return props.gift;
+  }
+  return prizeStore.getRandomPrizeByAward(props.award);
 });
 
 // 中奖结果头像渲染逻辑：优先外部传入avatar，其次image.dataUrl，最后降级为名称
@@ -43,8 +55,34 @@ const avatarUrl = computed(() => {
   <div v-if="visible" class="result-dialog-mask">
     <div class="result-dialog">
       <div class="result-header">
-        <span class="award">{{ awardText }}</span>
+        <div class="award-info">
+          <span class="award">{{ awardText }}</span>
+        </div>
         <button class="close-btn" @click="emit('close')">&times;</button>
+      </div>
+      
+      <!-- 奖品展示区域 -->
+      <div class="gift-showcase" v-if="giftInfo">
+        <div class="gift-card">
+          <div class="gift-image-container">
+            <img 
+              v-if="giftInfo.giftImage && typeof giftInfo.giftImage === 'object' && giftInfo.giftImage.dataUrl" 
+              :src="giftInfo.giftImage.dataUrl" 
+              :alt="giftInfo.giftName" 
+              class="gift-image" 
+            />
+            <div 
+              v-else
+              class="gift-image-placeholder"
+            >
+              {{ giftInfo.giftName ? giftInfo.giftName.charAt(0) : '礼' }}
+            </div>
+          </div>
+          <div class="gift-details">
+            <div class="gift-name">{{ giftInfo.giftName }}</div>
+            <div class="gift-description">{{ giftInfo.description || giftInfo.giftCategory || awardText }}</div>
+          </div>
+        </div>
       </div>
       <div class="result-body">
         <template v-if="nameZh === 'Invalid Winner' || !nameZh">
@@ -98,10 +136,11 @@ const avatarUrl = computed(() => {
 
 .result-dialog {
   background: #fff;
-  border-radius: 16px;
-  padding: 40px 48px 32px 48px;
-  min-width: 380px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  border-radius: 20px;
+  padding: 32px 40px 28px 40px;
+  min-width: 420px;
+  max-width: 500px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
   text-align: center;
   position: relative;
   animation: pop-in 0.4s;
@@ -122,7 +161,14 @@ const avatarUrl = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.award-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
 }
 
 .award {
@@ -132,12 +178,104 @@ const avatarUrl = computed(() => {
   font-family: "STKaiti", "KaiTi ", serif;
 }
 
+/* 奖品展示区域样式 */
+.gift-showcase {
+  margin-bottom: 24px;
+}
+
+.gift-card {
+  background: linear-gradient(135deg, #fffbe6 0%, #fff8dc 100%);
+  border-radius: 16px;
+  padding: 20px;
+  border: 3px solid #d9ad61;
+  box-shadow: 0 4px 20px rgba(218, 165, 32, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  animation: gift-appear 0.6s ease-out;
+}
+
+@keyframes gift-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.gift-image-container {
+  flex-shrink: 0;
+}
+
+.gift-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 3px solid #d9ad61;
+  box-shadow: 0 2px 8px rgba(218, 165, 32, 0.3);
+}
+
+.gift-image-placeholder {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #ffe082 0%, #ffd54f 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #b8860b;
+  font-weight: bold;
+  border: 3px solid #d9ad61;
+  box-shadow: 0 2px 8px rgba(218, 165, 32, 0.3);
+}
+
+.gift-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gift-name {
+  font-size: 1.8rem;
+  color: #b8860b;
+  font-weight: bold;
+  font-family: "STKaiti", "KaiTi ", serif;
+  line-height: 1.2;
+}
+
+.gift-description {
+  font-size: 1.4rem;
+  color: #8b7355;
+  font-family: "STKaiti", "KaiTi ", serif;
+  line-height: 1.3;
+}
+
 .close-btn {
   background: none;
   border: none;
-  font-size: 2rem;
-  color: #888;
+  font-size: 2.4rem;
+  color: #d9ad61;
   cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(218, 165, 32, 0.1);
+  color: #b8860b;
 }
 
 .result-body {

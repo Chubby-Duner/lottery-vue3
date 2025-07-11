@@ -54,6 +54,7 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
         权重设置
       </a-button>
     </div>
+
     <div class="btn weight-edit-section">
       <a-button type="primary" @click="$emit('exportWinners')">
         <template #icon>

@@ -1,5 +1,6 @@
 import { weightedRandomIndex } from '@/composables/utils'
 import * as XLSX from "xlsx";
+import { usePrizeStore } from "@/store/prizeStore";
 
 // #region 抽奖相关
 export default function useLottery({
@@ -15,6 +16,7 @@ export default function useLottery({
   winnerImage,
   winnerAvatarChar,
   winnerWish,
+  winnerGift,
   wrapPosition,
   speed,
   selectedAward,
@@ -26,6 +28,7 @@ export default function useLottery({
   showCountdownSequence,
   message
 }) {
+  const prizeStore = usePrizeStore();
   const selectAward = awardKey => {
     if (isStarted.value) {
       message.error('正在抽奖中，不允许更改奖项设置');
@@ -141,12 +144,32 @@ export default function useLottery({
         winnerAvatarChar.value = "Invalid Winner";
         winnerWish.value = "Invalid Winner";
         winnerImage.value = null;
+        winnerGift.value = null;
       } else {
         winnerNameZh.value = winner.namezh;
         winnerNameEn.value = winner.nameen;
         winnerAvatarChar.value = winner.avatarChar;
         winnerWish.value = winner.wish;
         winnerImage.value = (winner.image && winner.image.dataUrl) ? { dataUrl: winner.image.dataUrl } : null;
+        // 调试信息：显示当前奖项的所有礼物状态
+        // const availablePrizes = prizeStore.getAvailablePrizesForAward(selectedAward.value);
+        // console.log(`奖项 ${selectedAward.value} 的礼物状态:`, availablePrizes);
+
+        // 随机选择一个礼物（getRandomPrizeByAward已经会过滤掉数量为0的礼物）
+        winnerGift.value = prizeStore.getRandomPrizeByAward(selectedAward.value);
+
+        // 调试信息：显示选中的礼物和剩余数量
+        if (winnerGift.value && winnerGift.value.giftName) {
+        //   const remainingQuantity = prizeStore.getPrizeRemainingQuantity(winnerGift.value.giftName, selectedAward.value);
+        //   console.log(`选中礼物: ${winnerGift.value.giftName}, 剩余数量: ${remainingQuantity}`);
+
+          // 减少选中礼物的数量
+          prizeStore.decreasePrizeQuantity(winnerGift.value.giftName, selectedAward.value);
+
+        //   // 再次检查减少后的数量
+        //   const newQuantity = prizeStore.getPrizeRemainingQuantity(winnerGift.value.giftName, selectedAward.value);
+        //   console.log(`减少后剩余数量: ${newQuantity}`);
+        }
       }
 
       // 显示倒计时（动画继续运行）

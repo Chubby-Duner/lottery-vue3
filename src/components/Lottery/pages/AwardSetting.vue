@@ -2,6 +2,7 @@
 import { ref, watch, computed } from "vue";
 import { message } from "ant-design-vue";
 import { useAwardStore } from "@/store/awardStore";
+import { usePrizeStore } from "@/store/prizeStore";
 
 defineOptions({
   name: "AwardSetting"
@@ -14,6 +15,7 @@ const props = defineProps({
 const emit = defineEmits(["update:visible", "save", "close", "onOpen", "onClose"]);
 
 const awardStore = useAwardStore();
+const prizeStore = usePrizeStore();
 const settingVisible = ref(false);
 const localAwards = ref([]);
 const searchKeyword = ref("");
@@ -168,6 +170,9 @@ const handleOk = () => {
     newLog[key] = item.remainingCount;
   });
   awardStore.setAwardLog(newLog);
+
+  // 一定要放在 setAwardLog 之后，因为 syncGiftLevelMapAndPrizes 里面是依赖于 awardStore.awardLog 的，这样才能拿到最新的数据
+  prizeStore.syncGiftLevelMapAndPrizes(); // 同步奖项key、label、礼物列表和数量
 
   settingVisible.value = false;
   message.success("奖项设置已保存");

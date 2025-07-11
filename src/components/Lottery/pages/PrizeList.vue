@@ -6,13 +6,14 @@ import { UploadOutlined, CheckCircleOutlined } from "@ant-design/icons-vue";
 import { isExcel } from "@/composables/utils";
 import { readFileAsArrayBuffer, getHeaderRow, handleImageError } from "@/composables/uploadExcel/uploadUtils";
 import { extractImagesFromExcel, mergeImagesWithData } from "@/composables/uploadExcel/excelImageExtract";
+import { usePrizeStore } from "@/store/prizeStore";
 
 defineOptions({
   name: "PrizeList"
 });
 
 const showList = ref(false);
-const prizeList = ref([]);
+const prizeStore = usePrizeStore();
 
 // 导入窗口相关状态
 const importModal = ref(false);
@@ -40,7 +41,8 @@ const giftTitleMap = {
   giftName: "礼物名称",
   giftCategory: "礼物类别",
   giftImage: "礼物图片",
-  description: "礼物描述"
+  description: "礼物描述",
+  giftQuantity: "礼物数量"
 };
 
 // 礼物等级映射
@@ -53,7 +55,7 @@ const giftLevelMap = {
 
 // 计算是否有礼物数据
 const hasGiftData = computed(() => {
-  return prizeList.value.length > 0;
+  return prizeStore.hasPrizes;
 });
 
 // 表格数据（添加唯一key）
@@ -98,20 +100,7 @@ const previewColumns = computed(() => {
 
 // 礼物分组数据
 const giftGroups = computed(() => {
-  const groups = {};
-  prizeList.value.forEach(gift => {
-    const level = gift.giftLevel || 'award1';
-    if (!groups[level]) {
-      groups[level] = [];
-    }
-    groups[level].push(gift);
-  });
-  
-  return Object.keys(groups).map(level => ({
-    key: level,
-    title: giftLevelMap[level] || level,
-    data: groups[level]
-  })).filter(group => group.data.length > 0);
+  return prizeStore.getPrizeGroups;
 });
 
 // 显示数量控制
@@ -211,7 +200,9 @@ const processFile = rawFile => {
 
 // 确认导入
 const confirmImport = () => {
-  prizeList.value = tableData.value;
+  prizeStore.setPrizeList(tableData.value);
+  // 初始化礼物数量状态
+  prizeStore.resetPrizeQuantities();
   message.success(`成功导入 ${tableData.value.length} 条礼物数据`);
   closeImportModal();
 };
@@ -267,7 +258,7 @@ const clearGiftData = () => {
     cancelText: "取消",
     async onOk() {
       try {
-        prizeList.value = [];
+        prizeStore.clearPrizes();
         message.success("已清空礼物数据");
       } catch (error) {
         console.error("error in clearGiftData", error);
@@ -339,7 +330,12 @@ const clearGiftData = () => {
                         {{ gift.giftName ? gift.giftName.charAt(0) : '礼' }}
                       </div>
                     </div>
-                    <div class="f-l name">{{ gift.giftName }}</div>
+                    <div class="f-l name">
+                      {{ gift.giftName }}
+                      <span class="quantity-info">
+                        (剩余: {{ prizeStore.getPrizeRemainingQuantity(gift.giftName, gift.giftLevel) }}/{{ gift.giftQuantity || 1 }})
+                      </span>
+                    </div>
                   </li>
                 </ul>
                 <div class="action-btns" v-if="group.data.length > 5">
@@ -560,5 +556,12 @@ const clearGiftData = () => {
   border-radius: 4px;
   display: block;
   margin: 0 auto;
+}
+
+.quantity-info {
+  font-size: 12px;
+  color: #8b7355;
+  margin-left: 8px;
+  font-weight: normal;
 }
 </style>
