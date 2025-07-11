@@ -8,14 +8,14 @@ export const useAwardStore = defineStore("awardStore", {
       { key: "award1", label: "一等奖", count: 1 },
       { key: "award2", label: "二等奖", count: 3 },
       { key: "award3", label: "三等奖", count: 3 },
-      { key: "award4", label: "纪念奖", count: 4 }
+      { key: "award4", label: "纪念奖", count: 5 }
     ]),
     // 奖项剩余数量
     awardLog: storage.get("award_log", {
       award01: 1,
       award02: 3,
       award03: 3,
-      award04: 4
+      award04: 5
     }),
     // 中奖名单，key为奖项key
     winnerMap: storage.get("winner_map", {}),
@@ -110,7 +110,7 @@ export const useAwardStore = defineStore("awardStore", {
         award01: 1,
         award02: 3,
         award03: 3,
-        award04: 4
+        award04: 5
       };
       storage.set("award_log", this.awardLog);
       this.winnerMap = {};
@@ -134,14 +134,14 @@ export const useAwardStore = defineStore("awardStore", {
         { key: "award1", label: "一等奖", count: 1 },
         { key: "award2", label: "二等奖", count: 3 },
         { key: "award3", label: "三等奖", count: 3 },
-        { key: "award4", label: "纪念奖", count: 4 }
+        { key: "award4", label: "纪念奖", count: 5 }
       ];
       storage.set("awards", this.awards);
       this.awardLog = {
         award01: 1,
         award02: 3,
         award03: 3,
-        award04: 4
+        award04: 5
       };
       storage.set("award_log", this.awardLog);
       this.winnerMap = {};
