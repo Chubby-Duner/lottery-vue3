@@ -1,5 +1,5 @@
 <script setup>
-import { SettingOutlined, ExportOutlined, ClearOutlined } from "@ant-design/icons-vue";
+import { SettingOutlined, ExportOutlined, ClearOutlined, GiftOutlined } from "@ant-design/icons-vue";
 
 const props = defineProps({
   awards: { type: Array, required: true },
@@ -8,7 +8,7 @@ const props = defineProps({
   buttonText: { type: String, required: true }
 });
 
-const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "openWeightEditor", "resetAllData", "exportWinners"]);
+const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "openPrizeSetting", "openWeightEditor", "resetAllData", "exportWinners"]);
 </script>
 
 <template>
@@ -54,7 +54,14 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
         权重设置
       </a-button>
     </div>
-
+    <div class="btn weight-edit-section">
+      <a-button @click="$emit('openPrizeSetting')">
+        <template #icon>
+          <GiftOutlined />
+        </template>
+        礼物设置
+      </a-button>
+    </div>
     <div class="btn weight-edit-section">
       <a-button type="primary" @click="$emit('exportWinners')">
         <template #icon>

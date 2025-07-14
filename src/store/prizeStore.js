@@ -6,6 +6,8 @@ export const usePrizeStore = defineStore("prizeStore", {
   state: () => ({
     // 导入的礼物数据
     prizeList: storage.get("prize_list", []),
+    // 礼物数据备份
+    prizeListBackup: storage.get("prize_list_backup", []),
     // 礼物剩余数量状态（新结构）
     prizeQuantities: storage.get("prize_quantities", {}),
     // 礼物等级映射
@@ -117,9 +119,11 @@ export const usePrizeStore = defineStore("prizeStore", {
     // 清空礼物数据
     clearPrizes() {
       this.prizeList = [];
+      this.prize_list_backup = [];
       this.prizeQuantities = {};
       storage.remove("prize_list");
       storage.remove("prize_quantities");
+      storage.remove("prize_list_backup");
     },
     // 更新礼物
     updatePrize(index, prize) {
@@ -225,15 +229,19 @@ export const usePrizeStore = defineStore("prizeStore", {
       // 3. 对于awards中有但prizeList没有的giftLevel，自动补充一个默认礼物（仅无礼物时）
       awards.forEach((item, idx) => {
         const hasPrize = this.prizeList.some(prize => prize.giftLevel === item.key);
+        // 计算新id
+        const maxId = this.prizeList.length > 0 ? Math.max(...this.prizeList.map(g => g.__id ?? 0)) : 0;
         if (!hasPrize) {
           const awardLogKey = `award0${idx + 1}`;
           const remaining = awardLog[awardLogKey] ?? item.count;
           this.prizeList.push({
+            giftCategory: item.label,
             giftName: item.label,
             giftLevel: item.key,
             giftQuantity: remaining,
             giftImage: null,
-            description: item.label
+            description: item.label,
+            __id: maxId + 1
           });
         }
       });
@@ -262,6 +270,11 @@ export const usePrizeStore = defineStore("prizeStore", {
       this.prizeQuantities = newQuantities;
       storage.set("prize_list", this.prizeList);
       storage.set("prize_quantities", this.prizeQuantities);
+    },
+    // 备份礼物数据
+    setPrizeListBackup(prizes) {
+      this.prizeListBackup = prizes;
+      storage.set("prize_list_backup", this.prizeListBackup);
     }
   }
 }) 

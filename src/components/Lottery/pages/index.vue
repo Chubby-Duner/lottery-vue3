@@ -9,6 +9,7 @@ import LotteryLogo from "./LotteryLogo.vue";
 import LotteryResult from "./LotteryResult.vue";
 import WeightEditor from "./WeightEditor.vue";
 import AwardSetting from "./AwardSetting.vue";
+import GiftSetting from "./GiftSetting.vue";
 import Countdown from "../features/Countdown.vue";
 import ImportEmptyBlock from "../features/ImportEmptyBlock.vue";
 import AwardControlPanel from "../features/AwardControlPanel.vue";
@@ -21,6 +22,7 @@ import useAnimation from "@/composables/lottery/useAnimation";
 import useLottery from "@/composables/lottery/useLottery";
 import useResetData from "@/composables/lottery/useResetData";
 import useKeyboardShortcuts from "@/composables/lottery/useKeyboardShortcuts";
+import { usePrizeStore } from '@/store/prizeStore';
 
 defineOptions({
   name: "LotteryMain"
@@ -30,6 +32,7 @@ defineOptions({
 const awardStore = useAwardStore();
 // 获取音乐控制
 const musicStore = useMusicStore();
+const prizeStore = usePrizeStore();
 
 // ===================== 状态变量 =====================
 //#region 倒计时相关
@@ -114,7 +117,15 @@ const { awardSettingVisible, openAwardSetting, handleAwardSettingSave, handleAwa
   }
 });
 
+const giftSettingVisible = ref(false);
 
+const openPrizeSetting = () => {
+  if (!prizeStore.hasPrizes) {
+    message.warning('请先导入礼物数据');
+    return;
+  }
+  giftSettingVisible.value = true;
+};
 
 // ===================== 计算属性 =====================
 const buttonText = computed(() => {
@@ -200,6 +211,8 @@ const updateWeightData = () => {
 const handleAwardSettingSaveWrap = newAwards => {
   handleAwardSettingSave(newAwards);
   updateWeightData();
+  // 奖项设置保存后弹出礼物设置弹窗
+  giftSettingVisible.value = true;
 };
 //#endregion
 
@@ -332,6 +345,7 @@ useKeyboardShortcuts({
         @selectAward="selectAward"
         @handleLottery="handleLottery"
         @openAwardSetting="openAwardSetting"
+        @openPrizeSetting="openPrizeSetting"
         @openWeightEditor="openWeightEditor"
         @resetAllData="resetAllData"
         @exportWinners="exportWinners"
@@ -359,6 +373,9 @@ useKeyboardShortcuts({
 
   <!-- 奖项设置 -->
   <AwardSetting v-model:visible="awardSettingVisible" :awards="awardStore.awards" @save="handleAwardSettingSaveWrap" @close="handleAwardSettingClose" @onOpen="keyboardEnabled = false" @onClose="keyboardEnabled = true" />
+
+  <!-- 礼物设置 -->
+  <GiftSetting v-model:visible="giftSettingVisible" />
 </template>
 
 <style lang="scss" scoped></style>

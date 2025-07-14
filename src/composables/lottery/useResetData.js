@@ -35,7 +35,9 @@ export default function useResetData({
             cancelAnimation();
           }
           awardStore.resetAllToImportBackup();
-          // 重置礼物数量状态
+          // 后期剩余数量直接使用prize_list的数据，改成直接使用备份数据赋值给 prize_list
+          // prizeStore.setPrizeListBackup();
+          // 重置礼物数量状态  
           prizeStore.resetPrizeQuantities();
           // 恢复 lotteryData，补全自定义字段
           if (awardStore.lotteryDataBackup && awardStore.lotteryDataBackup.length > 0) {

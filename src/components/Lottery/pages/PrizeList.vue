@@ -60,7 +60,11 @@ const hasGiftData = computed(() => {
 
 // 表格数据（添加唯一key）
 const tableData = computed(() => {
-  return (excelData.value.results || []).map((item, index) => ({ ...item, __id: index }));
+  return (excelData.value.results || []).map((item, index) => ({
+    ...item,
+    __id: index,
+    remainingQuantity: item.giftQuantity // 直接取导入数量
+  }));
 });
 
 // 是否包含图片
@@ -201,7 +205,7 @@ const processFile = rawFile => {
 // 确认导入
 const confirmImport = () => {
   prizeStore.setPrizeList(tableData.value);
-  // 初始化礼物数量状态
+  prizeStore.setPrizeListBackup(tableData.value); // 新增备份
   prizeStore.resetPrizeQuantities();
   message.success(`成功导入 ${tableData.value.length} 条礼物数据`);
   closeImportModal();
