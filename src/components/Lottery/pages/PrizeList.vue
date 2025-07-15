@@ -261,7 +261,7 @@ const clearGiftData = () => {
     <!-- 侧边栏内容区域 -->
     <transition name="drawer">
       <div class="aside-main" v-show="showList">
-        <div class="btn btn-red-outline award-list-btn" @click="toggleList">新年礼物</div>
+        <div class="btn weight-edit-section" @click="toggleList">新年礼物</div>
         
         <!-- 礼物数据为空时显示导入按钮 -->
         <div v-if="!hasGiftData" class="gift-import-section">

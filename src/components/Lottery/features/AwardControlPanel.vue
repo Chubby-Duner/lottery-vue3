@@ -33,6 +33,7 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
 
     <!-- 抽奖按钮 -->
     <a-button class="btn btn-red-outline lottery-btn" @click="$emit('handleLottery')">
+      <!-- <span class="btn-emoji">🎉</span> -->
       {{ buttonText }}
     </a-button>
   </div>
@@ -82,4 +83,4 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
   </div>
 </template>
 
-<style scoped></style>
+<style lang="scss" scoped></style>

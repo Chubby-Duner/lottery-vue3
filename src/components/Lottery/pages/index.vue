@@ -117,8 +117,8 @@ const { awardSettingVisible, openAwardSetting, handleAwardSettingSave, handleAwa
   }
 });
 
+// 礼物设置相关
 const giftSettingVisible = ref(false);
-
 const openPrizeSetting = () => {
   if (!prizeStore.hasPrizes) {
     message.warning('请先导入礼物数据');
@@ -132,7 +132,7 @@ const buttonText = computed(() => {
   if (!isStarted.value && !isMoving.value) return "重新开始";
   if (!isStarted.value && isMoving.value) return "开始抽奖";
   if (isStarted.value && !isLocked.value) return "停止抽奖";
-  return "正在抽奖...";
+  return "抽奖中...";
 });
 
 // ===================== 业务逻辑区 =====================

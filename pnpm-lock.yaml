@@ -14,6 +14,9 @@ importers:
       ant-design-vue:
         specifier: ^4.2.6
         version: 4.2.6(vue@3.5.17)
+      canvas-confetti:
+        specifier: ^1.9.3
+        version: 1.9.3
       exceljs:
         specifier: ^4.4.0
         version: 4.4.0
@@ -714,6 +717,9 @@ packages:
   callsites@3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
+
+  canvas-confetti@1.9.3:
+    resolution: {integrity: sha512-rFfTURMvmVEX1gyXFgn5QMn81bYk70qa0HLzcIOSVEyl57n6o9ItHeBtUSWdvKAPY0xlvBHno4/v3QPrT83q9g==}
 
   cfb@1.2.2:
     resolution: {integrity: sha512-KfdUZsSOw19/ObEWasvBP/Ac4reZvAGauZhs6S/gqNhXhI7cKwvlH7ulj+dOEYnca4bm4SGo8C1bTAQvnTjgQA==}
@@ -2306,6 +2312,8 @@ snapshots:
       keyv: 5.3.4
 
   callsites@3.1.0: {}
+
+  canvas-confetti@1.9.3: {}
 
   cfb@1.2.2:
     dependencies:

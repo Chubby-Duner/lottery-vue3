@@ -52,7 +52,7 @@ const showLess = awardKey => {
     <!-- 侧边栏内容区域 -->
     <transition name="drawer">
       <div class="aside-main" v-show="showList">
-        <div class="btn btn-red-outline award-list-btn" @click="toggleList">收起名单</div>
+        <div class="btn weight-edit-section" @click="toggleList">收起名单</div>
         <div class="award-main" v-if="awardGroups.length > 0">
           <template v-for="group in awardGroups" :key="group.key">
             <div class="award-con" v-if="group.data.length > 0">

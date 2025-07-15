@@ -1,8 +1,9 @@
 <script setup>
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { useAwardStore } from "@/store/awardStore";
 import { usePrizeStore } from "@/store/prizeStore";
 import { storeToRefs } from "pinia";
+import FireworkEffect from '../features/FireworkEffect.vue'
 
 defineOptions({
   name: "LotteryResult"
@@ -49,10 +50,26 @@ const avatarUrl = computed(() => {
   if (props.image && typeof props.image === "object" && props.image.dataUrl) return props.image.dataUrl;
   return "";
 });
+
+// 礼花效果
+const showFirework = ref(false)
+
+watch(
+  () => props.visible,
+  (val) => {
+    if (val) {
+      showFirework.value = false
+      setTimeout(() => {
+        showFirework.value = true
+      }, 100)
+    }
+  }
+)
 </script>
 
 <template>
   <div v-if="visible" class="result-dialog-mask">
+    <FireworkEffect :show="showFirework" />
     <div class="result-dialog">
       <div class="result-header">
         <div class="award-info">
