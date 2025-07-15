@@ -5,7 +5,8 @@ const props = defineProps({
   awards: { type: Array, required: true },
   selectedAward: { type: String, required: true },
   awardLog: { type: Object, required: true },
-  buttonText: { type: String, required: true }
+  buttonText: { type: String, required: true },
+  isStarted: { type: Boolean, required: true }
 });
 
 const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "openPrizeSetting", "openWeightEditor", "resetAllData", "exportWinners"]);
@@ -39,7 +40,7 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
   <!-- 设置按钮区域 -->
   <div class="dashboard dashboard-setting">
     <div class="btn weight-edit-section">
-      <a-button @click="$emit('openAwardSetting')">
+      <a-button @click="$emit('openAwardSetting')" :disabled="isStarted">
         <template #icon>
           <SettingOutlined />
         </template>
@@ -47,7 +48,7 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
       </a-button>
     </div>
     <div class="btn weight-edit-section">
-      <a-button @click="$emit('openWeightEditor')">
+      <a-button @click="$emit('openWeightEditor')" :disabled="isStarted">
         <template #icon>
           <SettingOutlined />
         </template>
@@ -55,7 +56,7 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
       </a-button>
     </div>
     <div class="btn weight-edit-section">
-      <a-button @click="$emit('openPrizeSetting')">
+      <a-button @click="$emit('openPrizeSetting')" :disabled="isStarted">
         <template #icon>
           <GiftOutlined />
         </template>
@@ -63,7 +64,7 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
       </a-button>
     </div>
     <div class="btn weight-edit-section">
-      <a-button type="primary" @click="$emit('exportWinners')">
+      <a-button type="primary" @click="$emit('exportWinners')" :disabled="isStarted">
         <template #icon>
           <ExportOutlined />
         </template>
@@ -71,7 +72,7 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
       </a-button>
     </div>
     <div class="btn weight-edit-section">
-      <a-button danger @click="$emit('resetAllData')">
+      <a-button danger @click="$emit('resetAllData')" :disabled="isStarted">
         <template #icon>
           <ClearOutlined />
         </template>

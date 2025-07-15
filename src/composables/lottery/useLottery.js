@@ -160,15 +160,8 @@ export default function useLottery({
 
         // 调试信息：显示选中的礼物和剩余数量
         if (winnerGift.value && winnerGift.value.giftName) {
-        //   const remainingQuantity = prizeStore.getPrizeRemainingQuantity(winnerGift.value.giftName, selectedAward.value);
-        //   console.log(`选中礼物: ${winnerGift.value.giftName}, 剩余数量: ${remainingQuantity}`);
-
-          // 减少选中礼物的数量
-          prizeStore.decreasePrizeQuantity(winnerGift.value.giftName, selectedAward.value);
-
-        //   // 再次检查减少后的数量
-        //   const newQuantity = prizeStore.getPrizeRemainingQuantity(winnerGift.value.giftName, selectedAward.value);
-        //   console.log(`减少后剩余数量: ${newQuantity}`);
+          // 减少选中礼物的剩余数量
+          prizeStore.decreasePrizeRemainingQuantity(winnerGift.value.giftName, selectedAward.value);
         }
       }
 
@@ -190,6 +183,10 @@ export default function useLottery({
       if (winner.image && typeof winner.image === 'object' && winner.image.dataUrl) {
         winnerData.image = { dataUrl: winner.image.dataUrl };
       }
+      // 增加奖项和礼物信息
+      const awardObj = awardStore.awards.find(a => a.key === selectedAward.value);
+      winnerData.award = awardObj ? (awardObj.label || awardObj.name) : selectedAward.value;
+      winnerData.gift = winnerGift.value ? winnerGift.value.giftName : '';
       // 写入中奖名单
       awardStore.addWinner(selectedAward.value, winnerData);
       // 更新奖项剩余数量
@@ -216,24 +213,32 @@ export default function useLottery({
       message.error("暂无任何中奖名单，无法导出！");
       return;
     }
-    // 只导出奖项为表头，下面为中奖名单，不设置任何样式
-    const awardNames = awards.map(award => award.label || award.name);
-    // 中奖名单按列组织
-    const maxWinners = Math.max(...awards.map(award => (winnerMap[award.key] || []).length));
-    const winnerRows = [];
-    for (let i = 0; i < maxWinners; i++) {
-      winnerRows.push(awards.map(award => {
-        const winner = (winnerMap[award.key] || [])[i];
-        return winner ? (winner.namezh || winner.nameZh || winner.nameZH || winner.name) : "";
-      }));
+    // 统一表头
+    const columns = ["奖项", "中奖人", "礼物"];
+    const data = [columns];
+    awards.forEach(award => {
+      const winners = winnerMap[award.key] || [];
+      if (winners.length > 0) {
+        // 区块奖项名
+        data.push([award.label || award.name]);
+        winners.forEach(winner => {
+          data.push([
+            winner.award || (award.label || award.name),
+            winner.namezh || winner.nameZh || winner.nameZH || winner.name || '',
+            winner.gift || ''
+          ]);
+        });
+        // 区块之间空一行
+        data.push([]);
+      }
+    });
+    // 移除最后一个空行
+    if (data.length > 0 && data[data.length - 1].length === 0) {
+      data.pop();
     }
-    const data = [awardNames, ...winnerRows];
-
     // 生成sheet
     const ws = XLSX.utils.aoa_to_sheet(data);
-    // 设置每列宽度
-    ws['!cols'] = awards.map(() => ({ wch: 16 }));
-    // 创建workbook并导出
+    ws['!cols'] = columns.map(() => ({ wch: 16 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "中奖名单");
     XLSX.writeFile(wb, "中奖名单.xlsx");

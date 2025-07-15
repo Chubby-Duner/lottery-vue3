@@ -343,6 +343,14 @@ footer {
   }
 }
 
+/* 上传loading */
+.upload-spin {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+
 /* 响应式媒体查询 */
 @media (min-width: 768px) {
   .modal-dialog {

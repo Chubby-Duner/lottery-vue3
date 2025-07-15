@@ -222,7 +222,8 @@ watch(
         <div style="margin-bottom: 4px">• <strong>原始数量</strong>：奖项的初始设置数量（可编辑）</div>
         <div style="margin-bottom: 4px">• <strong>剩余数量</strong>：当前可抽奖的数量（可编辑，不能超过原始数量）</div>
         <div style="margin-bottom: 4px">• <strong>重置剩余数量</strong>：将所有奖项剩余数量恢复为原始设置</div>
-        <div>• <strong>手动设置剩余数量</strong>：保存当前表格中的剩余数量设置</div>
+        <div style="margin-bottom: 4px">• <strong>手动设置剩余数量</strong>：保存当前表格中的剩余数量设置</div>
+        <div style="background: #e6f7ff; color: #1890ff; font-size: 16px; font-weight: bold; padding: 8px 16px; border-radius: 6px; margin-bottom: 4px; text-align: center; letter-spacing: 1px">注意：更改奖项后会自动跳转到礼物设置页面，必须手动设置礼物数量，否则无法正常抽奖！</div>
       </div>
     </div>
 

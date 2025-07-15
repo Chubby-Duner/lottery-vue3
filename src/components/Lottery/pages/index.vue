@@ -4,6 +4,7 @@ import { getRandomChar } from "@/composables/utils";
 import { message } from "ant-design-vue";
 import { useAwardStore } from "@/store/awardStore";
 import { useMusicStore } from "@/store/musicStore";
+import { usePrizeStore } from '@/store/prizeStore';
 import UploadExcel from "@/components/Upload/UploadExcel.vue";
 import LotteryLogo from "./LotteryLogo.vue";
 import LotteryResult from "./LotteryResult.vue";
@@ -22,7 +23,6 @@ import useAnimation from "@/composables/lottery/useAnimation";
 import useLottery from "@/composables/lottery/useLottery";
 import useResetData from "@/composables/lottery/useResetData";
 import useKeyboardShortcuts from "@/composables/lottery/useKeyboardShortcuts";
-import { usePrizeStore } from '@/store/prizeStore';
 
 defineOptions({
   name: "LotteryMain"
@@ -213,6 +213,14 @@ const handleAwardSettingSaveWrap = newAwards => {
   updateWeightData();
   // 奖项设置保存后弹出礼物设置弹窗
   giftSettingVisible.value = true;
+  // 强制重置动画相关状态并自动重启动画
+  isStarted.value = false;
+  isMoving.value = false;
+  animationPaused.value = false;
+  nextTick(() => {
+    wrapPosition.value = 0;
+    startAnimation();
+  });
 };
 //#endregion
 
@@ -342,6 +350,7 @@ useKeyboardShortcuts({
         :selectedAward="selectedAward"
         :awardLog="awardStore.awardLog"
         :buttonText="buttonText"
+        :isStarted="isStarted"
         @selectAward="selectAward"
         @handleLottery="handleLottery"
         @openAwardSetting="openAwardSetting"

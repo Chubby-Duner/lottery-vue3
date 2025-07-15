@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import * as XLSX from "xlsx";
 import { message } from "ant-design-vue";
 import { UploadOutlined, CheckCircleOutlined } from "@ant-design/icons-vue";
@@ -25,8 +25,6 @@ const importModal = ref(false); // 导入弹窗显示状态
 const previewData = ref(false); // 预览弹窗显示状态
 const loading = ref(false); // 加载状态
 const status = ref("idle"); // idle|parsing|success|error
-const progress = ref(0); // 进度百分比
-const progressStatus = ref("normal"); // 进度条状态
 const errorMessage = ref(""); // 错误信息
 const excelData = ref({ header: null, results: null }); // Excel数据
 const paginationConfig = ref({
@@ -62,7 +60,6 @@ const hasImages = computed(() => {
 
 // 预览表格的列配置
 const previewColumns = computed(() => {
-  console.log(excelData.value.header)
   if (!excelData.value.header) return [];
   return excelData.value.header
     .filter(key => key !== "nameen") // 过滤掉 nameen 字段
@@ -96,11 +93,9 @@ const generateData = () => {
 // 解析Excel文件，提取图片并合并数据
 const parseExcel = async rawFile => {
   loading.value = true;
-  // 模拟进度条
-  const timer = setInterval(() => {
-    progress.value = Math.min(progress.value + 10, 90);
-  }, 100);
+  status.value = "parsing";
   try {
+    // 解析Excel（异步，主线程不阻塞UI）
     let imageList = [];
     let implantBlobList = [];
     try {
@@ -110,25 +105,18 @@ const parseExcel = async rawFile => {
     } catch (imageErr) {
       console.warn("图片提取失败，继续处理数据:", imageErr);
     }
-    // 读取Excel数据
     const data = await readFileAsArrayBuffer(rawFile);
     const workbook = XLSX.read(data, { type: "array" });
     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
     const header = getHeaderRow(firstSheet);
     const results = XLSX.utils.sheet_to_json(firstSheet);
     if (!results.length) throw new Error("文件没有包含有效数据");
-
-    // 合并图片数据
     const resultsWithImages = mergeImagesWithData(results, imageList, implantBlobList);
-    clearInterval(timer);
-
-    progress.value = 100;
     excelData.value.header = header;
     excelData.value.results = resultsWithImages;
     status.value = "success";
     errorMessage.value = "";
   } catch (err) {
-    clearInterval(timer);
     showError(`解析失败: ${err.message}`);
   } finally {
     loading.value = false;
@@ -169,14 +157,12 @@ const showError = msg => {
 
 // 工具方法：重置上传状态
 const resetStatus = () => {
-  progress.value = 0;
   errorMessage.value = "";
 };
 
 // 重置所有状态
 const resetAll = () => {
   status.value = "idle";
-  progress.value = 0;
   errorMessage.value = "";
   excelData.value = { header: null, results: null };
   previewData.value = false;
@@ -244,7 +230,9 @@ const resetPagination = () => {
       </a-upload-dragger>
       <!-- 状态显示区 -->
       <div v-if="status !== 'idle'" class="status-area">
-        <a-progress v-if="status === 'parsing'" :percent="progress" :status="progressStatus" stroke-color="#1890ff" />
+        <div v-if="status === 'parsing'" class="upload-spin">
+          <a-spin tip="正在解析Excel，请稍候..." />
+        </div>
         <a-alert v-if="status === 'error'" :message="errorMessage" type="error" show-icon closable />
         <div v-if="status === 'success'" class="success-area">
           <a-tag color="green">
