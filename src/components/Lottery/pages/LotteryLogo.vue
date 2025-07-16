@@ -1,4 +1,8 @@
-<script setup></script>
+<script setup>
+defineOptions({
+  name: "LotteryLogo"
+});
+</script>
 
 <template>
   <div class="lottery-logo">

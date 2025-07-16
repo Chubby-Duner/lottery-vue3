@@ -4,6 +4,10 @@ import { message } from "ant-design-vue";
 import { usePrizeStore } from "@/store/prizeStore";
 import { useAwardStore } from "@/store/awardStore";
 
+defineOptions({
+  name: "GiftSetting"
+});
+
 const props = defineProps({
   visible: Boolean
 });

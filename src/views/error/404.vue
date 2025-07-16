@@ -1,9 +1,23 @@
+<script setup>
+import { useRouter } from "vue-router";
+
+defineOptions({
+  name: "NotFound"
+});
+
+const router = useRouter();
+
+const goHome = () => {
+  router.push("/");
+};
+</script>
+
 <template>
   <div class="not-found-bg">
     <div class="not-found-card">
       <div class="not-found-svg">
         <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="60" cy="60" r="60" fill="#f2f6fc"/>
+          <circle cx="60" cy="60" r="60" fill="#f2f6fc" />
           <text x="50%" y="50%" text-anchor="middle" dy=".35em" font-size="48" fill="#409eff" font-weight="bold">404</text>
         </svg>
       </div>
@@ -13,17 +27,6 @@
     </div>
   </div>
 </template>
-
-<script>
-export default {
-  name: 'NotFound',
-  methods: {
-    goHome() {
-      this.$router.push('/');
-    }
-  }
-}
-</script>
 
 <style scoped>
 .not-found-bg {
@@ -71,7 +74,10 @@ button {
   border: none;
   border-radius: 24px;
   cursor: pointer;
-  transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s,
+    background 0.2s;
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.12);
 }
 
@@ -96,7 +102,13 @@ button:hover {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-</style> 
+</style>

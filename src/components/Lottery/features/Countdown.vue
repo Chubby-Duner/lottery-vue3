@@ -1,4 +1,8 @@
 <script setup>
+defineOptions({
+  name: "Countdown"
+});
+
 const props = defineProps({
   visible: Boolean,
   countdownText: [String, Number]
@@ -11,12 +15,7 @@ const emit = defineEmits(["end"]);
   <transition name="fade">
     <div v-if="visible" class="stop-main">
       <div class="countdown-container">
-        <div
-          id="stop-time"
-          class="countdown-text"
-          :data-number="countdownText"
-          :key="countdownText"
-        >
+        <div id="stop-time" class="countdown-text" :data-number="countdownText" :key="countdownText">
           {{ countdownText }}
         </div>
         <div class="countdown-circle"></div>

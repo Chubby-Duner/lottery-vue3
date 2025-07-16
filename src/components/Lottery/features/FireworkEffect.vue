@@ -2,6 +2,10 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import confetti from 'canvas-confetti'
 
+defineOptions({
+  name: "FireworkEffect"
+});
+
 const props = defineProps({
   show: { type: Boolean, default: false }
 })

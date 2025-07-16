@@ -1,22 +1,10 @@
-<template>
-  <a-empty :image="image" :image-style="imageStyle" class="margin-top30">
-    <template #description>
-      <slot name="description">
-        <span>{{ description }}</span>
-      </slot>
-    </template>
-    <a-button type="primary">
-      <a :href="getTemplateUrl()" target="_blank">下载模板</a>
-    </a-button>
-    <a-button class="margin-left10" type="primary" @click="$emit('import')">导入抽奖名单数据</a-button>
-    <a-button class="margin-left10" type="primary" @click="clearAllData">清空所有数据</a-button>
-    <slot />
-  </a-empty>
-</template>
-
 <script setup>
-import { message, Modal } from 'ant-design-vue'
+import { message, Modal } from "ant-design-vue";
 import { useAwardStore } from "@/store/awardStore";
+
+defineOptions({
+  name: "ImportEmptyBlock"
+});
 
 const props = defineProps({
   description: { type: String, default: "请先导入数据" },
@@ -48,6 +36,22 @@ const clearAllData = () => {
   });
 };
 </script>
+
+<template>
+  <a-empty :image="image" :image-style="imageStyle" class="margin-top30">
+    <template #description>
+      <slot name="description">
+        <span>{{ description }}</span>
+      </slot>
+    </template>
+    <a-button type="primary">
+      <a :href="getTemplateUrl()" target="_blank">下载模板</a>
+    </a-button>
+    <a-button class="margin-left10" type="primary" @click="$emit('import')">导入抽奖名单数据</a-button>
+    <a-button class="margin-left10" type="primary" @click="clearAllData">清空所有数据</a-button>
+    <slot />
+  </a-empty>
+</template>
 
 <style scoped>
 .margin-top30 {

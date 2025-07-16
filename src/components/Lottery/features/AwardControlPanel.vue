@@ -1,6 +1,10 @@
 <script setup>
 import { SettingOutlined, ExportOutlined, ClearOutlined, GiftOutlined } from "@ant-design/icons-vue";
 
+defineOptions({
+  name: "AwardControlPanel"
+});
+
 const props = defineProps({
   awards: { type: Array, required: true },
   selectedAward: { type: String, required: true },

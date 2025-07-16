@@ -1,5 +1,10 @@
 <script setup>
 import { ref } from "vue";
+
+defineOptions({
+  name: "KeyboardShortcuts"
+});
+
 const props = defineProps({
   awardLength: {
     type: Number,
