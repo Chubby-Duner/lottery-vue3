@@ -1,12 +1,9 @@
 <script setup>
-import { ref, computed, nextTick } from "vue";
-import * as XLSX from "xlsx";
+import { ref, computed } from "vue";
 import { message, Modal } from "ant-design-vue";
 import { UploadOutlined, CheckCircleOutlined } from "@ant-design/icons-vue";
-import { isExcel } from "@/composables/utils";
-import { readFileAsArrayBuffer, getHeaderRow, handleImageError } from "@/composables/uploadExcel/uploadUtils";
-import { extractImagesFromExcel, mergeImagesWithData } from "@/composables/uploadExcel/excelImageExtract";
 import { usePrizeStore } from "@/store/prizeStore";
+import { useExcelImport } from "@/composables/uploadExcel/useExcelImport";
 
 defineOptions({
   name: "PrizeList"
@@ -14,24 +11,6 @@ defineOptions({
 
 const showList = ref(false);
 const prizeStore = usePrizeStore();
-
-// 导入窗口相关状态
-const importModal = ref(false);
-const previewData = ref(false);
-const loading = ref(false);
-const status = ref("idle");
-const errorMessage = ref("");
-const excelData = ref({ header: null, results: null });
-
-// 分页配置
-const paginationConfig = ref({
-  pageSize: 10,
-  showSizeChanger: true,
-  showQuickJumper: true,
-  showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-  pageSizeOptions: ["5", "10", "20", "50"],
-  size: "small"
-});
 
 // 礼物数据表头映射
 const giftTitleMap = {
@@ -43,72 +22,41 @@ const giftTitleMap = {
   giftQuantity: "礼物数量"
 };
 
-// 礼物等级映射
-const giftLevelMap = {
-  award1: "一等奖",
-  award2: "二等奖", 
-  award3: "三等奖",
-  award4: "纪念奖"
-};
-
-// 计算是否有礼物数据
-const hasGiftData = computed(() => {
-  return prizeStore.hasPrizes;
+// 复用 useExcelImport
+const {
+  importModal,
+  previewData,
+  loading,
+  status,
+  errorMessage,
+  tableData,
+  hasImages,
+  previewColumns,
+  paginationConfig,
+  handleClick,
+  confirmImport: baseConfirmImport,
+  closeImportModal,
+  handleTableChange,
+  resetAll
+} = useExcelImport({
+  fieldFilter: key => key !== "giftLevel",
+  titleMap: giftTitleMap,
+  onSuccess: data => {
+    prizeStore.setPrizeList(data);
+    prizeStore.setPrizeListBackup(data);
+    prizeStore.resetAllRemainingQuantity();
+    message.success(`成功导入 ${data.length} 条礼物数据`);
+  },
+  resultType: 'table'
 });
 
-// 表格数据（添加唯一key）
-const tableData = computed(() => {
-  return (excelData.value.results || []).map((item, index) => ({
-    ...item,
-    __id: index,
-    remainingQuantity: item.giftQuantity // 直接取导入数量
-  }));
-});
-
-// 是否包含图片
-const hasImages = computed(() => {
-  return tableData.value.some(item => {
-    return Object.keys(item).some(key => {
-      const value = item[key];
-      return value && typeof value === "object" && value.dataUrl;
-    });
-  });
-});
-
-// 预览表格的列配置
-const previewColumns = computed(() => {
-  if (!excelData.value.header) return [];
-  return excelData.value.header
-    .filter(key => key !== "giftLevel") // 过滤掉 giftLevel 字段
-    .map(key => ({
-      title: giftTitleMap[key] || key,
-      dataIndex: key,
-      key: key,
-      ellipsis: true,
-      align: "center",
-      customCell: record => {
-        const text = record[key];
-        const style = {};
-        if (text == null) {
-          style.color = "#ccc";
-          style.fontStyle = "italic";
-        } else if (typeof text === "number") {
-          style.textAlign = "center";
-        }
-        return { style };
-      }
-    }));
-});
+const hasGiftData = computed(() => prizeStore.hasPrizes);
 
 // 礼物分组数据
-const giftGroups = computed(() => {
-  return prizeStore.getPrizeGroups;
-});
+const giftGroups = computed(() => prizeStore.getPrizeGroups);
 
 // 显示数量控制
 const visibleCounts = ref({});
-
-// 初始化每个礼物等级的显示数量
 const initVisibleCounts = () => {
   giftGroups.value.forEach(group => {
     if (!(group.key in visibleCounts.value)) {
@@ -116,128 +64,23 @@ const initVisibleCounts = () => {
     }
   });
 };
-
 const showMore = giftLevel => {
   visibleCounts.value[giftLevel] += 5;
 };
-
 const showLess = giftLevel => {
   visibleCounts.value[giftLevel] = 5;
 };
-
 const getTemplateUrl = () => {
   return new URL("/template/giftTemplate.xlsx", import.meta.url).href;
 };
-
 const toggleList = () => {
   showList.value = !showList.value;
   if (showList.value) initVisibleCounts();
 };
-
-// 打开导入窗口
 const openImportModal = () => {
   importModal.value = true;
   resetAll();
 };
-
-// 解析Excel文件，提取图片并合并数据
-const parseExcel = async rawFile => {
-  loading.value = true;
-  status.value = "parsing";
-  try {
-    let imageList = [];
-    let implantBlobList = [];
-    try {
-      const imageResult = await extractImagesFromExcel(rawFile);
-      imageList = imageResult.imageList;
-      implantBlobList = imageResult.implantBlobList;
-    } catch (imageErr) {
-      console.warn("图片提取失败，继续处理数据:", imageErr);
-    }
-    const data = await readFileAsArrayBuffer(rawFile);
-    const workbook = XLSX.read(data, { type: "array" });
-    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-    const header = getHeaderRow(firstSheet);
-    const results = XLSX.utils.sheet_to_json(firstSheet);
-    if (!results.length) throw new Error("文件没有包含有效数据");
-    const resultsWithImages = mergeImagesWithData(results, imageList, implantBlobList);
-    excelData.value.header = header;
-    excelData.value.results = resultsWithImages;
-    status.value = "success";
-    errorMessage.value = "";
-  } catch (err) {
-    showError(`解析失败: ${err.message}`);
-  } finally {
-    loading.value = false;
-  }
-};
-
-// 点击上传
-const handleClick = e => {
-  const file = e.file;
-  const rawFile = file.originFileObj;
-  if (!rawFile) return;
-  resetStatus();
-  status.value = "parsing";
-  processFile(rawFile);
-};
-
-// 处理文件上传
-const processFile = rawFile => {
-  if (!isExcel(rawFile)) return showError("仅支持.xlsx, .xls 格式文件");
-  parseExcel(rawFile);
-};
-
-// 确认导入
-const confirmImport = () => {
-  prizeStore.setPrizeList(tableData.value);
-  prizeStore.setPrizeListBackup(tableData.value); // 新增备份
-  prizeStore.resetAllRemainingQuantity();
-  message.success(`成功导入 ${tableData.value.length} 条礼物数据`);
-  closeImportModal();
-};
-
-// 工具方法：错误提示
-const showError = msg => {
-  status.value = "error";
-  errorMessage.value = msg;
-  message.error(msg);
-};
-
-// 工具方法：重置上传状态
-const resetStatus = () => {
-  errorMessage.value = "";
-};
-
-// 重置所有状态
-const resetAll = () => {
-  status.value = "idle";
-  errorMessage.value = "";
-  excelData.value = { header: null, results: null };
-  previewData.value = false;
-  loading.value = false;
-  resetPagination();
-};
-
-// 关闭导入窗口
-const closeImportModal = () => {
-  resetAll();
-  importModal.value = false;
-};
-
-// 分页事件处理
-const handleTableChange = pagination => {
-  paginationConfig.value.pageSize = pagination.pageSize;
-  paginationConfig.value.current = pagination.current;
-};
-
-// 重置分页状态
-const resetPagination = () => {
-  paginationConfig.value.pageSize = 10;
-  paginationConfig.value.current = 1;
-};
-
-// 清空礼物数据
 const clearGiftData = () => {
   Modal.confirm({
     title: "确定要清空礼物数据吗？",
@@ -254,6 +97,11 @@ const clearGiftData = () => {
     }
   });
 };
+// 确认导入
+const confirmImport = () => {
+  // 这里的 onSuccess 已经处理了 prizeStore 的赋值和提示
+  baseConfirmImport();
+};
 </script>
 
 <template>
@@ -262,7 +110,6 @@ const clearGiftData = () => {
     <transition name="drawer">
       <div class="aside-main" v-show="showList">
         <div class="btn weight-edit-section" @click="toggleList">新年礼物</div>
-        
         <!-- 礼物数据为空时显示导入按钮 -->
         <div v-if="!hasGiftData" class="gift-import-section">
           <div class="gift-empty-state">
@@ -277,13 +124,11 @@ const clearGiftData = () => {
             </div>
           </div>
         </div>
-        
         <!-- 有礼物数据时显示礼物列表 -->
         <div v-else class="award-main">
           <div class="gift-controls">
             <a-button size="small" @click="clearGiftData">清空礼物数据</a-button>
           </div>
-          
           <!-- 礼物分组显示 -->
           <div v-if="giftGroups.length > 0" class="gift-groups">
             <template v-for="group in giftGroups" :key="group.key">
@@ -333,7 +178,6 @@ const clearGiftData = () => {
               </div>
             </template>
           </div>
-          
           <!-- 无礼物数据时显示空状态 -->
           <div v-else class="empty-tip">
             <a-empty description="暂无礼物数据" />
@@ -341,11 +185,9 @@ const clearGiftData = () => {
         </div>
       </div>
     </transition>
-
     <!-- 灯笼 - 同一个灯笼，跟随区域移动 -->
     <img src="@/assets/images/lantern.png" alt="" width="85" @click="toggleList" class="switch" :class="{ 'switch-expanded': showList }" />
   </aside>
-
   <!-- 礼物导入模态框 -->
   <a-modal v-model:open="importModal" title="导入礼物数据" width="50%" :footer="null" :maskClosable="false" @cancel="closeImportModal">
     <div class="excel-uploader">
@@ -386,7 +228,6 @@ const clearGiftData = () => {
       </div>
     </div>
   </a-modal>
-
   <!-- 数据预览模态框 -->
   <a-modal v-model:open="previewData" title="礼物数据预览" width="80%" :footer="null" :maskClosable="false" style="top: 60px">
     <!-- 固定的说明区域 -->
@@ -412,7 +253,7 @@ const clearGiftData = () => {
       </template>
       <template #bodyCell="{ column, text, record }">
         <div v-if="text && typeof text === 'object' && text.dataUrl">
-          <img :src="text.dataUrl" class="table-cell-img" alt="礼物图片" @error="handleImageError" />
+          <img :src="text.dataUrl" class="table-cell-img" alt="礼物图片" />
         </div>
         <span v-else-if="text == null">空值</span>
         <span v-else-if="typeof text === 'number'">{{ text.toLocaleString() }}</span>

@@ -1,182 +1,49 @@
 <script setup>
-import { ref, computed, watch, nextTick } from "vue";
-import * as XLSX from "xlsx";
-import { message } from "ant-design-vue";
+import { watch } from "vue";
 import { UploadOutlined, CheckCircleOutlined } from "@ant-design/icons-vue";
-import { isExcel } from "@/composables/utils";
-import { readFileAsArrayBuffer, getHeaderRow, handleImageError } from "@/composables/uploadExcel/uploadUtils";
-import { extractImagesFromExcel, mergeImagesWithData } from "@/composables/uploadExcel/excelImageExtract";
+import { useExcelImport } from "@/composables/uploadExcel/useExcelImport";
 
-// ========== 组件配置 ==========
 defineOptions({
   name: "UploadExcel"
 });
 
-// ========== 组件 Props 和 Emits ==========
 const props = defineProps({
   visible: Boolean, // 是否显示导入弹窗
   beforeUpload: Function, // 上传前的校验函数
   onSuccess: Function // 解析成功后的回调
 });
+
 const emit = defineEmits(["update:visible"]);
 
-// ========== 状态管理 ==========
-const importModal = ref(false); // 导入弹窗显示状态
-const previewData = ref(false); // 预览弹窗显示状态
-const loading = ref(false); // 加载状态
-const status = ref("idle"); // idle|parsing|success|error
-const errorMessage = ref(""); // 错误信息
-const excelData = ref({ header: null, results: null }); // Excel数据
-const paginationConfig = ref({
-  // 分页配置
-  pageSize: 10,
-  showSizeChanger: true,
-  showQuickJumper: true,
-  showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-  pageSizeOptions: ["5", "10", "20", "50"],
-  size: "small"
-});
 const titleMap = {
   namezh: "名称",
   wish: "愿望",
   image: "头像"
 };
 
-// ========== 计算属性 ==========
-// 表格数据（添加唯一key）
-const tableData = computed(() => {
-  return (excelData.value.results || []).map((item, index) => ({ ...item, __id: index }));
+const {
+  importModal,
+  previewData,
+  loading,
+  status,
+  errorMessage,
+  tableData,
+  hasImages,
+  previewColumns,
+  paginationConfig,
+  handleClick,
+  confirmImport,
+  closeImportModal,
+  handleTableChange,
+  resetAll
+} = useExcelImport({
+  fieldFilter: key => key !== "nameen",
+  titleMap,
+  beforeUpload: props.beforeUpload,
+  onSuccess: data => props.onSuccess?.(data),
+  resultType: 'excel'
 });
 
-// 是否包含图片
-const hasImages = computed(() => {
-  return tableData.value.some(item => {
-    return Object.keys(item).some(key => {
-      const value = item[key];
-      return value && typeof value === "object" && value.dataUrl;
-    });
-  });
-});
-
-// 预览表格的列配置
-const previewColumns = computed(() => {
-  if (!excelData.value.header) return [];
-  return excelData.value.header
-    .filter(key => key !== "nameen") // 过滤掉 nameen 字段
-    .map(key => ({
-      title: titleMap[key] || key, // 中文表头
-      dataIndex: key,
-      key: key,
-      ellipsis: true,
-      align: "center",
-      customCell: record => {
-        const text = record[key];
-        const style = {};
-        if (text == null) {
-          style.color = "#ccc";
-          style.fontStyle = "italic";
-        } else if (typeof text === "number") {
-          style.textAlign = "center";
-        }
-        return { style };
-      }
-    }));
-});
-
-// ========== 核心方法 ==========
-// 生成最终数据并回调
-const generateData = () => {
-  message.success(`成功导入 ${tableData.value.length} 条数据`);
-  props.onSuccess?.(excelData.value);
-};
-
-// 解析Excel文件，提取图片并合并数据
-const parseExcel = async rawFile => {
-  loading.value = true;
-  status.value = "parsing";
-  try {
-    // 解析Excel（异步，主线程不阻塞UI）
-    let imageList = [];
-    let implantBlobList = [];
-    try {
-      const imageResult = await extractImagesFromExcel(rawFile);
-      imageList = imageResult.imageList;
-      implantBlobList = imageResult.implantBlobList;
-    } catch (imageErr) {
-      console.warn("图片提取失败，继续处理数据:", imageErr);
-    }
-    const data = await readFileAsArrayBuffer(rawFile);
-    const workbook = XLSX.read(data, { type: "array" });
-    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-    const header = getHeaderRow(firstSheet);
-    const results = XLSX.utils.sheet_to_json(firstSheet);
-    if (!results.length) throw new Error("文件没有包含有效数据");
-    const resultsWithImages = mergeImagesWithData(results, imageList, implantBlobList);
-    excelData.value.header = header;
-    excelData.value.results = resultsWithImages;
-    status.value = "success";
-    errorMessage.value = "";
-  } catch (err) {
-    showError(`解析失败: ${err.message}`);
-  } finally {
-    loading.value = false;
-  }
-};
-
-// ========== 事件处理 ==========
-
-// 点击上传
-const handleClick = e => {
-  const file = e.file;
-  const rawFile = file.originFileObj;
-  if (!rawFile) return;
-  resetStatus();
-  status.value = "parsing";
-  processFile(rawFile);
-};
-
-// 处理文件上传
-const processFile = rawFile => {
-  if (!isExcel(rawFile)) return showError("仅支持.xlsx, .xls 格式文件");
-  if (props.beforeUpload && !props.beforeUpload(rawFile)) return;
-  parseExcel(rawFile);
-};
-
-// 确认导入
-const confirmImport = () => {
-  generateData();
-  closeImportModal();
-};
-
-// 工具方法：错误提示
-const showError = msg => {
-  status.value = "error";
-  errorMessage.value = msg;
-  message.error(msg);
-};
-
-// 工具方法：重置上传状态
-const resetStatus = () => {
-  errorMessage.value = "";
-};
-
-// 重置所有状态
-const resetAll = () => {
-  status.value = "idle";
-  errorMessage.value = "";
-  excelData.value = { header: null, results: null };
-  previewData.value = false;
-  loading.value = false;
-  resetPagination();
-};
-
-// 关闭导入窗口
-const closeImportModal = () => {
-  resetAll();
-  importModal.value = false;
-};
-
-// ========== 监听器 ==========
 // 监听外部visible变化，重置状态
 watch(
   () => props.visible,
@@ -187,23 +54,13 @@ watch(
     }
   }
 );
-// 监听内部modal变化，通知父组件
+
 watch(
   () => importModal.value,
   val => {
     emit("update:visible", val);
   }
 );
-// 分页事件处理
-const handleTableChange = pagination => {
-  paginationConfig.value.pageSize = pagination.pageSize;
-  paginationConfig.value.current = pagination.current;
-};
-// 重置分页状态
-const resetPagination = () => {
-  paginationConfig.value.pageSize = 10;
-  paginationConfig.value.current = 1;
-};
 </script>
 
 <template>
@@ -270,7 +127,7 @@ const resetPagination = () => {
       </template>
       <template #bodyCell="{ column, text, record }">
         <div v-if="text && typeof text === 'object' && text.dataUrl">
-          <img :src="text.dataUrl" class="table-cell-img" alt="Excel图片" @error="handleImageError" />
+          <img :src="text.dataUrl" class="table-cell-img" alt="Excel图片" />
         </div>
         <span v-else-if="text == null">空值</span>
         <span v-else-if="typeof text === 'number'">{{ text.toLocaleString() }}</span>
