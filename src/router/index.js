@@ -29,6 +29,11 @@ const routes = [
     path: '/',
     name: 'Lottery',
     component: () => import('../views/Lottery.vue')
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('../views/error/404.vue')
   }
 ]
 
