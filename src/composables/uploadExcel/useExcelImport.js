@@ -89,15 +89,18 @@ export function useExcelImport({ fieldFilter = () => true, titleMap = {}, before
       } catch (imageErr) {
         console.warn("图片提取失败，继续处理数据:", imageErr);
       }
+
       const data = await readFileAsArrayBuffer(rawFile);
       const workbook = XLSX.read(data, { type: "array" });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
       const header = getHeaderRow(firstSheet);
       const results = XLSX.utils.sheet_to_json(firstSheet);
       if (!results.length) throw new Error("文件没有包含有效数据");
+
       const resultsWithImages = mergeImagesWithData(results, imageList, implantBlobList);
       excelData.value.header = header;
       excelData.value.results = resultsWithImages;
+
       status.value = "success";
       errorMessage.value = "";
     } catch (err) {
@@ -142,8 +145,21 @@ export function useExcelImport({ fieldFilter = () => true, titleMap = {}, before
   };
 
   return {
-    importModal, previewData, loading, status, errorMessage, excelData,
-    tableData, hasImages, previewColumns, paginationConfig,
-    handleClick, confirmImport, closeImportModal, previewData, handleTableChange, resetAll
+    importModal,
+    previewData,
+    loading,
+    status,
+    errorMessage,
+    excelData,
+    tableData,
+    hasImages,
+    previewColumns,
+    paginationConfig,
+    handleClick,
+    confirmImport,
+    closeImportModal,
+    previewData,
+    handleTableChange,
+    resetAll
   };
 } 

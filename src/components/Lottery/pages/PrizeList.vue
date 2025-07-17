@@ -47,7 +47,7 @@ const {
     prizeStore.resetAllRemainingQuantity();
     message.success(`成功导入 ${data.length} 条礼物数据`);
   },
-  resultType: 'table'
+  resultType: "table"
 });
 
 const hasGiftData = computed(() => prizeStore.hasPrizes);
@@ -138,36 +138,28 @@ const confirmImport = () => {
                   <li v-for="(gift, index) in group.data.slice(0, visibleCounts[group.key])" :key="index" class="clearfix win-li">
                     <div class="f-l avatar">
                       <!-- 优先使用导入图片，没有则显示礼物名称 -->
-                      <img 
-                        v-if="gift.giftImage && typeof gift.giftImage === 'object' && gift.giftImage.dataUrl" 
-                        :src="gift.giftImage.dataUrl" 
-                        width="34" 
-                        :alt="gift.giftName" 
-                        style="object-fit: contain; border-radius: 4px; display: block; margin: 0 auto" 
-                      />
+                      <img v-if="gift.giftImage && typeof gift.giftImage === 'object' && gift.giftImage.dataUrl" :src="gift.giftImage.dataUrl" width="34" :alt="gift.giftName" style="object-fit: contain; border-radius: 4px; display: block; margin: 0 auto" />
                       <div
                         v-else
                         class="avatar-text"
-                        :style="{ 
-                          width: '3rem', 
-                          height: '3rem', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center', 
-                          background: '#ffe082', 
-                          borderRadius: '50%', 
+                        :style="{
+                          width: '3rem',
+                          height: '3rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: '#ffe082',
+                          borderRadius: '50%',
                           color: '#b8860b',
                           fontSize: '12px'
                         }"
                       >
-                        {{ gift.giftName ? gift.giftName.charAt(0) : '礼' }}
+                        {{ gift.giftName ? gift.giftName.charAt(0) : "礼" }}
                       </div>
                     </div>
                     <div class="f-l name">
                       {{ gift.giftName }}
-                      <span class="quantity-info">
-                        (剩余: {{ prizeStore.getPrizeRemainingQuantity(gift.giftName, gift.giftLevel) }}/{{ gift.giftQuantity || 1 }})
-                      </span>
+                      <span class="quantity-info"> (剩余: {{ prizeStore.getPrizeRemainingQuantity(gift.giftName, gift.giftLevel) }}/{{ gift.giftQuantity || 1 }}) </span>
                     </div>
                   </li>
                 </ul>
@@ -216,7 +208,7 @@ const confirmImport = () => {
         <div v-if="status === 'parsing'" class="upload-spin">
           <a-spin tip="正在解析Excel，请稍候..." />
         </div>
-        <a-alert v-if="status === 'error'" :message="errorMessage" type="error" show-icon closable />
+        <a-alert v-if="status === 'error'" :message="errorMessage" type="error" show-icon closable class="margin-top10" />
         <div v-if="status === 'success'" class="success-area">
           <a-tag color="green">
             <template #icon><check-circle-outlined /></template>

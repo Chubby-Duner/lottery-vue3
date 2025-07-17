@@ -21,27 +21,12 @@ const titleMap = {
   image: "头像"
 };
 
-const {
-  importModal,
-  previewData,
-  loading,
-  status,
-  errorMessage,
-  tableData,
-  hasImages,
-  previewColumns,
-  paginationConfig,
-  handleClick,
-  confirmImport,
-  closeImportModal,
-  handleTableChange,
-  resetAll
-} = useExcelImport({
+const { importModal, previewData, loading, status, errorMessage, tableData, hasImages, previewColumns, paginationConfig, handleClick, confirmImport, closeImportModal, handleTableChange, resetAll } = useExcelImport({
   fieldFilter: key => key !== "nameen",
   titleMap,
   beforeUpload: props.beforeUpload,
   onSuccess: data => props.onSuccess?.(data),
-  resultType: 'excel'
+  resultType: "excel"
 });
 
 // 监听外部visible变化，重置状态
@@ -90,7 +75,7 @@ watch(
         <div v-if="status === 'parsing'" class="upload-spin">
           <a-spin tip="正在解析Excel，请稍候..." />
         </div>
-        <a-alert v-if="status === 'error'" :message="errorMessage" type="error" show-icon closable />
+        <a-alert v-if="status === 'error'" :message="errorMessage" type="error" show-icon closable class="margin-top10" />
         <div v-if="status === 'success'" class="success-area">
           <a-tag color="green">
             <template #icon><check-circle-outlined /></template>
