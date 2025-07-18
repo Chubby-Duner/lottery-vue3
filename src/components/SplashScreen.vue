@@ -1,6 +1,15 @@
 <script setup>
+import { onMounted } from "vue";
+const emit = defineEmits(["close"]);
+
 defineOptions({
   name: "SplashScreen"
+});
+
+onMounted(() => {
+  setTimeout(() => {
+    emit("close");
+  }, 500);
 });
 </script>
 

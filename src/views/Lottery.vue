@@ -11,17 +11,11 @@ defineOptions({
 });
 
 const showSplash = ref(true);
-const handleMusicLoaded = () => {
-  showSplash.value = false;
-};
 </script>
 
 <template>
   <div>
-    <!-- 背景音乐 -->
-    <MusicControl @musicLoaded="handleMusicLoaded" />
-    
-    <SplashScreen v-if="showSplash" />
+    <SplashScreen v-if="showSplash" @close="showSplash = false" />
     <div v-else class="lottery-container">
       <!-- 顶部花纹 -->
       <header class="top-head"></header>
@@ -31,6 +25,8 @@ const handleMusicLoaded = () => {
       <PrizeList />
       <!-- 主抽奖程序 -->
       <LotteryMain />
+      <!-- 背景音乐 -->
+      <MusicControl />
       <!-- 底部花纹 -->
       <footer class="footer"></footer>
     </div>
