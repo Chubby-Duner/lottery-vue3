@@ -11,6 +11,6 @@ services:
       - "443:443"
     volumes:
       - ./dist:/usr/share/nginx/html
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
       - ./ssl:/etc/nginx/ssl:ro       # 如果你用 HTTPS
     restart: always
