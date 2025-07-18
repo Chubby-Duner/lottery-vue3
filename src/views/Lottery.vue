@@ -14,7 +14,7 @@ const showSplash = ref(true);
 </script>
 
 <template>
-  <div>
+  <div class="lottery-wrapper">
     <SplashScreen v-if="showSplash" @close="showSplash = false" />
     <div v-else class="lottery-container">
       <!-- 顶部花纹 -->
@@ -33,4 +33,9 @@ const showSplash = ref(true);
   </div>
 </template>
 
-<style lang="scss"></style>
+<style lang="scss">
+.lottery-wrapper {
+  width: 100%;
+  height: 100%;
+}
+</style>
