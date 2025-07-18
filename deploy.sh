@@ -11,7 +11,7 @@ cd "$PROJECT_DIR"
 echo "拉取最新代码..."
 
 # 拉取最新代码
-git pull origin main
+git pull origin master
 
 # 安装依赖（如果你用 pnpm）
 echo "安装依赖..."
