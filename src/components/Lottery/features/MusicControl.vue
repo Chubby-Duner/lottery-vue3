@@ -1,27 +1,35 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { useMusicStore } from "@/store/musicStore";
+import { defineEmits } from "vue";
 import shijiMp3 from "@/assets/audio/shiji.mp3";
 
 defineOptions({
   name: "MusicControl"
 });
 
+const emit = defineEmits(["musicLoaded"]);
 const musicStore = useMusicStore();
 const audioElement = ref(null);
 
 onMounted(() => {
   if (audioElement.value) {
     audioElement.value.loop = true;
+    // 音乐加载完成时派发事件
+    audioElement.value.addEventListener(
+      "canplaythrough",
+      () => {
+        // 这里延时是为了启动页效果更好，可自行删掉
+        setTimeout(() => {
+          emit("musicLoaded");
+        }, 1000);
+      },
+      { once: true }
+    );
+
+    // 直接播放，不再处理拦截
     if (musicStore.isMusicPlaying) {
-      audioElement.value.play().catch(e => {
-        // 自动播放被拦截，等待用户交互
-        const tryPlay = () => {
-          audioElement.value.play();
-          window.removeEventListener("click", tryPlay);
-        };
-        window.addEventListener("click", tryPlay);
-      });
+      audioElement.value.play();
     }
   }
 });

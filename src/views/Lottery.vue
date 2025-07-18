@@ -1,27 +1,39 @@
 <script setup>
+import { ref } from "vue";
 import AwardList from "@/components/Lottery/pages/AwardList.vue";
 import PrizeList from "@/components/Lottery/pages/PrizeList.vue";
 import LotteryMain from "@/components/Lottery/pages/index.vue";
 import MusicControl from "@/components/Lottery/features/MusicControl.vue";
+import SplashScreen from "@/components/SplashScreen.vue";
 
 defineOptions({
   name: "Lottery"
 });
+
+const showSplash = ref(true);
+const handleMusicLoaded = () => {
+  showSplash.value = false;
+};
 </script>
 
 <template>
-  <div class="lottery-container">
-    <header class="top-head"></header>
-
-    <AwardList />
-    <PrizeList />
-
-    <LotteryMain />
-
-    <!-- 添加音乐和清除控制 -->
-    <MusicControl />
-
-    <footer class="footer"></footer>
+  <div>
+    <!-- 背景音乐 -->
+    <MusicControl @musicLoaded="handleMusicLoaded" />
+    
+    <SplashScreen v-if="showSplash" />
+    <div v-else class="lottery-container">
+      <!-- 顶部花纹 -->
+      <header class="top-head"></header>
+      <!-- 中奖列表 -->
+      <AwardList />
+      <!-- 礼物列表 -->
+      <PrizeList />
+      <!-- 主抽奖程序 -->
+      <LotteryMain />
+      <!-- 底部花纹 -->
+      <footer class="footer"></footer>
+    </div>
   </div>
 </template>
 
