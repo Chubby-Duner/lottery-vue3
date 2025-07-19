@@ -21,7 +21,7 @@ RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 # 拷贝打包后的静态资源
-COPY --from=build-stage /app/dist /usr/share/nginx/html
+COPY --from=build-stage /app/dist/lottery /usr/share/nginx/html/lottery
 
 # 拷贝 SSL 文件
 COPY ssl /etc/nginx/ssl
