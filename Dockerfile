@@ -21,7 +21,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build-stage /app/dist /usr/share/nginx/html/lottery
 
 # 拷贝 SSL 文件
-COPY ssl /etc/nginx/ssl
+# COPY ssl /etc/nginx/ssl
 
 EXPOSE 80
 EXPOSE 443
