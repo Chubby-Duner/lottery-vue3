@@ -12,19 +12,17 @@ COPY . .
 RUN pnpm build
 
 # 生产阶段
-#FROM nginx:stable-alpine as production-stage
+FROM nginx:stable-alpine as production-stage
 
 # 添加自定义配置
-#COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # 拷贝打包后的静态资源
-#COPY --from=build-stage /app/dist /usr/share/nginx/html
+COPY --from=build-stage /app/dist /usr/share/nginx/html/lottery
 
-#EXPOSE 80
-#CMD ["nginx", "-g", "daemon off;"]
+# 拷贝 SSL 文件
+COPY ssl /etc/nginx/ssl
 
-# 最终阶段仅保留静态文件
-FROM alpine
-RUN apk add --no-cache bash
-WORKDIR /app
-COPY --from=builder /app/dist /app/dist
+EXPOSE 80
+EXPOSE 443
+CMD ["nginx", "-g", "daemon off;"]
