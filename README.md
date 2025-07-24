@@ -2,7 +2,7 @@
 
 ## 前言
 
-本项目基于 [参考链接](https://github.com/henry-fun/hanshan-lottery) 进行重构和功能扩展。相比原项目，新增了权重设置、Excel 名单导入、奖项自定义等功能，整体交互和界面体验也做了优化，适用于年会、聚会等多种抽奖场景。[在线浏览](https:chubbyduner.top/lottery)
+本项目基于 [参考链接](https://github.com/henry-fun/hanshan-lottery) 进行重构和功能扩展。相比原项目，新增了权重设置、Excel 名单导入、奖项自定义等功能，整体交互和界面体验也做了优化，适用于年会、聚会等多种抽奖场景。[在线浏览](https://chubbyduner.top/lottery)
 
 ## 项目简介
 
