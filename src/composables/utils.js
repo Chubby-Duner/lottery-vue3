@@ -85,4 +85,18 @@ const getRandomChar = (name) => {
   return chars[Math.floor(Math.random() * chars.length)];
 }
 
-export { formatExcelDate, translateKeys, getImageUrl, weightedRandomIndex, isExcel, getRandomChar }
+/**
+ * 将awards的key格式转换为awardLog的key格式
+ * @param {string} awardKey - 奖项标识
+ */
+const convertAwardKey = (awardKey) => {
+  // award1 -> award01, award2 -> award02, etc.
+  const match = awardKey.match(/award(\d+)/)
+  if (match) {
+    const num = parseInt(match[1])
+    return `award${num.toString().padStart(2, '0')}`
+  }
+  return awardKey
+}
+
+export { formatExcelDate, translateKeys, getImageUrl, weightedRandomIndex, isExcel, getRandomChar, convertAwardKey }

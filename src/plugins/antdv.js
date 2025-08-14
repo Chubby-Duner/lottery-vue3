@@ -16,7 +16,12 @@ import {
   Switch,
   Input,
   InputSearch,
-  Popconfirm
+  Popconfirm,
+  Timeline,
+  TimelineItem,
+  Row,
+  Col,
+  Statistic
 } from 'ant-design-vue'
 
 const components = [
@@ -36,7 +41,12 @@ const components = [
   Switch,
   Input,
   InputSearch,
-  Popconfirm
+  Popconfirm,
+  Timeline,
+  TimelineItem,
+  Row,
+  Col,
+  Statistic
 ]
 
 const plugins = []

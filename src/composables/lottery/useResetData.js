@@ -1,5 +1,6 @@
 import { Modal } from 'ant-design-vue'
 import { usePrizeStore } from "@/store/prizeStore";
+import { useLotteryHistoryStore } from "@/store/lotteryHistoryStore";
 
 // #region 其它功能
 export default function useResetData({
@@ -15,6 +16,7 @@ export default function useResetData({
   nextTick
 }) {
   const prizeStore = usePrizeStore();
+  const historyStore = useLotteryHistoryStore();
   // 重置数据
   const resetAllData = () => {
     // 如果正在抽奖中，给出提示
@@ -37,6 +39,8 @@ export default function useResetData({
           awardStore.resetAllToImportBackup();
           // 重置礼物数量状态  
           prizeStore.resetAllRemainingQuantity();
+          // 清空抽奖历史记录
+          historyStore.clearHistory();
           // 恢复 lotteryData，补全自定义字段
           if (awardStore.lotteryDataBackup && awardStore.lotteryDataBackup.length > 0) {
             // 动态设置默认权重
@@ -68,4 +72,4 @@ export default function useResetData({
   return {
     resetAllData
   }
-} 
+}

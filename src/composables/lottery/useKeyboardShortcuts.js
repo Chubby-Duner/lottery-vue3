@@ -1,5 +1,6 @@
 import { onMounted, onUnmounted, watch } from 'vue'
 import { usePrizeStore } from "@/store/prizeStore";
+import { useLotteryHistoryStore } from "@/store/lotteryHistoryStore";
 
 // #region 键盘快捷键处理
 export default function useKeyboardShortcuts({
@@ -87,6 +88,8 @@ export default function useKeyboardShortcuts({
   const handleBeforeUnload = () => {
     awardStore.clearAll();
     usePrizeStore().clearPrizes();
+    // 清空抽奖历史记录
+    useLotteryHistoryStore().clearHistory();
   };
 
   // 事件监听注册/移除逻辑
@@ -130,4 +133,4 @@ export default function useKeyboardShortcuts({
     handleKeyDown,
     handleBeforeUnload
   };
-} 
+}

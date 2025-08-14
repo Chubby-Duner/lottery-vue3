@@ -1,6 +1,8 @@
-import { weightedRandomIndex } from '@/composables/utils'
+import { weightedRandomIndex, convertAwardKey } from '@/composables/utils'
 import * as XLSX from "xlsx";
 import { usePrizeStore } from "@/store/prizeStore";
+import { useLotteryHistoryStore } from "@/store/lotteryHistoryStore";
+import { v4 as uuidv4 } from 'uuid';
 
 // #region 抽奖相关
 export default function useLottery({
@@ -29,6 +31,7 @@ export default function useLottery({
   message
 }) {
   const prizeStore = usePrizeStore();
+  const historyStore = useLotteryHistoryStore();
   const selectAward = awardKey => {
     if (isStarted.value) {
       message.error('正在抽奖中，不允许更改奖项设置');
@@ -91,15 +94,34 @@ export default function useLottery({
     isStarted.value = true;
     isMoving.value = true;
     isLocked.value = true;
-    // 加速动画
-    setTimeout(() => (speed.value = 15), 1000);
-    setTimeout(() => (speed.value = 20), 1500);
-    setTimeout(() => (speed.value = 30), 3000);
-    setTimeout(() => (speed.value = 50), 3500);
-    setTimeout(() => {
-      speed.value = 90;
-      isLocked.value = false;
-    }, 4000);
+    
+    // 多轮抽奖模式下的快速动画
+    if (historyStore.multiRoundConfig.enabled) {
+      // 快速动画，2秒内完成
+      setTimeout(() => (speed.value = 30), 200);
+      setTimeout(() => (speed.value = 50), 400);
+      setTimeout(() => (speed.value = 90), 600);
+      setTimeout(() => {
+        speed.value = 120;
+        isLocked.value = false;
+        // 自动停止抽奖
+        setTimeout(() => {
+          if (isStarted.value && !isLocked.value) {
+            stopLottery();
+          }
+        }, 500); // 0.5秒后自动停止
+      }, 800);
+    } else {
+      // 普通模式的原有动画
+      setTimeout(() => (speed.value = 15), 1000);
+      setTimeout(() => (speed.value = 20), 1500);
+      setTimeout(() => (speed.value = 30), 3000);
+      setTimeout(() => (speed.value = 50), 3500);
+      setTimeout(() => {
+        speed.value = 90;
+        isLocked.value = false;
+      }, 4000);
+    }
   };
 
   const stopLottery = async () => {
@@ -174,8 +196,12 @@ export default function useLottery({
       canStop.value = true;
       speed.value = 8;
       // 更新奖项数据
+      // 为winner生成唯一id
+      const winnerId = uuidv4();
+      
       // 中奖人对象，只存nameen、namezh和image.dataUrl和avatarChar
       let winnerData = {
+        id: winnerId, // 添加生成的唯一id
         nameen: winner.nameen,
         namezh: winner.namezh,
         avatarChar: winner.avatarChar // 新增，保证名单有头像字
@@ -187,6 +213,26 @@ export default function useLottery({
       const awardObj = awardStore.awards.find(a => a.key === selectedAward.value);
       winnerData.award = awardObj ? (awardObj.label || awardObj.name) : selectedAward.value;
       winnerData.gift = winnerGift.value ? winnerGift.value.giftName : '';
+      // 记录抽奖历史（在状态更新前记录快照）
+      const awardName = awardStore.awards.find(a => a.key === selectedAward.value)?.label || selectedAward.value;
+      historyStore.addLotteryRecord({
+        awardKey: convertAwardKey(selectedAward.value),
+        awardName,
+        winner: {
+          id: winnerId, // 使用生成的同一个id
+          namezh: winner.namezh,
+          nameen: winner.nameen,
+          avatarChar: winner.avatarChar,
+          image: winner.image,
+          wish: winner.wish
+        },
+        gift: winnerGift.value,
+        lotteryDataSnapshot: [...lotteryData.value],
+        awardLogSnapshot: { ...awardStore.awardLog },
+        winnerMapSnapshot: JSON.parse(JSON.stringify(awardStore.winnerMap)),
+        prizeListSnapshot: [...prizeStore.prizeList]
+      });
+      
       // 写入中奖名单
       awardStore.addWinner(selectedAward.value, winnerData);
       // 更新奖项剩余数量
@@ -197,6 +243,60 @@ export default function useLottery({
       awardStore.setAwardLog(newAwardLog);
       // 从抽奖池中移除获奖者
       lotteryData.value = lotteryData.value.filter(item => item.nameen !== winner.nameen);
+      
+      // 处理多轮抽奖逻辑
+      if (historyStore.multiRoundConfig.enabled) {
+        historyStore.completeOneRound();
+        
+        // 自动关闭结果弹窗
+        setTimeout(() => {
+          showResult.value = false;
+        }, 1000); // 1秒后自动关闭结果弹窗
+        
+        // 检查是否还有剩余轮次
+        if (historyStore.multiRoundConfig.currentRound < historyStore.multiRoundConfig.roundCount) {
+          // 还有剩余轮次，自动重置状态准备下一轮
+          setTimeout(() => {
+            if (lotteryData.value.length > 0) {
+              // 重置抽奖状态，准备下一轮
+              isMoving.value = true;
+              isStarted.value = false;
+              isLocked.value = true;
+              speed.value = 6;
+              showResult.value = false;
+              canStop.value = false;
+              isLotteryProcessing.value = false;
+              
+              // 重新启动动画
+              if (!animationPaused.value) {
+                startAnimation();
+              }
+              
+              message.success(`第 ${historyStore.multiRoundConfig.currentRound} 轮完成，1秒后自动开始第 ${historyStore.multiRoundConfig.currentRound + 1} 轮抽奖`);
+              
+              // 自动开始下一轮抽奖
+              setTimeout(() => {
+                if (historyStore.multiRoundConfig.enabled && lotteryData.value.length > 0) {
+                  // 自动触发下一轮抽奖
+                  startLottery();
+                }
+              }, 1000); // 1秒后自动开始抽奖
+            } else {
+              // 没有足够的人员或奖项，结束多轮抽奖
+              historyStore.finishMultiRound();
+              message.warning('人员不足或奖项已抽完，多轮抽奖提前结束');
+            }
+          }, 2000); // 2秒后准备下一轮（给结果展示时间）
+        } else {
+          // 所有轮次完成
+          const results = historyStore.finishMultiRound();
+          setTimeout(() => {
+            showResult.value = false; // 自动关闭最后一轮的结果弹窗
+            message.success(`多轮抽奖完成！共抽取了 ${results.length} 位中奖者`);
+          }, 2000); // 2秒后关闭并显示完成消息
+        }
+      }
+      
       winnerIndex.value = -1;
     } catch (error) {
       console.error('Function stopLottery ~ error:', error);
@@ -251,4 +351,4 @@ export default function useLottery({
     stopLottery,
     exportWinners
   }
-} 
+}

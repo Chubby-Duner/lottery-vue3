@@ -1,5 +1,5 @@
 <script setup>
-import { SettingOutlined, ExportOutlined, ClearOutlined, GiftOutlined } from "@ant-design/icons-vue";
+import { SettingOutlined, ExportOutlined, ClearOutlined, GiftOutlined, HistoryOutlined, ReloadOutlined } from "@ant-design/icons-vue";
 
 defineOptions({
   name: "AwardControlPanel"
@@ -10,10 +10,12 @@ const props = defineProps({
   selectedAward: { type: String, required: true },
   awardLog: { type: Object, required: true },
   buttonText: { type: String, required: true },
-  isStarted: { type: Boolean, required: true }
+  isStarted: { type: Boolean, required: true },
+  canUndo: { type: Boolean, default: false },
+  isMultiRoundMode: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "openPrizeSetting", "openWeightEditor", "resetAllData", "exportWinners"]);
+const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "openPrizeSetting", "openWeightEditor", "resetAllData", "exportWinners", "showHistory", "showMultiRoundSetting"]);
 </script>
 
 <template>
@@ -68,6 +70,23 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
         礼物设置
       </a-button>
     </div>
+    <div class="btn weight-edit-section">
+      <a-button @click="$emit('showMultiRoundSetting')" :disabled="isStarted">
+        <template #icon>
+          <ReloadOutlined />
+        </template>
+        多轮抽奖
+      </a-button>
+    </div>
+    <div class="btn weight-edit-section">
+      <a-button @click="$emit('showHistory')">
+        <template #icon>
+          <HistoryOutlined />
+        </template>
+        抽奖历史
+      </a-button>
+    </div>
+
     <div class="btn weight-edit-section">
       <a-button type="primary" @click="$emit('exportWinners')" :disabled="isStarted">
         <template #icon>

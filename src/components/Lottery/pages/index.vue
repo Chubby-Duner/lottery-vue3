@@ -4,7 +4,7 @@ import { getRandomChar } from "@/composables/utils";
 import { message } from "ant-design-vue";
 import { useAwardStore } from "@/store/awardStore";
 import { useMusicStore } from "@/store/musicStore";
-import { usePrizeStore } from '@/store/prizeStore';
+import { usePrizeStore } from "@/store/prizeStore";
 import UploadExcel from "@/components/Upload/UploadExcel.vue";
 import LotteryLogo from "./LotteryLogo.vue";
 import LotteryResult from "./LotteryResult.vue";
@@ -15,6 +15,9 @@ import Countdown from "../features/Countdown.vue";
 import ImportEmptyBlock from "../features/ImportEmptyBlock.vue";
 import AwardControlPanel from "../features/AwardControlPanel.vue";
 import KeyboardShortcuts from "../features/KeyboardShortcuts.vue";
+import MultiRoundSetting from "../features/MultiRoundSetting.vue";
+import MultiRoundProgress from "../features/MultiRoundProgress.vue";
+import LotteryHistory from "../features/LotteryHistory.vue";
 
 import useCountdown from "@/composables/lottery/useCountdown";
 import useAwardSetting from "@/composables/lottery/useAwardSetting";
@@ -23,6 +26,8 @@ import useAnimation from "@/composables/lottery/useAnimation";
 import useLottery from "@/composables/lottery/useLottery";
 import useResetData from "@/composables/lottery/useResetData";
 import useKeyboardShortcuts from "@/composables/lottery/useKeyboardShortcuts";
+import useLotteryHistory from "@/composables/lottery/useLotteryHistory";
+import useMultiRoundLottery from "@/composables/lottery/useMultiRoundLottery";
 
 defineOptions({
   name: "LotteryMain"
@@ -93,13 +98,7 @@ const { weightEditorVisible, openWeightEditor, handleWeightSave, handleWeightEdi
   startAnimation: () => startAnimation(),
   cancelAnimation: () => cancelAnimation(),
   message,
-  nextTick,
-  onOpen: () => {
-    keyboardEnabled.value = false;
-  },
-  onClose: () => {
-    keyboardEnabled.value = true;
-  }
+  nextTick
 });
 // 奖项设置相关
 const { awardSettingVisible, openAwardSetting, handleAwardSettingSave, handleAwardSettingClose } = useAwardSetting({
@@ -108,27 +107,62 @@ const { awardSettingVisible, openAwardSetting, handleAwardSettingSave, handleAwa
   animationPaused,
   startAnimation: () => startAnimation(),
   cancelAnimation: () => cancelAnimation(),
-  nextTick,
-  onOpen: () => {
-    keyboardEnabled.value = false;
-  },
-  onClose: () => {
-    keyboardEnabled.value = true;
-  }
+  nextTick
 });
 
 // 礼物设置相关
 const giftSettingVisible = ref(false);
 const openPrizeSetting = () => {
   if (!prizeStore.hasPrizes) {
-    message.warning('请先导入礼物数据');
+    message.warning("请先导入礼物数据");
     return;
   }
   giftSettingVisible.value = true;
 };
 
+// 历史记录相关
+const { showHistoryModal, canUndo, historyStats, recentHistory, showHistory, handleUndoConfirm, clearAllHistory, deleteHistoryRecord, historyStore } = useLotteryHistory({
+  lotteryData,
+  selectedAward,
+  isMoving,
+  animationPaused,
+  startAnimation: () => startAnimation(),
+  cancelAnimation: () => cancelAnimation()
+});
+
+// 多轮抽奖相关
+const { showMultiRoundModal, multiRoundCount, showMultiRoundProgress, multiRoundResults, isMultiRoundMode, currentRoundIndex, totalRounds, showMultiRoundSetting, startMultiRoundLottery, cancelMultiRoundLottery, closeMultiRoundModal, getCurrentAwardRemaining } = useMultiRoundLottery({
+  selectedAward,
+  isStarted,
+  isMoving,
+  isLotteryProcessing
+});
+
+// 处理多轮抽奖开始
+const handleMultiRoundStart = () => {
+  const success = startMultiRoundLottery();
+  if (success) {
+    // 多轮抽奖设置成功后，自动开始第一轮抽奖
+    setTimeout(() => {
+      if (historyStore.multiRoundConfig.enabled && lotteryData.value.length > 0) {
+        message.info("多轮抽奖已开始，将全自动进行所有轮次");
+        handleLottery(); // 自动开始第一轮抽奖
+      }
+    }, 500); // 0.5秒后自动开始第一轮
+  }
+};
+
 // ===================== 计算属性 =====================
 const buttonText = computed(() => {
+  // 多轮抽奖模式下的按钮文本
+  if (isMultiRoundMode.value) {
+    if (!isStarted.value && !isMoving.value) return "重新开始";
+    if (!isStarted.value && isMoving.value) return "多轮抽奖准备中...";
+    if (isStarted.value && !isLocked.value) return "停止抽奖";
+    return `多轮抽奖进行中... (${currentRoundIndex.value + 1}/${totalRounds.value})`;
+  }
+
+  // 普通抽奖模式
   if (!isStarted.value && !isMoving.value) return "重新开始";
   if (!isStarted.value && isMoving.value) return "开始抽奖";
   if (isStarted.value && !isLocked.value) return "停止抽奖";
@@ -351,6 +385,8 @@ useKeyboardShortcuts({
         :awardLog="awardStore.awardLog"
         :buttonText="buttonText"
         :isStarted="isStarted"
+        :canUndo="canUndo"
+        :isMultiRoundMode="isMultiRoundMode"
         @selectAward="selectAward"
         @handleLottery="handleLottery"
         @openAwardSetting="openAwardSetting"
@@ -358,6 +394,8 @@ useKeyboardShortcuts({
         @openWeightEditor="openWeightEditor"
         @resetAllData="resetAllData"
         @exportWinners="exportWinners"
+        @showHistory="showHistory"
+        @showMultiRoundSetting="showMultiRoundSetting"
       />
 
       <!-- 键盘快捷键提示 -->
@@ -385,6 +423,24 @@ useKeyboardShortcuts({
 
   <!-- 礼物设置 -->
   <GiftSetting v-model:visible="giftSettingVisible" />
+
+  <!-- 多轮抽奖设置 -->
+  <MultiRoundSetting
+    v-model:visible="showMultiRoundModal"
+    :currentAwardName="awardStore.awards.find(a => a.key === selectedAward)?.label || selectedAward"
+    :remainingCount="getCurrentAwardRemaining()"
+    :defaultRoundCount="multiRoundCount"
+    @confirm="handleMultiRoundStart"
+    @cancel="closeMultiRoundModal"
+    @onOpen="keyboardEnabled = false"
+    @onClose="keyboardEnabled = true"
+  />
+
+  <!-- 多轮抽奖进度 -->
+  <MultiRoundProgress :visible="showMultiRoundProgress" :awardName="awardStore.awards.find(a => a.key === selectedAward)?.label || selectedAward" :currentRound="currentRoundIndex + 1" :totalRounds="totalRounds" :currentResults="multiRoundResults" @cancel="cancelMultiRoundLottery" />
+
+  <!-- 抽奖历史记录 -->
+  <LotteryHistory v-model:visible="showHistoryModal" :historyList="recentHistory" :historyStats="historyStats" :canUndo="canUndo" @undo="handleUndoConfirm" @delete="deleteHistoryRecord" @clear="clearAllHistory" />
 </template>
 
 <style lang="scss" scoped></style>
