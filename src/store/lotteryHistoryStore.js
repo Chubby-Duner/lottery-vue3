@@ -105,12 +105,10 @@ export const useLotteryHistoryStore = defineStore("lotteryHistoryStore", {
     // 撤销最后一次抽奖
     undoLastLottery() {
       if (this.lotteryHistory.length === 0) return null
-      console.log("🚀 ~ undoLastLottery ~ this.lotteryHistory:", this.lotteryHistory);
       
       // 按时间戳降序排序，获取最新的记录
       const sortedHistory = [...this.lotteryHistory].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       const lastRecord = sortedHistory[0]
-      console.log("🚀 ~ undoLastLottery ~ lastRecord:", lastRecord);
       
       // 从原数组中移除这条记录
       const recordIndex = this.lotteryHistory.findIndex(record => record.id === lastRecord.id)

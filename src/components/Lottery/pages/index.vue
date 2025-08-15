@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { getRandomChar } from "@/composables/utils";
 import { message } from "ant-design-vue";
+import { getRandomChar } from "@/composables/utils";
 import { useAwardStore } from "@/store/awardStore";
 import { useMusicStore } from "@/store/musicStore";
 import { usePrizeStore } from "@/store/prizeStore";
@@ -131,7 +131,22 @@ const { showHistoryModal, canUndo, historyStats, recentHistory, showHistory, han
 });
 
 // 多轮抽奖相关
-const { showMultiRoundModal, multiRoundCount, showMultiRoundProgress, multiRoundResults, isMultiRoundMode, currentRoundIndex, totalRounds, showMultiRoundSetting, startMultiRoundLottery, cancelMultiRoundLottery, closeMultiRoundModal, getCurrentAwardRemaining } = useMultiRoundLottery({
+const {
+  showMultiRoundModal,
+  multiRoundCount,
+  showMultiRoundProgress,
+  multiRoundResults,
+  isMultiRoundMode,
+  currentRoundIndex,
+  totalRounds,
+  showMultiRoundSetting,
+  startMultiRoundLottery,
+  finishMultiRoundLottery,
+  completeOneRound,
+  cancelMultiRoundLottery,
+  closeMultiRoundModal,
+  getCurrentAwardRemaining
+} = useMultiRoundLottery({
   selectedAward,
   isStarted,
   isMoving,
@@ -139,13 +154,13 @@ const { showMultiRoundModal, multiRoundCount, showMultiRoundProgress, multiRound
 });
 
 // 处理多轮抽奖开始
-const handleMultiRoundStart = () => {
-  const success = startMultiRoundLottery();
+const handleMultiRoundStart = roundCount => {
+  const success = startMultiRoundLottery(roundCount);
   if (success) {
     // 多轮抽奖设置成功后，自动开始第一轮抽奖
     setTimeout(() => {
       if (historyStore.multiRoundConfig.enabled && lotteryData.value.length > 0) {
-        message.info("多轮抽奖已开始，将全自动进行所有轮次");
+        message.info(`多轮抽奖已开始，将全自动进行${roundCount}轮抽奖`);
         handleLottery(); // 自动开始第一轮抽奖
       }
     }, 500); // 0.5秒后自动开始第一轮
@@ -282,7 +297,9 @@ const { selectAward, handleLottery, exportWinners } = useLottery({
   startAnimation: () => startAnimation(),
   cancelAnimation: () => cancelAnimation(),
   showCountdownSequence,
-  message
+  message,
+  finishMultiRoundLottery,
+  completeOneRound
 });
 //#endregion
 

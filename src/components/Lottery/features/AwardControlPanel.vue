@@ -87,14 +87,14 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
       </a-button>
     </div>
 
-    <div class="btn weight-edit-section">
+    <!-- <div class="btn weight-edit-section">
       <a-button type="primary" @click="$emit('exportWinners')" :disabled="isStarted">
         <template #icon>
           <ExportOutlined />
         </template>
         导出中奖名单
       </a-button>
-    </div>
+    </div> -->
     <div class="btn weight-edit-section">
       <a-button danger @click="$emit('resetAllData')" :disabled="isStarted">
         <template #icon>

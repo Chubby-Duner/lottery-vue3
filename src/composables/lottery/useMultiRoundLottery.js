@@ -50,26 +50,29 @@ export default function useMultiRoundLottery({
   }
   
   // 开始多轮抽奖
-  const startMultiRoundLottery = () => {
+  const startMultiRoundLottery = (roundCount = multiRoundCount.value) => {
     try {
-      if (multiRoundCount.value < 1) {
+      if (roundCount < 1) {
         message.error('抽奖轮数必须大于0')
         return false
       }
       
       const remaining = getCurrentAwardRemaining()
-      if (multiRoundCount.value > remaining) {
-        message.error(`当前奖项仅剩余 ${remaining} 个，无法抽取 ${multiRoundCount.value} 轮`)
+      if (roundCount > remaining) {
+        message.error(`当前奖项仅剩余 ${remaining} 个，无法抽取 ${roundCount} 轮`)
         return false
       }
       
+      // 更新内部状态
+      multiRoundCount.value = roundCount
+      
       // 开始多轮抽奖
-      historyStore.startMultiRound(selectedAward.value, multiRoundCount.value)
+      historyStore.startMultiRound(selectedAward.value, roundCount)
       multiRoundResults.value = []
       showMultiRoundProgress.value = true
       showMultiRoundModal.value = false
       
-      message.success(`开始 ${multiRoundCount.value} 轮抽奖`)
+      message.success(`开始 ${roundCount} 轮抽奖`)
       return true
     } catch (error) {
       console.error('开始多轮抽奖失败:', error)
@@ -109,10 +112,16 @@ export default function useMultiRoundLottery({
   // 完成多轮抽奖
   const finishMultiRoundLottery = () => {
     try {
+      // 在清空结果前获取轮次数
+      const completedRounds = historyStore.multiRoundConfig.enabled ? 
+        historyStore.multiRoundConfig.currentRound : 
+        multiRoundResults.value.length
+      
       const results = historyStore.finishMultiRound()
       showMultiRoundProgress.value = false
       
-      message.success(`多轮抽奖完成！共抽取了 ${results.length} 位中奖者`)
+      // 使用轮次数而不是results.length，因为results可能已被清空
+      message.success(`多轮抽奖完成！共抽取了 ${completedRounds} 位中奖者`)
       
       // 清空本地结果
       setTimeout(() => {

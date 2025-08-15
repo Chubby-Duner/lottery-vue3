@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed } from "vue";
 import { message } from "ant-design-vue";
 import * as XLSX from "xlsx";
 
@@ -151,7 +151,7 @@ const getTimelineColor = record => {
 // 获取时间线图标
 const getTimelineDot = record => {
   if (record.multiRound.isMultiRound) {
-    return record.multiRound.roundIndex;
+    return record.multiRound.roundIndex + 1;
   }
   return "🎯";
 };

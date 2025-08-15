@@ -108,7 +108,7 @@ const handleCancel = () => {
               <div class="winner-gift">{{ result.gift?.giftName || "奖品" }}</div>
             </div>
           </div>
-          <div class="round-badge">第{{ result.roundIndex + 1 }}轮</div>
+          <div class="round-badge">第{{ result.roundIndex }}轮</div>
         </div>
       </div>
     </div>
