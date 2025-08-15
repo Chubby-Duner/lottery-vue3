@@ -107,20 +107,6 @@
   }
 }
 
-#award04-toggle {
-  display: none;
-  width: 50%;
-  margin: 1rem auto 1rem auto;
-  padding: 0.5rem 1rem;
-  text-align: center;
-  text-decoration: none;
-  color: var(--secondary-color);
-  font-size: var(--font-size-xl);
-  font-family: var(--font-family-chinese);
-  border-radius: 2px;
-  border: 1px solid var(--secondary-color);
-}
-
 /* 奖项列表按钮 */
 .award-list-btn {
   margin: 4rem;
@@ -184,4 +170,4 @@
     width: 20%;
     margin: 30px auto;
   }
-} 
+}

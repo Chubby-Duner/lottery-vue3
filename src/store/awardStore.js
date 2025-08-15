@@ -12,10 +12,10 @@ export const useAwardStore = defineStore("awardStore", {
     ]),
     // 奖项剩余数量
     awardLog: storage.get("award_log", {
-      award01: 1,
-      award02: 3,
-      award03: 3,
-      award04: 5
+      award1: 1,
+      award2: 3,
+      award3: 3,
+      award4: 5
     }),
     // 中奖名单，key为奖项key
     winnerMap: storage.get("winner_map", {}),
@@ -33,7 +33,7 @@ export const useAwardStore = defineStore("awardStore", {
       // 更新奖项剩余数量
       const newLog = { ...this.awardLog };
       newAwards.forEach((item, idx) => {
-        const key = `award0${idx + 1}`;
+        const key = `award${idx + 1}`;
         if (!(key in newLog)) {
           // 新增奖项，设置初始数量
           newLog[key] = item.count;
@@ -48,7 +48,7 @@ export const useAwardStore = defineStore("awardStore", {
 
       // 删除被移除奖项的数量
       Object.keys(newLog).forEach(key => {
-        const awardIndex = parseInt(key.replace("award0", "")) - 1;
+        const awardIndex = parseInt(key.replace("award", "")) - 1;
         if (!newAwards[awardIndex]) {
           delete newLog[key];
         }
@@ -84,7 +84,7 @@ export const useAwardStore = defineStore("awardStore", {
     resetAwardCounts() {
       const newLog = {};
       this.awards.forEach((item, idx) => {
-        newLog[`award0${idx + 1}`] = item.count;
+        newLog[`award${idx + 1}`] = item.count;
       });
       this.awardLog = newLog;
       storage.set("award_log", this.awardLog);
@@ -107,10 +107,10 @@ export const useAwardStore = defineStore("awardStore", {
       ];
       storage.set("awards", this.awards);
       this.awardLog = {
-        award01: 1,
-        award02: 3,
-        award03: 3,
-        award04: 5
+        award1: 1,
+        award2: 3,
+        award3: 3,
+        award4: 5
       };
       storage.set("award_log", this.awardLog);
       this.winnerMap = {};
@@ -138,10 +138,10 @@ export const useAwardStore = defineStore("awardStore", {
       ];
       storage.set("awards", this.awards);
       this.awardLog = {
-        award01: 1,
-        award02: 3,
-        award03: 3,
-        award04: 5
+        award1: 1,
+        award2: 3,
+        award3: 3,
+        award4: 5
       };
       storage.set("award_log", this.awardLog);
       this.winnerMap = {};
@@ -150,4 +150,4 @@ export const useAwardStore = defineStore("awardStore", {
       storage.set("select_award", this.selectAward);
     }
   }
-}) 
+})

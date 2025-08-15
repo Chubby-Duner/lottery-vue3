@@ -28,7 +28,7 @@ export default function useMultiRoundLottery({
   // 获取当前奖项剩余数量
   const getCurrentAwardRemaining = () => {
     const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value)
-    const awardKey = `award0${idx + 1}`
+    const awardKey = `award${idx + 1}`
     return awardStore.awardLog[awardKey] || 0
   }
   
@@ -100,8 +100,6 @@ export default function useMultiRoundLottery({
       // 检查是否完成所有轮次
       if (currentRoundIndex.value >= totalRounds.value) {
         finishMultiRoundLottery()
-      } else {
-        message.success(`第 ${currentRoundIndex.value} 轮抽奖完成，还需抽取 ${totalRounds.value - currentRoundIndex.value} 轮`)
       }
     } catch (error) {
       console.error('完成轮次失败:', error)

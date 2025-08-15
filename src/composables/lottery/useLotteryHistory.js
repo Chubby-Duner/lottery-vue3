@@ -3,7 +3,6 @@ import { useLotteryHistoryStore } from '@/store/lotteryHistoryStore'
 import { useAwardStore } from '@/store/awardStore'
 import { usePrizeStore } from '@/store/prizeStore'
 import { message } from 'ant-design-vue'
-import { convertAwardKey } from '@/composables/utils'
 
 export default function useLotteryHistory({
   lotteryData,
@@ -16,17 +15,6 @@ export default function useLotteryHistory({
   const historyStore = useLotteryHistoryStore()
   const awardStore = useAwardStore()
   const prizeStore = usePrizeStore()
-
-  // 将awardLog的key格式转换回awards的key格式
-  const convertBackAwardKey = (awardKey) => {
-    // award01 -> award1, award02 -> award2, etc.
-    const match = awardKey.match(/award0?(\d+)/)
-    if (match) {
-      const num = parseInt(match[1])
-      return `award${num}`
-    }
-    return awardKey
-  }
 
   // 历史记录相关状态
   const showHistoryModal = ref(false)
@@ -43,9 +31,8 @@ export default function useLotteryHistory({
       // 获取当前状态快照
       const awardName = awardStore.awards.find(a => a.key === selectedAward.value)?.label || selectedAward.value
       // 转换为正确的awardKey格式
-      const correctAwardKey = convertAwardKey(selectedAward.value)
       historyStore.addLotteryRecord({
-        awardKey: correctAwardKey,
+        awardKey: selectedAward.value,
         awardName,
         winner,
         gift,
@@ -55,7 +42,6 @@ export default function useLotteryHistory({
         prizeListSnapshot: prizeStore.prizeList
       })
 
-      console.log('抽奖操作已记录到历史，awardKey:', correctAwardKey)
     } catch (error) {
       console.error('记录抽奖历史失败:', error)
     }
@@ -103,7 +89,6 @@ export default function useLotteryHistory({
 
   // 增量撤销：只恢复被撤销奖项相关的数据
   const undoSpecificAward = async (lastRecord) => {
-    console.log(lastRecord, 'undoSpecificAward-lastRecord')
     try {
       const { awardKey, winner, gift } = lastRecord
 
@@ -120,7 +105,7 @@ export default function useLotteryHistory({
       })
 
       // 3. 从该奖项的中奖名单中移除这个中奖者
-      const winnerMapKey = convertBackAwardKey(awardKey)
+      const winnerMapKey = awardKey
       const currentWinners = awardStore.winnerMap[winnerMapKey] || []
       const updatedWinners = currentWinners.filter(w => w.id !== winner.id)
       awardStore.setWinners(winnerMapKey, updatedWinners)
@@ -140,7 +125,6 @@ export default function useLotteryHistory({
         prizeStore.setPrizeList(updatedPrizes)
       }
 
-      console.log(`已撤销 ${awardKey} 奖项的抽奖结果`)
     } catch (error) {
       console.error('增量撤销失败:', error)
       throw error
@@ -164,7 +148,6 @@ export default function useLotteryHistory({
       // 恢复礼物数量
       prizeStore.setPrizeList(JSON.parse(JSON.stringify(snapshots.prizeList)))
 
-      console.log('状态已从快照恢复')
     } catch (error) {
       console.error('恢复状态失败:', error)
       throw error

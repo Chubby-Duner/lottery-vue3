@@ -25,7 +25,7 @@ const selectedRowKeys = ref([]);
 const getRemainingCount = awardKey => {
   const idx = awardStore.awards.findIndex(a => a.key === awardKey);
   if (idx === -1) return 0;
-  const awardLogKey = `award0${idx + 1}`;
+  const awardLogKey = `award${idx + 1}`;
   return awardStore.awardLog[awardLogKey] || 0;
 };
 
@@ -140,7 +140,7 @@ const setRemainingCounts = () => {
 
   const newLog = { ...awardStore.awardLog };
   localAwards.value.forEach((item, idx) => {
-    const key = `award0${idx + 1}`;
+    const key = `award${idx + 1}`;
     newLog[key] = item.remainingCount;
   });
   awardStore.setAwardLog(newLog);
@@ -166,7 +166,7 @@ const handleOk = () => {
   // 同时更新剩余数量
   const newLog = { ...awardStore.awardLog };
   localAwards.value.forEach((item, idx) => {
-    const key = `award0${idx + 1}`;
+    const key = `award${idx + 1}`;
     newLog[key] = item.remainingCount;
   });
   awardStore.setAwardLog(newLog);

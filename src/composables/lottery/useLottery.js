@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 import { v4 as uuidv4 } from 'uuid';
-import { weightedRandomIndex, convertAwardKey } from '@/composables/utils'
+import { weightedRandomIndex } from '@/composables/utils'
 import { usePrizeStore } from "@/store/prizeStore";
 import { useLotteryHistoryStore } from "@/store/lotteryHistoryStore";
 
@@ -58,7 +58,7 @@ export default function useLottery({
     if (!isStarted.value && isMoving.value) {
       // 先校验剩余数量
       const idx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
-      const awardKey = `award0${idx + 1}`;
+      const awardKey = `award${idx + 1}`;
       if (awardStore.awardLog[awardKey] <= 0) {
         message.error("该奖项已经抽完啦，请选择其它奖项哦！");
         return;
@@ -218,7 +218,7 @@ export default function useLottery({
       // 记录抽奖历史（在状态更新前记录快照）
       const awardName = awardStore.awards.find(a => a.key === selectedAward.value)?.label || selectedAward.value;
       historyStore.addLotteryRecord({
-        awardKey: convertAwardKey(selectedAward.value),
+        awardKey: selectedAward.value,
         awardName,
         winner: {
           id: winnerId, // 使用生成的同一个id
@@ -239,7 +239,7 @@ export default function useLottery({
       awardStore.addWinner(selectedAward.value, winnerData);
       // 更新奖项剩余数量
       const remainingIdx = awardStore.awards.findIndex(a => a.key === selectedAward.value);
-      const awardKey = `award0${remainingIdx + 1}`;
+      const awardKey = `award${remainingIdx + 1}`;
       const newAwardLog = { ...awardStore.awardLog };
       newAwardLog[awardKey] -= 1;
       awardStore.setAwardLog(newAwardLog);

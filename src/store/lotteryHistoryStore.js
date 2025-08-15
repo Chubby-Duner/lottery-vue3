@@ -12,7 +12,8 @@ export const useLotteryHistoryStore = defineStore("lotteryHistoryStore", {
       roundCount: 1, // 本轮要抽取的人数
       currentRound: 0, // 当前已抽取的人数
       awardKey: '', // 当前奖项
-      isInProgress: false // 是否正在进行多轮抽奖
+      isInProgress: false, // 是否正在进行多轮抽奖
+      sessionId: '' // 当前多轮抽奖会话ID
     },
     // 当前多轮抽奖的临时结果
     currentMultiRoundResults: []
@@ -85,7 +86,8 @@ export const useLotteryHistoryStore = defineStore("lotteryHistoryStore", {
         multiRound: {
           isMultiRound: this.multiRoundConfig.enabled,
           roundIndex: this.multiRoundConfig.currentRound,
-          totalRounds: this.multiRoundConfig.roundCount
+          totalRounds: this.multiRoundConfig.roundCount,
+          sessionId: this.multiRoundConfig.sessionId || '' // 多轮抽奖会话ID
         }
       }
       
@@ -136,7 +138,8 @@ export const useLotteryHistoryStore = defineStore("lotteryHistoryStore", {
         roundCount,
         currentRound: 0,
         awardKey,
-        isInProgress: true
+        isInProgress: true,
+        sessionId: uuidv4() // 生成唯一的会话ID
       }
       this.currentMultiRoundResults = []
     },
@@ -160,7 +163,8 @@ export const useLotteryHistoryStore = defineStore("lotteryHistoryStore", {
         roundCount: 1,
         currentRound: 0,
         awardKey: '',
-        isInProgress: false
+        isInProgress: false,
+        sessionId: ''
       }
       
       // 保存多轮抽奖结果
@@ -177,7 +181,8 @@ export const useLotteryHistoryStore = defineStore("lotteryHistoryStore", {
         roundCount: 1,
         currentRound: 0,
         awardKey: '',
-        isInProgress: false
+        isInProgress: false,
+        sessionId: ''
       }
       this.currentMultiRoundResults = []
     },

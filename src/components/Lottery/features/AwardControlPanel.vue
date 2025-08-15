@@ -26,7 +26,7 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
         <template v-for="(item, idx) in awards" :key="item.key">
           <div class="cirle-btn award" :id="'award-' + item.key" :class="{ 'award-active': selectedAward === item.key }" @click="$emit('selectAward', item.key)" :style="awards.length > 12 ? { 'will-change': 'transform' } : {}">
             {{ item.label }}<br />
-            <small>剩余: {{ awardLog[`award0${idx + 1}`] }}</small>
+            <small>剩余: {{ awardLog[`award${idx + 1}`] }}</small>
             <div class="keyboard-hint" v-if="awards.length <= 20">
               <span v-if="idx + 1 <= 9">按 {{ idx + 1 }} 键</span>
               <span v-else-if="idx + 1 === 10">按 0 键</span>

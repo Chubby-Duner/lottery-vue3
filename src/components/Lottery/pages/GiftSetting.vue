@@ -62,10 +62,8 @@ const columns = [
 
 // 计算奖项行的剩余数量，直接取awardStore.awardLog
 const getAwardRemainingQuantity = awardKey => {
-  // awardKey 形如 award1，转换为 award01
-  const idx = Number(awardKey.replace("award", ""));
-  const logKey = `award0${idx}`;
-  return awardStore.awardLog[logKey] ?? 0;
+  // awardKey 形如 award1，直接使用
+  return awardStore.awardLog[awardKey] ?? 0;
 };
 
 const addGift = level => {
@@ -97,7 +95,7 @@ const removeGift = gift => {
 };
 const getAwardRemainCount = level => {
   const idx = Number(level.replace("award", ""));
-  const key = `award0${idx}`;
+  const key = `award${idx}`;
   return awardStore.awardLog[key] ?? 0;
 };
 const handleOk = () => {
@@ -116,7 +114,7 @@ const handleOk = () => {
     // 2. 所有礼物“剩余数量”总和不能大于奖项剩余数量
     const remainTotal = group.children.reduce((sum, g) => sum + (Number(g.remainingQuantity) || 0), 0);
     const idx = Number(group.key.replace("award", ""));
-    const logKey = `award0${idx}`;
+    const logKey = `award${idx}`;
     const remain = awardStore.awardLog[logKey] ?? 0;
     if (remainTotal > remain) {
       message.error(`${group.title}下所有礼物的剩余数量总和不能超过奖项剩余数量（${remain}），请检查奖项剩余数量是否正确！`);

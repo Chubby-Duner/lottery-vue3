@@ -112,7 +112,9 @@ const handleExport = () => {
 
       // 添加该奖项的所有记录
       group.records.forEach(record => {
-        const roundText = record.multiRound.isMultiRound ? `多轮抽奖(${record.multiRound.roundIndex + 1}/${record.multiRound.totalRounds})` : "单次抽奖";
+        const roundText = record.multiRound.isMultiRound 
+          ? `多轮抽奖(${record.multiRound.roundIndex + 1}/${record.multiRound.totalRounds})${record.multiRound.sessionId ? '#' + record.multiRound.sessionId.slice(-6) : ''}` 
+          : "单次抽奖";
 
         data.push([formatTime(record.timestamp), record.awardName, record.winner.namezh, record.gift?.giftName || record.gift || "", roundText]);
       });
@@ -243,7 +245,12 @@ const formatTime = timestamp => {
 
                   <!-- 多轮抽奖标识 -->
                   <div v-if="record.multiRound.isMultiRound" class="multi-round-badge">
-                    <a-tag color="blue"> 多轮抽奖 {{ record.multiRound.roundIndex + 1 }}/{{ record.multiRound.totalRounds }} </a-tag>
+                    <a-tag color="blue"> 
+                      多轮抽奖 {{ record.multiRound.roundIndex + 1 }}/{{ record.multiRound.totalRounds }}
+                      <span v-if="record.multiRound.sessionId" class="session-id">
+                        #{{ record.multiRound.sessionId.slice(-6) }}
+                      </span>
+                    </a-tag>
                   </div>
                 </div>
               </div>
@@ -383,6 +390,13 @@ const formatTime = timestamp => {
 
           .multi-round-badge {
             margin-left: 12px;
+            
+            .session-id {
+              font-size: 11px;
+              opacity: 0.8;
+              margin-left: 4px;
+              font-family: monospace;
+            }
           }
         }
       }
