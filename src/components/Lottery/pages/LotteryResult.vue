@@ -19,6 +19,7 @@ const props = defineProps({
   avatarChar: String, // 可选，外部传入头像dataUrl
   wish: String, // 新增，中奖者愿景及祝福
   gift: Object, // 新增，中奖者获得的礼物信息
+  department: String
 });
 
 const emit = defineEmits(["close"]);
@@ -120,6 +121,10 @@ watch(
           <template v-else>
             {{ nameZh }}
           </template>
+        </div>
+        <div class="winner-department" v-if="department">
+          <b>部门：</b>
+          <span>{{ department }}</span>
         </div>
         <div class="winner-wish" v-if="wish">
           <b>新年愿景及祝福：</b>
@@ -316,6 +321,17 @@ watch(
   font-weight: bold;
   font-family: "STKaiti", "KaiTi ", serif;
   margin-top: 8px;
+}
+
+.winner-department {
+  margin-top: 8px;
+  font-size: 1.8rem;
+  color: #8b7355;
+  font-family: "STKaiti", "KaiTi ", serif;
+  background: #f9f9f9;
+  border-radius: 6px;
+  padding: 6px 12px;
+  display: inline-block;
 }
 
 .winner-wish {

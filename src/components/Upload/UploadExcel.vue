@@ -18,6 +18,7 @@ const emit = defineEmits(["update:visible"]);
 const titleMap = {
   namezh: "名称",
   wish: "愿望",
+  department: "部门",
   image: "头像"
 };
 

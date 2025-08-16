@@ -18,6 +18,7 @@ import KeyboardShortcuts from "../features/KeyboardShortcuts.vue";
 import MultiRoundSetting from "../features/MultiRoundSetting.vue";
 import MultiRoundProgress from "../features/MultiRoundProgress.vue";
 import LotteryHistory from "../features/LotteryHistory.vue";
+import LotteryStatistics from "../features/LotteryStatistics.vue";
 
 import useCountdown from "@/composables/lottery/useCountdown";
 import useAwardSetting from "@/composables/lottery/useAwardSetting";
@@ -66,6 +67,7 @@ const winnerImage = ref(null);
 const winnerAvatarChar = ref("");
 const winnerWish = ref("");
 const winnerGift = ref(null);
+const winnerDepartment = ref("");
 const wrapPosition = ref(0);
 const animationFrame = ref(null);
 const speed = ref(6);
@@ -129,6 +131,16 @@ const { showHistoryModal, canUndo, historyStats, recentHistory, showHistory, han
   startAnimation: () => startAnimation(),
   cancelAnimation: () => cancelAnimation()
 });
+
+// 统计功能相关
+const showStatisticsModal = ref(false);
+const openStatistics = () => {
+  if (lotteryData.value.length === 0) {
+    message.warning("请先导入抽奖数据");
+    return;
+  }
+  showStatisticsModal.value = true;
+};
 
 // 多轮抽奖相关
 const {
@@ -288,6 +300,7 @@ const { selectAward, handleLottery, exportWinners } = useLottery({
   winnerAvatarChar,
   winnerWish,
   winnerGift,
+  winnerDepartment,
   wrapPosition,
   speed,
   selectedAward,
@@ -383,7 +396,7 @@ useKeyboardShortcuts({
               <div class="border bor-bottom"></div>
               <h3 class="content-title">
                 <span class="lottery-name">{{ item.namezh }}</span>
-                <span class="company">[ 牛马科技 ]</span>
+                <span class="company">[ 牛马科技<span v-if="item.department">-{{ item.department }}</span> ]</span>
               </h3>
               <div class="content-detail">
                 <b>新年愿景及祝福：</b>
@@ -413,6 +426,7 @@ useKeyboardShortcuts({
         @exportWinners="exportWinners"
         @showHistory="showHistory"
         @showMultiRoundSetting="showMultiRoundSetting"
+        @showStatistics="openStatistics"
       />
 
       <!-- 键盘快捷键提示 -->
@@ -427,7 +441,7 @@ useKeyboardShortcuts({
   <Countdown :visible="showCountdown" :countdown-text="countdownText" />
 
   <!-- 中奖结果弹窗，传递中奖人image字段，支持动态头像 -->
-  <LotteryResult :visible="showResult" :award="selectedAward" :name-zh="winnerNameZh" :name-en="winnerNameEn" :image="winnerImage" :avatarChar="winnerAvatarChar" :wish="winnerWish" :gift="winnerGift" @close="showResult = false" />
+  <LotteryResult :visible="showResult" :award="selectedAward" :name-zh="winnerNameZh" :name-en="winnerNameEn" :image="winnerImage" :avatarChar="winnerAvatarChar" :wish="winnerWish" :gift="winnerGift" :department="winnerDepartment" @close="showResult = false" />
 
   <!-- 导入数据 -->
   <UploadExcel v-model:visible="importModal" :on-success="handleSuccess" :before-upload="beforeUpload" />
@@ -458,6 +472,9 @@ useKeyboardShortcuts({
 
   <!-- 抽奖历史记录 -->
   <LotteryHistory v-model:visible="showHistoryModal" :historyList="recentHistory" :historyStats="historyStats" :canUndo="canUndo" @undo="handleUndoConfirm" @delete="deleteHistoryRecord" @clear="clearAllHistory" />
+
+  <!-- 统计分析 -->
+  <LotteryStatistics v-model:visible="showStatisticsModal" :lottery-data="lotteryData" />
 </template>
 
 <style lang="scss" scoped></style>

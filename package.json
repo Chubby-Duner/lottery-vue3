@@ -16,6 +16,7 @@
     "@ant-design/icons-vue": "^7.0.1",
     "ant-design-vue": "^4.2.6",
     "canvas-confetti": "^1.9.3",
+    "echarts": "^6.0.0",
     "exceljs": "^4.4.0",
     "jszip": "^3.10.1",
     "pinia": "^3.0.3",

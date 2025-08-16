@@ -19,6 +19,7 @@ export default function useLottery({
   winnerAvatarChar,
   winnerWish,
   winnerGift,
+  winnerDepartment,
   wrapPosition,
   speed,
   selectedAward,
@@ -169,11 +170,13 @@ export default function useLottery({
         winnerWish.value = "Invalid Winner";
         winnerImage.value = null;
         winnerGift.value = null;
+        winnerDepartment.value = null;
       } else {
         winnerNameZh.value = winner.namezh;
         winnerNameEn.value = winner.nameen;
         winnerAvatarChar.value = winner.avatarChar;
         winnerWish.value = winner.wish;
+        winnerDepartment.value = winner.department;
         winnerImage.value = (winner.image && winner.image.dataUrl) ? { dataUrl: winner.image.dataUrl } : null;
         // 调试信息：显示当前奖项的所有礼物状态
         // const availablePrizes = prizeStore.getAvailablePrizesForAward(selectedAward.value);
@@ -206,7 +209,8 @@ export default function useLottery({
         id: winnerId, // 添加生成的唯一id
         nameen: winner.nameen,
         namezh: winner.namezh,
-        avatarChar: winner.avatarChar // 新增，保证名单有头像字
+        avatarChar: winner.avatarChar, // 保证名单有头像字
+        department: winner.department
       };
       if (winner.image && typeof winner.image === 'object' && winner.image.dataUrl) {
         winnerData.image = { dataUrl: winner.image.dataUrl };
@@ -226,7 +230,8 @@ export default function useLottery({
           nameen: winner.nameen,
           avatarChar: winner.avatarChar,
           image: winner.image,
-          wish: winner.wish
+          wish: winner.wish,
+          department: winner.department
         },
         gift: winnerGift.value,
         lotteryDataSnapshot: [...lotteryData.value],

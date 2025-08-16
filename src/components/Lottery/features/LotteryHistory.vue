@@ -98,7 +98,7 @@ const handleExport = () => {
     });
 
     // 构建导出数据
-    const data = [["时间", "奖项", "中奖者", "礼物", "类型"]];
+    const data = [["时间", "奖项", "中奖者", "部门", "礼物", "类型"]];
 
     // 按奖项分块添加数据
     Object.keys(groupedByAward).forEach((awardKey, index) => {
@@ -116,7 +116,7 @@ const handleExport = () => {
           ? `多轮抽奖(${record.multiRound.roundIndex + 1}/${record.multiRound.totalRounds})${record.multiRound.sessionId ? '#' + record.multiRound.sessionId.slice(-6) : ''}` 
           : "单次抽奖";
 
-        data.push([formatTime(record.timestamp), record.awardName, record.winner.namezh, record.gift?.giftName || record.gift || "", roundText]);
+        data.push([formatTime(record.timestamp), record.awardName, record.winner.namezh, record.winner.department || "", record.gift?.giftName || record.gift || "", roundText]);
       });
     });
 
@@ -127,6 +127,7 @@ const handleExport = () => {
       { wch: 20 }, // 时间
       { wch: 12 }, // 奖项
       { wch: 15 }, // 中奖者
+      { wch: 15 }, // 部门
       { wch: 20 }, // 礼物
       { wch: 18 } // 类型
     ];
@@ -239,6 +240,7 @@ const formatTime = timestamp => {
                     <div class="winner-details">
                       <div class="winner-name">{{ record.winner.namezh }}</div>
                       <div class="winner-en">{{ record.winner.nameen }}</div>
+                      <div v-if="record.winner.department" class="winner-department">🏢 {{ record.winner.department }}</div>
                       <div v-if="record.gift" class="winner-gift">🎁 {{ record.gift.giftName || record.gift }}</div>
                     </div>
                   </div>
@@ -267,6 +269,7 @@ const formatTime = timestamp => {
         <div v-if="lastRecord" class="last-record-info">
           <p><strong>奖项：</strong>{{ lastRecord.awardName }}</p>
           <p><strong>中奖者：</strong>{{ lastRecord.winner.namezh }}</p>
+          <p v-if="lastRecord.winner.department"><strong>部门：</strong>{{ lastRecord.winner.department }}</p>
           <p><strong>时间：</strong>{{ formatTime(lastRecord.timestamp) }}</p>
         </div>
         <a-alert message="注意" description="撤销后将恢复抽奖前的状态，包括名单、奖项数量等" type="warning" show-icon />
@@ -375,6 +378,13 @@ const formatTime = timestamp => {
               .winner-en {
                 font-size: 12px;
                 color: #999;
+                line-height: 1.2;
+                margin-top: 2px;
+              }
+
+              .winner-department {
+                font-size: 12px;
+                color: #1890ff;
                 line-height: 1.2;
                 margin-top: 2px;
               }

@@ -19,15 +19,30 @@ const weightVisible = ref(false);
 // 权重数据副本
 const weightData = ref([]);
 const searchKeyword = ref("");
+const departmentKeyword = ref("");
 
 // 过滤后的数据
 const filteredWeightData = computed(() => {
-  if (!searchKeyword.value) return weightData.value;
-  return weightData.value.filter(item => {
-    const namezh = item.namezh || "";
-    const nameen = item.nameen || "";
-    return namezh.includes(searchKeyword.value) || nameen.toLowerCase().includes(searchKeyword.value.toLowerCase());
-  });
+  let filteredData = weightData.value;
+  
+  // 按姓名过滤
+  if (searchKeyword.value) {
+    filteredData = filteredData.filter(item => {
+      const namezh = item.namezh || "";
+      const nameen = item.nameen || "";
+      return namezh.includes(searchKeyword.value) || nameen.toLowerCase().includes(searchKeyword.value.toLowerCase());
+    });
+  }
+  
+  // 按部门过滤
+  if (departmentKeyword.value) {
+    filteredData = filteredData.filter(item => {
+      const department = item.department || "";
+      return department.includes(departmentKeyword.value);
+    });
+  }
+  
+  return filteredData;
 });
 
 // 分页配置
@@ -129,6 +144,7 @@ watch(
     if (newValue) {
       // 重置状态
       searchKeyword.value = "";
+      departmentKeyword.value = "";
       resetPagination();
       emit("onOpen");
     } else {
@@ -224,7 +240,10 @@ const resetPagination = () => {
       </div>
 
       <!-- 搜索区域 -->
-      <a-input-search v-model:value="searchKeyword" placeholder="请输入姓名进行搜索" allowClear style="width: 240px; margin-bottom: 16px" />
+      <div style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
+        <a-input-search v-model:value="searchKeyword" placeholder="请输入姓名进行搜索" allowClear style="width: 240px" />
+        <a-input-search v-model:value="departmentKeyword" placeholder="请输入部门进行搜索" allowClear style="width: 240px" />
+      </div>
 
       <!-- 表格区域 -->
       <a-table :dataSource="filteredWeightData" :columns="columns" :pagination="paginationConfig" size="small" bordered :scroll="{ y: 500 }" style="border-radius: 8px; overflow: hidden; margin-bottom: 16px" @change="handleTableChange">
@@ -233,6 +252,7 @@ const resetPagination = () => {
             <div class="person-info">
               <div class="person-name">{{ record.namezh }}</div>
               <div class="person-en">{{ record.nameen }}</div>
+              <div class="person-en">{{ record.department }}</div>
             </div>
           </template>
 
