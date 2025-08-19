@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "NODE_OPTIONS=--max-old-space-size=4096 vite",
     "serve": "pnpm dev",
-    "build": "rimraf dist && NODE_OPTIONS=--max-old-space-size=8192 vite build",
+    "build": "rimraf dist && NODE_OPTIONS=--max-old-space-size=1536 vite build",
     "preview": "vite preview",
     "preview:build": "pnpm build && vite preview",
     "clean:cache": "rimraf pnpm-lock.yaml && rimraf node_modules && pnpm store prune && pnpm install"
