@@ -1,9 +1,14 @@
 FROM node:20 AS builder
 
 WORKDIR /app
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
+
+RUN npm config set registry https://registry.npmmirror.com
+
+RUN pnpm install --frozen-lockfile
+
 COPY . .
-RUN corepack enable && corepack prepare pnpm@latest --activate
-RUN pnpm install
 RUN pnpm run build
 
 # 用 nginx 服务静态文件
