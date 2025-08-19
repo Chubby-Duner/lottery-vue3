@@ -47,6 +47,7 @@ export default ({ mode }) => {
           manualChunks: {
             vue: ["vue", "pinia", "vue-router"],
             "ant-design-vue": ["ant-design-vue"],
+            echarts: ["echarts"]
           }
         }
       }
