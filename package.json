@@ -5,9 +5,9 @@
   "type": "module",
   "author": "chubbyduner",
   "scripts": {
-    "dev": "vite",
+    "dev": "NODE_OPTIONS=--max-old-space-size=4096 vite",
     "serve": "pnpm dev",
-    "build": "rimraf dist && vite build",
+    "build": "rimraf dist && NODE_OPTIONS=--max-old-space-size=8192 vite build",
     "preview": "vite preview",
     "preview:build": "pnpm build && vite preview",
     "clean:cache": "rimraf pnpm-lock.yaml && rimraf node_modules && pnpm store prune && pnpm install"
@@ -21,7 +21,7 @@
     "jszip": "^3.10.1",
     "pinia": "^3.0.3",
     "uuid": "^11.1.0",
-    "vue": "^3.5.17",
+    "vue": "^3.5.18",
     "vue-router": "^4.5.1",
     "xlsx": "^0.18.5"
   },
