@@ -21,7 +21,11 @@ import {
   TimelineItem,
   Row,
   Col,
-  Statistic
+  Statistic,
+  Form,
+  FormItem,
+  Descriptions,
+  DescriptionsItem
 } from 'ant-design-vue'
 
 const components = [
@@ -46,7 +50,11 @@ const components = [
   TimelineItem,
   Row,
   Col,
-  Statistic
+  Statistic,
+  Form,
+  FormItem,
+  Descriptions,
+  DescriptionsItem
 ]
 
 const plugins = []

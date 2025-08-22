@@ -1,5 +1,5 @@
 <script setup>
-import { SettingOutlined, ExportOutlined, ClearOutlined, GiftOutlined, HistoryOutlined, ReloadOutlined, BarChartOutlined } from "@ant-design/icons-vue";
+import { SettingOutlined, ExportOutlined, ClearOutlined, GiftOutlined, HistoryOutlined, ReloadOutlined, BarChartOutlined, MessageOutlined } from "@ant-design/icons-vue";
 
 defineOptions({
   name: "AwardControlPanel"
@@ -15,7 +15,7 @@ const props = defineProps({
   isMultiRoundMode: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "openPrizeSetting", "openWeightEditor", "resetAllData", "exportWinners", "showHistory", "showMultiRoundSetting", "showStatistics"]);
+const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "openPrizeSetting", "openWeightEditor", "resetAllData", "exportWinners", "showHistory", "showMultiRoundSetting", "showStatistics", "showBarrage"]);
 </script>
 
 <template>
@@ -92,6 +92,14 @@ const emit = defineEmits(["selectAward", "handleLottery", "openAwardSetting", "o
           <BarChartOutlined />
         </template>
         统计分析
+      </a-button>
+    </div>
+    <div class="btn weight-edit-section">
+      <a-button @click="$emit('showBarrage')">
+        <template #icon>
+          <MessageOutlined />
+        </template>
+        弹幕互动
       </a-button>
     </div>
 

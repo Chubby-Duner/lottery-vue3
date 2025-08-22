@@ -5,6 +5,7 @@ import { getRandomChar } from "@/composables/utils";
 import { useAwardStore } from "@/store/awardStore";
 import { useMusicStore } from "@/store/musicStore";
 import { usePrizeStore } from "@/store/prizeStore";
+import { useBarrageStore } from "@/store/barrageStore";
 import UploadExcel from "@/components/Upload/UploadExcel.vue";
 import LotteryLogo from "./LotteryLogo.vue";
 import LotteryResult from "./LotteryResult.vue";
@@ -19,6 +20,8 @@ import MultiRoundSetting from "../features/MultiRoundSetting.vue";
 import MultiRoundProgress from "../features/MultiRoundProgress.vue";
 import LotteryHistory from "../features/LotteryHistory.vue";
 import LotteryStatistics from "../features/LotteryStatistics.vue";
+import BarrageQRCode from "../features/BarrageQRCode.vue";
+import BarrageDisplay from "../features/BarrageDisplay.vue";
 
 import useCountdown from "@/composables/lottery/useCountdown";
 import useAwardSetting from "@/composables/lottery/useAwardSetting";
@@ -39,6 +42,8 @@ const awardStore = useAwardStore();
 // 获取音乐控制
 const musicStore = useMusicStore();
 const prizeStore = usePrizeStore();
+// 获取弹幕状态管理
+const barrageStore = useBarrageStore();
 
 // ===================== 状态变量 =====================
 //#region 倒计时相关
@@ -140,6 +145,49 @@ const openStatistics = () => {
     return;
   }
   showStatisticsModal.value = true;
+};
+
+// 弹幕功能相关
+const openBarrage = () => {
+  barrageStore.setQRCodeVisible(true);
+  barrageStore.setBarrageVisible(true);
+  message.success('弹幕功能已开启，用户可扫码发送弹幕');
+};
+
+const closeBarrageQRCode = () => {
+  barrageStore.setQRCodeVisible(false);
+};
+
+const toggleBarrageDisplay = () => {
+  barrageStore.setBarrageVisible(!barrageStore.isBarrageVisible);
+};
+
+const handleBarrageReceived = (newBarrages) => {
+  // 将新弹幕添加到store中
+  barrageStore.addBarrages(newBarrages);
+  
+  // 可以在这里添加特殊效果或通知
+  if (newBarrages.length > 0) {
+    console.log(`收到 ${newBarrages.length} 条新弹幕`);
+  }
+};
+
+// 弹幕管理功能
+const clearAllBarrages = () => {
+  barrageStore.clearBarrages();
+  message.success('弹幕已清空');
+};
+
+const exportBarrages = () => {
+  const data = barrageStore.exportBarrages();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `弹幕数据_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  message.success('弹幕数据导出成功');
 };
 
 // 多轮抽奖相关
@@ -427,6 +475,7 @@ useKeyboardShortcuts({
         @showHistory="showHistory"
         @showMultiRoundSetting="showMultiRoundSetting"
         @showStatistics="openStatistics"
+        @showBarrage="openBarrage"
       />
 
       <!-- 键盘快捷键提示 -->
@@ -475,6 +524,23 @@ useKeyboardShortcuts({
 
   <!-- 统计分析 -->
   <LotteryStatistics v-model:visible="showStatisticsModal" :lottery-data="lotteryData" />
+
+  <!-- 弹幕二维码 -->
+  <BarrageQRCode 
+    v-model:visible="barrageStore.isQRCodeVisible" 
+    :roomId="barrageStore.config.roomId" 
+    @close="closeBarrageQRCode" 
+  />
+
+  <!-- 弹幕显示 -->
+  <BarrageDisplay 
+    :visible="barrageStore.isBarrageVisible" 
+    :roomId="barrageStore.config.roomId" 
+    :maxBarrages="barrageStore.config.maxBarrages"
+    :pollInterval="barrageStore.config.pollInterval"
+    :autoScroll="barrageStore.config.autoScroll"
+    @barrageReceived="handleBarrageReceived" 
+  />
 </template>
 
 <style lang="scss" scoped></style>
