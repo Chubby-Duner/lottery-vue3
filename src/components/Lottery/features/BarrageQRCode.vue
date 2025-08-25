@@ -18,15 +18,12 @@ const props = defineProps({
   },
   serverUrl: {
     type: String,
-    /* 
-      // 动态获取服务器地址，适应不同部署环境
+    default: () => {
+      // 动态获取服务器地址，线上和本地环境都使用3000端口
       const protocol = window.location.protocol;
       const hostname = window.location.hostname;
-      // 开发环境使用3000端口，生产环境使用当前端口
-      const port = hostname === 'localhost' || hostname === '127.0.0.1' ? '3000' : window.location.port;
-      return `${protocol}//${hostname}${port ? ':' + port : ''}`;
-    */
-    default: "http://chubbyduner.top:3000"
+      return `${protocol}//${hostname}:3000`;
+    }
   }
 });
 

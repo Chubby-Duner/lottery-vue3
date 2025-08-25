@@ -3,7 +3,7 @@ import { message } from 'ant-design-vue'
 
 // 创建axios实例
 const request = axios.create({
-  baseURL: 'http://chubbyduner.top:3000/api',
+  baseURL: `${window.location.protocol}//${window.location.hostname}:3000/api`,
   timeout: 10000, // 请求超时时间
   headers: {
     'Content-Type': 'application/json;charset=UTF-8'
