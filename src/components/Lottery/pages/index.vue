@@ -172,6 +172,10 @@ const handleBarrageReceived = (newBarrages) => {
   }
 };
 
+const handleBarrageClose = () => {
+  barrageStore.setBarrageVisible(false);
+};
+
 // 弹幕管理功能
 const clearAllBarrages = () => {
   barrageStore.clearBarrages();
@@ -540,6 +544,7 @@ useKeyboardShortcuts({
     :pollInterval="barrageStore.config.pollInterval"
     :autoScroll="barrageStore.config.autoScroll"
     @barrageReceived="handleBarrageReceived" 
+    @close="handleBarrageClose"
   />
 </template>
 

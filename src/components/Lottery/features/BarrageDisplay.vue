@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
+import { ref, onMounted, onUnmounted, watch } from "vue";
+import { CloseOutlined } from "@ant-design/icons-vue";
 import { barrageApi } from "@/api/barrage";
 
 defineOptions({
@@ -37,19 +38,56 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(["barrageReceived"]);
+const emit = defineEmits(["barrageReceived", "close"]);
 
-const barrages = ref([]);
 const scrollingBarrages = ref([]); // 正在滚动的弹幕
+const historyBarrages = ref([]); // 历史弹幕
 const loading = ref(false);
 const lastTimestamp = ref(null);
 const pollTimer = ref(null);
 const barrageContainer = ref(null);
 const isPaused = ref(false);
-// 移除轨道系统，改为从底部统一滚动
 const showHistory = ref(false); // 是否显示历史弹幕
-const historyBarrageTimer = ref(null); // 历史弹幕定时器
-const historyBarrageIndex = ref(0); // 历史弹幕索引
+
+// 垂直滚动相关变量
+const translateY = ref(0);
+const listRef = ref(null);
+let scrollInterval = null;
+const scrollSpeed = 1.5; // 滚动速度（px/帧）
+const stepTime = 30; // 滚动间隔（毫秒）
+
+// 获取初始弹幕列表
+const fetchInitialBarrages = async () => {
+  try {
+    const params = {
+      roomId: props.roomId,
+      limit: 20
+    };
+
+    const response = await barrageApi.getList(params);
+
+    if (response.code === 100200 && response.data.barrages && response.data.barrages.length > 0) {
+      const initialBarrages = response.data.barrages.map(item => ({
+        ...item,
+        id: item.id || Date.now() + Math.random(),
+        displayTime: new Date().toLocaleTimeString()
+      }));
+
+      // 按创建时间升序排序
+      initialBarrages.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+      // 设置历史弹幕列表
+      historyBarrages.value = initialBarrages;
+
+      // 更新最后时间戳
+      if (initialBarrages.length > 0) {
+        lastTimestamp.value = Math.max(...initialBarrages.map(b => new Date(b.createdAt).getTime()));
+      }
+    }
+  } catch (error) {
+    console.error("获取初始弹幕失败:", error);
+  }
+};
 
 // 获取最新弹幕
 const fetchLatestBarrages = async () => {
@@ -72,12 +110,20 @@ const fetchLatestBarrages = async () => {
         displayTime: new Date().toLocaleTimeString()
       }));
 
-      // 添加新弹幕到历史列表
-      barrages.value.push(...newBarrages);
+      // 添加新弹幕到历史弹幕列表
+      historyBarrages.value.push(...newBarrages);
 
-      // 限制弹幕数量
-      if (barrages.value.length > props.maxBarrages) {
-        barrages.value = barrages.value.slice(-props.maxBarrages);
+      // 限制历史弹幕数量
+      if (historyBarrages.value.length > 50) {
+        historyBarrages.value = historyBarrages.value.slice(-50);
+      }
+
+      // 只有新弹幕才添加到滚动列表进行滚动显示
+      scrollingBarrages.value.push(...newBarrages);
+
+      // 限制滚动弹幕数量，保持性能
+      if (scrollingBarrages.value.length > 20) {
+        scrollingBarrages.value = scrollingBarrages.value.slice(-20);
       }
 
       // 更新最后时间戳
@@ -85,24 +131,12 @@ const fetchLatestBarrages = async () => {
         lastTimestamp.value = Math.max(...newBarrages.map(b => new Date(b.createdAt).getTime()));
       }
 
-      // 将新弹幕添加到滚动队列
-      newBarrages.forEach(barrage => {
-        addScrollingBarrage(barrage);
-      });
-
       // 触发事件
       emit("barrageReceived", newBarrages);
-      
-      // 停止历史弹幕滚动，因为有新弹幕了
-      stopHistoryBarrageScroll();
-    } else {
-      // 没有新弹幕时，启动历史弹幕滚动
-      startHistoryBarrageScroll();
     }
   } catch (error) {
     console.error("获取弹幕失败:", error);
-    // 出错时也启动历史弹幕滚动
-    startHistoryBarrageScroll();
+    stopPolling();
   }
 };
 
@@ -110,86 +144,57 @@ const fetchLatestBarrages = async () => {
 const barrageQueue = ref([]);
 const isProcessingQueue = ref(false);
 
-// 添加滚动弹幕到队列
+// 添加滚动弹幕（直接添加到末尾）
 const addScrollingBarrage = barrage => {
-  barrageQueue.value.push(barrage);
-  processBarrageQueue();
+  scrollingBarrages.value.push(barrage);
+
+  // 限制显示的弹幕数量，保持性能
+  if (scrollingBarrages.value.length > 20) {
+    scrollingBarrages.value.shift();
+  }
 };
 
-// 处理弹幕队列，依次显示弹幕
+// 处理弹幕队列（已废弃，保留兼容性）
 const processBarrageQueue = async () => {
-  if (isProcessingQueue.value || barrageQueue.value.length === 0) {
-    return;
-  }
-  
-  isProcessingQueue.value = true;
-  
-  while (barrageQueue.value.length > 0) {
-    const barrage = barrageQueue.value.shift();
-    const duration = 6; // 6秒滚动时间
-    
-    const scrollingBarrage = {
-      ...barrage,
-      duration,
-      startTime: Date.now(),
-      endTime: Date.now() + duration * 1000,
-      horizontalOffset: Math.random() * 80
-    };
-    
-    scrollingBarrages.value.push(scrollingBarrage);
-    
-    // 设置定时器清理已完成的弹幕
-    setTimeout(() => {
-      removeScrollingBarrage(scrollingBarrage.id);
-    }, duration * 1000);
-    
-    // 等待1秒再处理下一个弹幕
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-  
-  isProcessingQueue.value = false;
+  // 不再需要队列处理，弹幕直接添加
 };
 
-// 轨道系统已移除，所有弹幕从底部开始滚动
+// 启动垂直滚动
+const startVerticalScroll = () => {
+  if (scrollInterval) return;
 
-// 移除滚动弹幕
+  scrollInterval = setInterval(() => {
+    if (isPaused.value || scrollingBarrages.value.length === 0) return;
+
+    translateY.value -= scrollSpeed;
+
+    // 获取第一条弹幕的高度
+    const firstItem = listRef.value?.children[0];
+    if (firstItem && Math.abs(translateY.value) >= firstItem.offsetHeight) {
+      // 滚动满一条弹幕高度 -> 把第一条移到末尾（循环显示）
+      const first = scrollingBarrages.value.shift();
+      if (first) {
+        scrollingBarrages.value.push(first);
+      }
+      // 重置位移
+      translateY.value = 0;
+    }
+  }, stepTime);
+};
+
+// 停止垂直滚动
+const stopVerticalScroll = () => {
+  if (scrollInterval) {
+    clearInterval(scrollInterval);
+    scrollInterval = null;
+  }
+};
+
+// 移除滚动弹幕（保留兼容性）
 const removeScrollingBarrage = barrageId => {
   const index = scrollingBarrages.value.findIndex(b => b.id === barrageId);
   if (index !== -1) {
     scrollingBarrages.value.splice(index, 1);
-  }
-};
-
-// 启动历史弹幕滚动
-const startHistoryBarrageScroll = () => {
-  // 如果没有历史弹幕或者已经在滚动，则不启动
-  if (barrages.value.length === 0 || historyBarrageTimer.value || isPaused.value) {
-    return;
-  }
-
-  historyBarrageTimer.value = setInterval(() => {
-    if (barrages.value.length > 0 && !isPaused.value) {
-      // 循环使用历史弹幕
-      const barrage = barrages.value[historyBarrageIndex.value % barrages.value.length];
-      
-      // 创建一个新的弹幕对象，避免重复ID问题
-      const historyBarrage = {
-        ...barrage,
-        id: `history-${Date.now()}-${Math.random()}`,
-        isHistory: true
-      };
-      
-      addScrollingBarrage(historyBarrage);
-      historyBarrageIndex.value++;
-    }
-  }, 2000); // 每2秒添加一个历史弹幕，让效果更连续
-};
-
-// 停止历史弹幕滚动
-const stopHistoryBarrageScroll = () => {
-  if (historyBarrageTimer.value) {
-    clearInterval(historyBarrageTimer.value);
-    historyBarrageTimer.value = null;
   }
 };
 
@@ -226,65 +231,47 @@ const togglePause = () => {
   isPaused.value = !isPaused.value;
   if (!isPaused.value) {
     fetchLatestBarrages();
+    startVerticalScroll();
   } else {
-    // 暂停时停止历史弹幕滚动
-    stopHistoryBarrageScroll();
+    // 暂停时停止垂直滚动
+    stopVerticalScroll();
   }
 };
 
 // 清空弹幕
 const clearBarrages = () => {
-  barrages.value = [];
   scrollingBarrages.value = [];
+  historyBarrages.value = [];
   barrageQueue.value = []; // 清空弹幕队列
   isProcessingQueue.value = false; // 重置处理状态
   lastTimestamp.value = null;
-  historyBarrageIndex.value = 0;
-  // 停止历史弹幕滚动
-  stopHistoryBarrageScroll();
-};
-
-// 手动刷新
-const refresh = () => {
-  lastTimestamp.value = null;
-  fetchLatestBarrages();
-};
-
-// 获取弹幕颜色样式
-const getBarrageStyle = barrage => {
-  return {
-    color: barrage.color || "#ffffff",
-    fontSize: `${barrage.fontSize || 16}px`
-  };
-};
-
-// 获取滚动弹幕样式
-const getScrollingBarrageStyle = barrage => {
-  const containerHeight = barrageContainer.value?.offsetHeight || 200;
-  const containerWidth = barrageContainer.value?.offsetWidth || 400;
-
-  // 计算弹幕的初始位置（从容器底部开始）
-  const leftPosition = 10 + (barrage.horizontalOffset || 0);
-  const maxLeft = containerWidth - 200;
-
-  return {
-    position: "absolute",
-    left: `${Math.min(leftPosition, maxLeft)}px`,
-    bottom: "0px", // 从容器底部开始
-    width: "auto",
-    maxWidth: "calc(100% - 20px)",
-    animationDuration: `${barrage.duration}s`,
-    animationName: barrage.isHistory ? "scrollHistoryBarrageUp" : "scrollBarrageUp",
-    animationTimingFunction: "linear",
-    animationFillMode: "forwards",
-    transform: "translateY(0)", // 初始位置
-    zIndex: 1000 + Math.floor(Date.now() / 1000) % 100
-  };
+  translateY.value = 0; // 重置滚动位置
+  // 停止垂直滚动
+  stopVerticalScroll();
 };
 
 // 切换历史弹幕显示
 const toggleHistory = () => {
   showHistory.value = !showHistory.value;
+};
+
+// 关闭弹幕区域
+const handleClose = () => {
+  emit("close");
+};
+
+// 手动刷新
+const refresh = () => {
+  lastTimestamp.value = null;
+  fetchInitialBarrages();
+};
+
+// 获取弹幕颜色样式
+const getBarrageItemStyle = barrage => {
+  return {
+    color: barrage.color || "#ffffff",
+    fontSize: `${barrage.fontSize || 14}px`
+  };
 };
 
 // 处理滚动事件
@@ -304,9 +291,11 @@ const handleScroll = () => {
 const handleVisibilityChange = () => {
   if (props.visible) {
     startPolling();
-    fetchLatestBarrages();
+    fetchInitialBarrages();
+    startVerticalScroll();
   } else {
     stopPolling();
+    stopVerticalScroll();
   }
 };
 
@@ -320,14 +309,15 @@ defineExpose({
 
 onMounted(() => {
   if (props.visible) {
-    fetchLatestBarrages();
+    fetchInitialBarrages();
     startPolling();
+    startVerticalScroll();
   }
 });
 
 onUnmounted(() => {
   stopPolling();
-  stopHistoryBarrageScroll();
+  stopVerticalScroll();
 });
 
 // 监听props变化
@@ -337,7 +327,7 @@ watch(
   () => {
     clearBarrages();
     if (props.visible) {
-      fetchLatestBarrages();
+      fetchInitialBarrages();
     }
   }
 );
@@ -357,6 +347,9 @@ watch(
         </a-button>
         <a-button size="small" @click="refresh" :loading="loading"> 刷新 </a-button>
         <a-button size="small" @click="clearBarrages" danger> 清空 </a-button>
+        <a-button size="small" @click="handleClose" class="close-btn">
+          <CloseOutlined />
+        </a-button>
       </div>
     </div>
 
@@ -366,22 +359,23 @@ watch(
         <p>暂无弹幕，等待用户发送...</p>
       </div>
 
-      <!-- 滚动弹幕 -->
-      <div v-for="barrage in scrollingBarrages" :key="barrage.id" :data-barrage-id="barrage.id" class="scrolling-barrage" :class="{ 'history-barrage': barrage.isHistory }" :style="getScrollingBarrageStyle(barrage)">
-        <span class="barrage-nickname">{{ barrage.nickname || "匿名" }}：</span>
-        <span class="barrage-text" :style="getBarrageStyle(barrage)">{{ barrage.content }}</span>
-        <span v-if="barrage.isHistory" class="history-tag">历史</span>
+      <!-- 垂直滚动弹幕列表 -->
+      <div class="barrage-list" :style="{ transform: `translateY(${translateY}px)` }" ref="listRef">
+        <div v-for="barrage in scrollingBarrages" :key="barrage.id" class="barrage-item">
+          <span class="barrage-nickname">{{ barrage.nickname || "匿名" }}：</span>
+          <span class="barrage-text" :style="getBarrageItemStyle(barrage)">{{ barrage.content }}</span>
+        </div>
       </div>
     </div>
 
     <!-- 历史弹幕列表（可折叠） -->
-    <div class="barrage-history" v-if="barrages.length > 0">
+    <div class="barrage-history" v-if="historyBarrages.length > 0">
       <div class="history-header" @click="toggleHistory">
-        <span>历史弹幕 ({{ barrages.length }})</span>
+        <span>历史弹幕 ({{ historyBarrages.length }})</span>
         <span class="toggle-icon">{{ showHistory ? "▼" : "▶" }}</span>
       </div>
       <div v-if="showHistory" class="history-list">
-        <div v-for="barrage in barrages.slice(-10)" :key="'history-' + barrage.id" class="history-item">
+        <div v-for="barrage in historyBarrages.slice(-10)" :key="'history-' + barrage.id" class="history-item">
           <span class="history-nickname">{{ barrage.nickname || "匿名" }}：</span>
           <span class="history-content">{{ barrage.content }}</span>
           <span class="history-time">{{ barrage.displayTime }}</span>
@@ -400,53 +394,108 @@ watch(
   position: fixed;
   top: 20px;
   right: 20px;
-  width: 400px;
-  height: 300px;
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 8px;
-  border: 1px solid #333;
+  width: 420px;
+  max-height: 80vh;
+  height: auto;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
   z-index: 1000;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
+  overflow: hidden;
 
   .barrage-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 12px;
-    border-bottom: 1px solid #333;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px 8px 0 0;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+    border-radius: 16px 16px 0 0;
     flex-shrink: 0;
+    backdrop-filter: blur(10px);
 
     .header-left {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
 
       h4 {
         margin: 0;
-        color: #fff;
-        font-size: 14px;
-        font-weight: 600;
+        color: #f8fafc;
+        font-size: 16px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #60a5fa, #a78bfa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
 
       .barrage-count {
-        color: #ccc;
+        color: #94a3b8;
         font-size: 12px;
+        background: rgba(59, 130, 246, 0.1);
+        padding: 2px 8px;
+        border-radius: 12px;
+        border: 1px solid rgba(59, 130, 246, 0.2);
       }
     }
 
     .header-actions {
       display: flex;
-      gap: 6px;
+      gap: 8px;
 
       :deep(.ant-btn) {
-        height: 24px;
-        padding: 0 8px;
+        height: 32px;
+        padding: 0 12px;
         font-size: 12px;
-        border-radius: 4px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: rgba(15, 23, 42, 0.6);
+        color: #e2e8f0;
+
+        &:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          border-color: rgba(59, 130, 246, 0.4);
+        }
+
+        &.ant-btn-primary {
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          border-color: transparent;
+
+          &:hover {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+          }
+        }
+
+        &.ant-btn-danger {
+          background: linear-gradient(135deg, #ef4444, #f97316);
+          border-color: transparent;
+
+          &:hover {
+            background: linear-gradient(135deg, #dc2626, #ea580c);
+          }
+        }
+
+        &.close-btn {
+          background: rgba(239, 68, 68, 0.1);
+          border-color: rgba(239, 68, 68, 0.3);
+          color: #ef4444;
+
+          &:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #dc2626;
+          }
+        }
       }
     }
   }
@@ -457,197 +506,236 @@ watch(
     overflow: hidden;
     background: transparent;
     min-height: 200px;
-    height: 200px;
-    border: 2px solid #ff4d4f; // 红色边框用于调试
+    max-height: 300px;
 
     .empty-state {
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100%;
-      color: #999;
+      color: #94a3b8;
       font-size: 14px;
+      font-weight: 500;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 51, 234, 0.03));
+      border-radius: 12px;
+      margin: 16px;
+      padding: 32px;
+      border: 1px dashed rgba(148, 163, 184, 0.2);
+
+      p {
+        margin: 0;
+        text-align: center;
+        line-height: 1.5;
+      }
     }
 
-    .scrolling-barrage {
+    .barrage-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .barrage-item {
+      padding: 12px 16px;
+      margin: 6px 12px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.08));
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      display: flex;
+      align-items: center;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(15px);
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: "";
         position: absolute;
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        padding: 6px 12px;
-        background: rgba(0, 0, 0, 0.8);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(8px);
-        z-index: 1;
-        max-width: calc(100% - 20px);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s ease;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.6s ease;
+      }
 
-        &.history-barrage {
-          background: rgba(0, 0, 0, 0.6);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          
-          .barrage-nickname {
-            color: #52c41a;
-          }
-        }
+      &:hover {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(147, 51, 234, 0.12));
+        border-color: rgba(59, 130, 246, 0.4);
+        transform: translateY(-2px) scale(1.02);
+        box-shadow:
+          0 8px 25px rgba(59, 130, 246, 0.25),
+          0 0 0 1px rgba(255, 255, 255, 0.1);
 
-        .barrage-nickname {
-          color: #1890ff;
-          font-size: 12px;
-          font-weight: 600;
-          margin-right: 4px;
-          flex-shrink: 0;
-        }
-
-        .barrage-text {
-          font-size: 13px;
-          font-weight: 500;
-          color: #ffffff;
-          text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          flex: 1;
-        }
-
-        .history-tag {
-          background: rgba(82, 196, 26, 0.8);
-          color: #fff;
-          font-size: 10px;
-          padding: 2px 6px;
-          border-radius: 10px;
-          margin-left: 6px;
-          flex-shrink: 0;
+        &::before {
+          left: 100%;
         }
       }
+
+      .barrage-nickname {
+        color: #60a5fa;
+        font-size: 14px;
+        font-weight: 700;
+        margin-right: 10px;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+
+        &::after {
+          content: "";
+          position: absolute;
+          bottom: -2px;
+          left: 0;
+          width: 0;
+          height: 2px;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+          transition: width 0.3s ease;
+        }
+      }
+
+      &:hover .barrage-nickname::after {
+        width: 100%;
+      }
+
+      .barrage-text {
+        font-size: 14px;
+        font-weight: 500;
+        color: #f8fafc;
+        flex: 1;
+        word-break: break-all;
+        line-height: 1.5;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+    }
   }
 
   .barrage-history {
-    border-top: 1px solid #333;
-    background: rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.6));
+    flex-shrink: 0;
+    backdrop-filter: blur(10px);
 
     .history-header {
-      padding: 8px 12px;
+      padding: 12px 20px;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: #ccc;
-      font-size: 12px;
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+      transition: all 0.3s ease;
 
       &:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.08));
+        color: #e2e8f0;
       }
 
       .toggle-icon {
-        font-size: 10px;
-        transition: transform 0.2s;
+        font-size: 12px;
+        transition: transform 0.3s ease;
+        color: #60a5fa;
       }
     }
 
     .history-list {
       max-height: 120px;
       overflow-y: auto;
+      background: rgba(15, 23, 42, 0.4);
+      padding: 4px;
 
       &::-webkit-scrollbar {
-        width: 4px;
+        width: 6px;
       }
 
       &::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(15, 23, 42, 0.3);
+        border-radius: 3px;
       }
 
       &::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 2px;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        border-radius: 3px;
+
+        &:hover {
+          background: linear-gradient(135deg, #2563eb, #7c3aed);
+        }
       }
 
       .history-item {
-        padding: 4px 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        font-size: 11px;
+        padding: 8px 12px;
+        margin: 2px 4px;
+        border-radius: 8px;
+        font-size: 12px;
         display: flex;
         align-items: center;
+        min-height: 28px;
+        background: rgba(30, 41, 59, 0.4);
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        transition: all 0.3s ease;
 
         &:hover {
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(59, 130, 246, 0.1);
+          border-color: rgba(59, 130, 246, 0.3);
+          transform: translateX(2px);
+        }
+
+        &:last-child {
+          border-bottom: 1px solid rgba(148, 163, 184, 0.1);
         }
 
         .history-nickname {
-          color: #1890ff;
-          font-weight: 500;
-          margin-right: 4px;
+          color: #60a5fa;
+          font-weight: 600;
+          margin-right: 8px;
           flex-shrink: 0;
+          min-width: 45px;
+          font-size: 11px;
         }
 
         .history-content {
-          color: #fff;
+          color: #e2e8f0;
           flex: 1;
           margin-right: 8px;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          line-height: 1.3;
+          font-weight: 400;
         }
 
         .history-time {
-          color: #999;
+          color: #94a3b8;
           font-size: 10px;
           flex-shrink: 0;
+          min-width: 50px;
+          text-align: right;
+          font-weight: 500;
         }
       }
     }
   }
 
   .pause-indicator {
-    padding: 6px 12px;
-    background: rgba(255, 193, 7, 0.2);
-    border-top: 1px solid #333;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.08));
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
     text-align: center;
+    backdrop-filter: blur(10px);
+    border-radius: 0 0 16px 16px;
 
     span {
-      color: #ffc107;
-      font-size: 11px;
+      color: #fbbf24;
+      font-size: 12px;
+      font-weight: 500;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-  }
-}
-
-// 弹幕在容器内从底部向顶部滚动
-@keyframes scrollBarrageUp {
-  0% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  5% {
-    opacity: 1;
-  }
-  95% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-220px); // 滚动超过容器高度确保完全消失
-    opacity: 0;
-  }
-}
-
-// 历史弹幕动画 - 稍微透明
-@keyframes scrollHistoryBarrageUp {
-  0% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  8% {
-    opacity: 0.7;
-  }
-  92% {
-    opacity: 0.7;
-  }
-  100% {
-    transform: translateY(-220px); // 滚动超过容器高度确保完全消失
-    opacity: 0;
   }
 }
 

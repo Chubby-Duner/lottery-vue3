@@ -117,7 +117,6 @@ const departmentPieData = computed(() => {
 
 // 实际参与抽奖的人数
 const actualParticipants = computed(() => {
-  console.log("🚀 ~ props.lotteryData:", props.lotteryData);
   return props.lotteryData.filter(item => {
     const awardWeights = item.awardWeights || {};
     return Object.values(awardWeights).some(weight => weight > 0);
@@ -384,21 +383,30 @@ watch(() => props.lotteryData, () => {
           <!-- 部门参与人数分布 -->
           <a-col :span="12">
             <div class="chart-card">
-              <div ref="departmentPieRef" class="chart"></div>
+              <div v-if="departmentPieData.length > 0" ref="departmentPieRef" class="chart"></div>
+              <div v-else class="empty-chart">
+                <a-empty description="暂无部门参与数据" />
+              </div>
             </div>
           </a-col>
 
           <!-- 各奖项部门分布 -->
           <a-col :span="12">
             <div class="chart-card">
-              <div ref="awardDistributionRef" class="chart"></div>
+              <div v-if="awardDistributionData.series.length > 0" ref="awardDistributionRef" class="chart"></div>
+              <div v-else class="empty-chart">
+                <a-empty description="暂无中奖分布数据" />
+              </div>
             </div>
           </a-col>
 
           <!-- 子部门统计 -->
           <a-col :span="24">
             <div class="chart-card">
-              <div ref="subDepartmentBarRef" class="chart" style="height: 400px"></div>
+              <div v-if="subDepartmentData.categories.length > 0" ref="subDepartmentBarRef" class="chart" style="height: 400px"></div>
+              <div v-else class="empty-chart" style="height: 400px">
+                <a-empty description="暂无子部门统计数据" />
+              </div>
             </div>
           </a-col>
 
@@ -427,6 +435,24 @@ watch(() => props.lotteryData, () => {
       .chart {
         width: 100%;
         height: 300px;
+      }
+      
+      .empty-chart {
+        width: 100%;
+        height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fafafa;
+        border-radius: 6px;
+        border: 1px dashed #d9d9d9;
+        
+        :deep(.ant-empty) {
+          .ant-empty-description {
+            color: #999;
+            font-size: 14px;
+          }
+        }
       }
     }
   }

@@ -3,7 +3,7 @@ import { message } from 'ant-design-vue'
 
 // 创建axios实例
 const request = axios.create({
-  baseURL: import.meta.env.PROD ? '/lottery/api' : '/api', // 生产环境使用/lottery/api，开发环境使用/api
+  baseURL: '/api',
   timeout: 10000, // 请求超时时间
   headers: {
     'Content-Type': 'application/json;charset=UTF-8'
