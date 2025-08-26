@@ -19,10 +19,11 @@ const props = defineProps({
   serverUrl: {
     type: String,
     default: () => {
-      // 动态获取服务器地址，线上和本地环境都使用3000端口
+      // 使用当前域名，通过Nginx代理访问API服务
       const protocol = window.location.protocol;
       const hostname = window.location.hostname;
-      return `${protocol}//${hostname}:3000`;
+      const port = window.location.port;
+      return `${protocol}//${hostname}${port ? ':' + port : ''}`;
     }
   }
 });
